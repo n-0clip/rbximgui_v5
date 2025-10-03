@@ -112,7 +112,7 @@ do -- Load items (Full Presets)
     local Text_4 = Instance.new("TextLabel")
     local Cache_2 = Instance.new("Frame")
     -- New Resize Handle Preset
-    local ResizeHandle = Instance.new("Frame")
+        local ResizeHandle = Instance.new("Frame")
     local ResizeGrip = Instance.new("ImageLabel")
 
     imgui2.Name = "imgui2"
@@ -172,6 +172,125 @@ do -- Load items (Full Presets)
     Expand.ZIndex = 4
     Expand.Image = "rbxassetid://7671465363"
 
+    Title.Name = "Title"
+    Title.Parent = Folder_2
+    Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Title.BackgroundTransparency = 1.000
+    Title.Position = UDim2.new(0, 30, 0, 0)
+    Title.Size = UDim2.new(1, -30, 1, 0)
+    Title.Font = Enum.Font.Code
+    Title.Text = "Folder"
+    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Title.TextSize = 14.000
+    Title.TextXAlignment = Enum.TextXAlignment.Left
+
+    Items.Name = "Items"
+    Items.Parent = Folder
+    Items.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Items.BackgroundTransparency = 1.000
+    Items.Position = UDim2.new(0, 10, 0, 25)
+    Items.Size = UDim2.new(1, -10, 1, -25)
+
+    UIListLayout.Parent = Items
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 5)
+
+    Tab.Name = "Tab"
+    Tab.Parent = Presets
+    Tab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Tab.BackgroundTransparency = 1.000
+    Tab.Position = UDim2.new(0, 0, 0, 30)
+    Tab.Size = UDim2.new(1, 0, 1, -30)
+
+    Items_2.Name = "Items"
+    Items_2.Parent = Tab
+    Items_2.Active = true
+    Items_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Items_2.BackgroundTransparency = 1.000
+    Items_2.BorderSizePixel = 0
+    Items_2.Position = UDim2.new(0, 10, 0, 0)
+    Items_2.Size = UDim2.new(1, -20, 1, 0)
+    Items_2.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Items_2.ScrollBarThickness = 6
+
+    UIListLayout_2.Parent = Items_2
+    UIListLayout_2.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout_2.Padding = UDim.new(0, 5)
+
+    Padding.Name = "Padding"
+    Padding.Parent = Items_2
+    Padding.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Padding.BackgroundTransparency = 1.000
+
+    Main.Name = "Main"
+    Main.Parent = Presets
+    Main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Main.BackgroundTransparency = 1.000
+    Main.Position = UDim2.new(0.309293151, 0, 0.41276595, 0)
+    Main.Size = UDim2.new(0, 300, 0, 22)
+    Main.ZIndex = 4
+    Main.Image = "rbxassetid://3570695787"
+    Main.ImageColor3 = Color3.fromRGB(10, 10, 10)
+    Main.ScaleType = Enum.ScaleType.Slice
+    Main.SliceCenter = Rect.new(100, 100, 100, 100)
+    Main.SliceScale = 0.050
+
+    Frame.Parent = Main
+    Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    Frame.BorderSizePixel = 0
+    Frame.Position = UDim2.new(0, 0, 1, -10)
+    Frame.Size = UDim2.new(1, 0, 0, 10)
+    Frame.ZIndex = 4
+
+    Frame_2.Parent = Frame
+    Frame_2.BackgroundColor3 = Color3.fromRGB(59, 59, 68)
+    Frame_2.BorderSizePixel = 0
+    Frame_2.Position = UDim2.new(0, 0, 1, 0)
+    Frame_2.Size = UDim2.new(1, 0, 0, 2)
+    Frame_2.ZIndex = 2
+
+    Content.Name = "Content"
+    Content.Parent = Main
+    Content.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Content.BackgroundTransparency = 1.000
+    Content.ClipsDescendants = true
+    Content.Position = UDim2.new(0, 0, 1, 0)
+    Content.Size = UDim2.new(1, 0, 0, 200)
+    Content.Image = "rbxassetid://3570695787"
+    Content.ImageColor3 = Color3.fromRGB(21, 22, 23)
+    Content.ScaleType = Enum.ScaleType.Slice
+    Content.SliceCenter = Rect.new(100, 100, 100, 100)
+    Content.SliceScale = 0.050
+
+    Frame_3.Parent = Content
+    Frame_3.BackgroundColor3 = Color3.fromRGB(21, 22, 23)
+    Frame_3.BorderSizePixel = 0
+    Frame_3.Size = UDim2.new(1, 0, 0, 10)
+
+    Message.Name = "Message"
+    Message.Parent = Content
+    Message.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Message.BackgroundTransparency = 1.000
+    Message.Position = UDim2.new(0, 0, 0, -22)
+    Message.Size = UDim2.new(1, 0, 1, 22)
+    Message.ZIndex = 3
+    Message.Image = "rbxassetid://3570695787"
+    Message.ImageColor3 = Color3.fromRGB(0, 0, 0)
+    Message.ImageTransparency = 1.000
+    Message.ScaleType = Enum.ScaleType.Slice
+    Message.SliceCenter = Rect.new(100, 100, 100, 100)
+    Message.SliceScale = 0.050
+
+    Expand_2.Name = "Expand_2"
+    Expand_2.Parent = Main
+    Expand_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Expand_2.BackgroundTransparency = 1.000
+    Expand_2.Position = UDim2.new(0, 6, 0, 2)
+    Expand_2.Rotation = 90.000
+    Expand_2.Size = UDim2.new(0, 18, 0, 18)
+    Expand_2.ZIndex = 4
+    Expand_2.Image = "rbxassetid://7671465363"
+	
     Title.Name = "Title"
     Title.Parent = Folder_2
     Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
