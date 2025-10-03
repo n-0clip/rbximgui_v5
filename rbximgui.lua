@@ -1,2340 +1,747 @@
---[[
-	rbimgui-2
-	version 1.4 (Rewritten with Keybind & Resize)
-	by n0clip
-	Enhancements: Keybind support for toggling windows, resizable corners.
---]]
-
-repeat wait() until game:GetService("Players").LocalPlayer
-if game:GetService("CoreGui"):FindFirstChild("imgui2") then
-    game:GetService("CoreGui"):FindFirstChild("imgui2"):Destroy()
-end
-
--- Load items (Full Presets) - Moved outside do block for global access
-local imgui = Instance.new("ScreenGui")
-local Presets = Instance.new("Frame")
-local Label = Instance.new("TextLabel")
-local TabButton = Instance.new("TextButton")
-local Folder = Instance.new("Frame")
-local Folder_2 = Instance.new("ImageLabel")
-local Expand = Instance.new("ImageButton")
-local Title = Instance.new("TextLabel")
-local Items = Instance.new("Frame")
-local UIListLayout = Instance.new("UIListLayout")
-local Tab = Instance.new("Frame")
-local Items_2 = Instance.new("ScrollingFrame")
-local UIListLayout_2 = Instance.new("UIListLayout")
-local Padding = Instance.new("Frame")
-local Main = Instance.new("ImageLabel")
-local Frame = Instance.new("Frame")
-local Frame_2 = Instance.new("Frame")
-local Content = Instance.new("ImageLabel")
-local Frame_3 = Instance.new("Frame")
-local Message = Instance.new("ImageLabel")
-local Expand_2 = Instance.new("ImageButton")
-local Title_2 = Instance.new("TextLabel")
-local Shadow = Instance.new("ImageLabel")
-local Tabs = Instance.new("Frame")
-local Items_3 = Instance.new("Frame")
-local UIListLayout_3 = Instance.new("UIListLayout")
-local Frame_4 = Instance.new("Frame")
-local Layer = Instance.new("ImageLabel")
-local Dock = Instance.new("Frame")
-local UIListLayout_4 = Instance.new("UIListLayout")
-local Switch = Instance.new("Frame")
-local Button = Instance.new("TextButton")
-local ImageLabel = Instance.new("ImageLabel")
-local Layer_2 = Instance.new("ImageLabel")
-local Check = Instance.new("ImageLabel")
-local Text = Instance.new("TextLabel")
-local Slider = Instance.new("Frame")
-local Outer = Instance.new("ImageLabel")
-local Inner = Instance.new("ImageLabel")
-local Slider_2 = Instance.new("Frame")
-local Value = Instance.new("TextLabel")
-local Text_2 = Instance.new("TextLabel")
-local Button_2 = Instance.new("TextButton")
-local ImageLabel_2 = Instance.new("ImageLabel")
-local Layer_3 = Instance.new("ImageLabel")
-local Card = Instance.new("ImageLabel")
-local UIGradient = Instance.new("UIGradient")
-local ImageLabel_3 = Instance.new("ImageLabel")
-local Roundify = Instance.new("ImageLabel")
-local heading = Instance.new("TextLabel")
-local Frame_5 = Instance.new("ImageLabel")
-local SubHeading = Instance.new("TextLabel")
-local ColorPicker = Instance.new("Frame")
-local Button_3 = Instance.new("TextButton")
-local ImageLabel_4 = Instance.new("ImageLabel")
-local ImageLabel_5 = Instance.new("ImageLabel")
-local Layer_4 = Instance.new("ImageLabel")
-local Text_3 = Instance.new("TextLabel")
-local DropdownOption = Instance.new("TextButton")
-local ImageLabel_6 = Instance.new("ImageLabel")
-local DropdownWindow = Instance.new("ImageLabel")
-local Frame_6 = Instance.new("Frame")
-local Frame_7 = Instance.new("Frame")
-local Title_3 = Instance.new("TextLabel")
-local Shadow_2 = Instance.new("ImageLabel")
-local Layer_5 = Instance.new("ImageLabel")
-local Content_2 = Instance.new("ImageLabel")
-local Items_4 = Instance.new("ScrollingFrame")
-local UIListLayout_5 = Instance.new("UIListLayout")
-local Search = Instance.new("Frame")
-local Outer_2 = Instance.new("ImageLabel")
-local Inner_2 = Instance.new("ImageLabel")
-local ImageLabel_7 = Instance.new("ImageLabel")
-local TextBox = Instance.new("TextLabel")
-local Selected = Instance.new("TextLabel")
-local Expand_3 = Instance.new("ImageButton")
-local Cache = Instance.new("Frame")
-local ColorPickerWindow = Instance.new("ImageLabel")
-local Frame_8 = Instance.new("Frame")
-local Frame_9 = Instance.new("Frame")
-local Title_4 = Instance.new("TextLabel")
-local Shadow_3 = Instance.new("ImageLabel")
-local Layer_6 = Instance.new("ImageLabel")
-local Expand_4 = Instance.new("ImageButton")
-local Content_3 = Instance.new("ImageLabel")
-local Palette = Instance.new("ImageLabel")
-local Indicator = Instance.new("ImageLabel")
-local Saturation = Instance.new("ImageLabel")
-local Indicator_2 = Instance.new("Frame")
-local FinalColor = Instance.new("ImageLabel")
-local SaturationColor = Instance.new("ImageLabel")
-local PaletteColor = Instance.new("ImageLabel")
-local TextLabel = Instance.new("TextLabel")
-local Dropdown = Instance.new("Frame")
-local Outer_3 = Instance.new("ImageLabel")
-local Inner_3 = Instance.new("ImageButton")
-local ImageLabel_8 = Instance.new("ImageLabel")
-local Value_2 = Instance.new("TextLabel")
-local Text_4 = Instance.new("TextLabel")
-local Cache_2 = Instance.new("Frame")
-
-imgui.Name = "imgui"
-imgui.Parent = game:GetService("CoreGui")
-
-Presets.Name = "Presets"
-Presets.Parent = imgui
-Presets.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Presets.Size = UDim2.new(0, 100, 0, 100)
-Presets.Visible = false
-
-Label.Name = "Label"
-Label.Parent = Presets
-Label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Label.BackgroundTransparency = 1.000
-Label.Size = UDim2.new(0, 91, 0, 15)
-Label.Font = Enum.Font.Code
-Label.Text = "Hello, World!"
-Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-Label.TextSize = 14.000
-Label.TextXAlignment = Enum.TextXAlignment.Left
-
-TabButton.Name = "TabButton"
-TabButton.Parent = Presets
-TabButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TabButton.BackgroundTransparency = 1.000
-TabButton.Size = UDim2.new(0, 32, 1, 0)
-TabButton.Font = Enum.Font.Code
-TabButton.Text = "Menu"
-TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-TabButton.TextSize = 16.000
-
-Folder.Name = "Folder"
-Folder.Parent = Presets
-Folder.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Folder.BackgroundTransparency = 1.000
-Folder.ClipsDescendants = true
-Folder.Size = UDim2.new(1, 0, 0, 100)
-
-Folder_2.Name = "Folder"
-Folder_2.Parent = Folder
-Folder_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Folder_2.BackgroundTransparency = 1.000
-Folder_2.Size = UDim2.new(1, 0, 0, 20)
-Folder_2.Image = "rbxassetid://3570695787"
-Folder_2.ImageColor3 = Color3.fromRGB(41, 74, 122)
-Folder_2.ScaleType = Enum.ScaleType.Slice
-Folder_2.SliceCenter = Rect.new(100, 100, 100, 100)
-Folder_2.SliceScale = 0.050
-
-Expand.Name = "Expand"
-Expand.Parent = Folder_2
-Expand.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Expand.BackgroundTransparency = 1.000
-Expand.Position = UDim2.new(0, 6, 0, 2)
-Expand.Size = UDim2.new(0, 16, 0, 16)
-Expand.ZIndex = 4
-Expand.Image = "rbxassetid://7671465363"
-
-Title.Name = "Title"
-Title.Parent = Folder_2
-Title.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Title.BackgroundTransparency = 1.000
-Title.Position = UDim2.new(0, 30, 0, 0)
-Title.Size = UDim2.new(1, -30, 1, 0)
-Title.Font = Enum.Font.Code
-Title.Text = "Folder"
-Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextSize = 14.000
-Title.TextXAlignment = Enum.TextXAlignment.Left
-
-Items.Name = "Items"
-Items.Parent = Folder
-Items.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Items.BackgroundTransparency = 1.000
-Items.Position = UDim2.new(0, 10, 0, 25)
-Items.Size = UDim2.new(1, -10, 1, -25)
-
-UIListLayout.Parent = Items
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 5)
-
-Tab.Name = "Tab"
-Tab.Parent = Presets
-Tab.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Tab.BackgroundTransparency = 1.000
-Tab.Position = UDim2.new(0, 0, 0, 30)
-Tab.Size = UDim2.new(1, 0, 1, -30)
-
-Items_2.Name = "Items"
-Items_2.Parent = Tab
-Items_2.Active = true
-Items_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Items_2.BackgroundTransparency = 1.000
-Items_2.BorderSizePixel = 0
-Items_2.Position = UDim2.new(0, 10, 0, 0)
-Items_2.Size = UDim2.new(1, -20, 1, 0)
-Items_2.CanvasSize = UDim2.new(0, 0, 0, 0)
-Items_2.ScrollBarThickness = 6
-
-UIListLayout_2.Parent = Items_2
-UIListLayout_2.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout_2.Padding = UDim.new(0, 5)
-
-Padding.Name = "Padding"
-Padding.Parent = Items_2
-Padding.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Padding.BackgroundTransparency = 1.000
-
-Main.Name = "Main"
-Main.Parent = Presets
-Main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Main.BackgroundTransparency = 1.000
-Main.Position = UDim2.new(0.309293151, 0, 0.41276595, 0)
-Main.Size = UDim2.new(0, 300, 0, 22)
-Main.ZIndex = 4
-Main.Image = "rbxassetid://3570695787"
-Main.ImageColor3 = Color3.fromRGB(10, 10, 10)
-Main.ScaleType = Enum.ScaleType.Slice
-Main.SliceCenter = Rect.new(100, 100, 100, 100)
-Main.SliceScale = 0.050
-
-Frame.Parent = Main
-Frame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Frame.BorderSizePixel = 0
-Frame.Position = UDim2.new(0, 0, 1, -10)
-Frame.Size = UDim2.new(1, 0, 0, 10)
-Frame.ZIndex = 4
-
-Frame_2.Parent = Frame
-Frame_2.BackgroundColor3 = Color3.fromRGB(59, 59, 68)
-Frame_2.BorderSizePixel = 0
-Frame_2.Position = UDim2.new(0, 0, 1, 0)
-Frame_2.Size = UDim2.new(1, 0, 0, 2)
-Frame_2.ZIndex = 2
-
-Content.Name = "Content"
-Content.Parent = Main
-Content.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Content.BackgroundTransparency = 1.000
-Content.ClipsDescendants = true
-Content.Position = UDim2.new(0, 0, 1, 0)
-Content.Size = UDim2.new(1, 0, 0, 200)
-Content.Image = "rbxassetid://3570695787"
-Content.ImageColor3 = Color3.fromRGB(21, 22, 23)
-Content.ScaleType = Enum.ScaleType.Slice
-Content.SliceCenter = Rect.new(100, 100, 100, 100)
-Content.SliceScale = 0.050
-
-Frame_3.Parent = Content
-Frame_3.BackgroundColor3 = Color3.fromRGB(21, 22, 23)
-Frame_3.BorderSizePixel = 0
-Frame_3.Size = UDim2.new(1, 0, 0, 10)
-
-Message.Name = "Message"
-Message.Parent = Content
-Message.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Message.BackgroundTransparency = 1.000
-Message.Position = UDim2.new(0, 0, 0, -22)
-Message.Size = UDim2.new(1, 0, 1, 22)
-Message.ZIndex = 3
-Message.Image = "rbxassetid://3570695787"
-Message.ImageColor3 = Color3.fromRGB(0, 0, 0)
-Message.ImageTransparency = 1.000
-Message.ScaleType = Enum.ScaleType.Slice
-Message.SliceCenter = Rect.new(100, 100, 100, 100)
-Message.SliceScale = 0.050
-
-Expand_2.Name = "Expand_2"
-Expand_2.Parent = Main
-Expand_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Expand_2.BackgroundTransparency = 1.000
-Expand_2.Position = UDim2.new(0, 6, 0, 2)
-Expand_2.Rotation = 90.000
-Expand_2.Size = UDim2.new(0, 18, 0, 18)
-Expand_2.ZIndex = 4
-Expand_2.Image = "rbxassetid://7671465363"
-
-Title_2.Name = "Title_2"
-Title_2.Parent = Main
-Title_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Title_2.BackgroundTransparency = 1.000
-Title_2.Position = UDim2.new(0, 30, 0, 0)
-Title_2.Size = UDim2.new(1, -30, 1, 0)
-Title_2.ZIndex = 4
-Title_2.Font = Enum.Font.Code
-Title_2.Text = "ImGui Demo"
-Title_2.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title_2.TextSize = 16.000
-Title_2.TextWrapped = true
-Title_2.TextXAlignment = Enum.TextXAlignment.Left
-
-Shadow.Name = "Shadow"
-Shadow.Parent = Main
-Shadow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Shadow.BackgroundTransparency = 1.000
-Shadow.Position = UDim2.new(0, 10, 0, 10)
-Shadow.Size = UDim2.new(1, 0, 10.090909, 0)
-Shadow.ZIndex = 0
-Shadow.Image = "rbxassetid://3570695787"
-Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-Shadow.ImageTransparency = 0.500
-Shadow.ScaleType = Enum.ScaleType.Slice
-Shadow.SliceCenter = Rect.new(100, 100, 100, 100)
-Shadow.SliceScale = 0.050
-
-Tabs.Name = "Tabs"
-Tabs.Parent = Main
-Tabs.BackgroundColor3 = Color3.fromRGB(36, 36, 36)
-Tabs.BorderSizePixel = 0
-Tabs.ClipsDescendants = true
-Tabs.Position = UDim2.new(0, 0, 1, 2)
-Tabs.Size = UDim2.new(1, 0, 0, 28)
-
-Items_3.Name = "Items"
-Items_3.Parent = Tabs
-Items_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Items_3.BackgroundTransparency = 1.000
-Items_3.Position = UDim2.new(0, 15, 0, 0)
-Items_3.Size = UDim2.new(1, -15, 1, -2)
-
-UIListLayout_3.Parent = Items_3
-UIListLayout_3.FillDirection = Enum.FillDirection.Horizontal
-UIListLayout_3.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout_3.Padding = UDim.new(0, 15)
-
-Frame_4.Parent = Tabs
-Frame_4.BackgroundColor3 = Color3.fromRGB(59, 59, 68)
-Frame_4.BorderSizePixel = 0
-Frame_4.Position = UDim2.new(0, 0, 1, -2)
-Frame_4.Size = UDim2.new(1, 0, 0, 2)
-Frame_4.ZIndex = 2
-
-Layer.Name = "Layer"
-Layer.Parent = Main
-Layer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Layer.BackgroundTransparency = 1.000
-Layer.Position = UDim2.new(0, 2, 0, 2)
-Layer.Size = UDim2.new(1, 0, 10.090909, 0)
-Layer.ZIndex = 0
-Layer.Image = "rbxassetid://3570695787"
-Layer.ImageColor3 = Color3.fromRGB(10, 10, 11)
-Layer.ScaleType = Enum.ScaleType.Slice
-Layer.SliceCenter = Rect.new(100, 100, 100, 100)
-Layer.SliceScale = 0.050
-
-Dock.Name = "Dock"
-Dock.Parent = Presets
-Dock.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Dock.BackgroundTransparency = 1.000
-Dock.ClipsDescendants = true
-Dock.Size = UDim2.new(1, 0, 0, 22)
-
-UIListLayout_4.Parent = Dock
-UIListLayout_4.FillDirection = Enum.FillDirection.Horizontal
-UIListLayout_4.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout_4.Padding = UDim.new(0, 5)
-
-Switch.Name = "Switch"
-Switch.Parent = Presets
-Switch.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Switch.BackgroundTransparency = 1.000
-Switch.Size = UDim2.new(0, 70, 0, 20)
-
-Button.Name = "Button"
-Button.Parent = Switch
-Button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Button.BackgroundTransparency = 1.000
-Button.BorderSizePixel = 0
-Button.Size = UDim2.new(0, 20, 0, 20)
-Button.ZIndex = 3
-Button.Font = Enum.Font.Code
-Button.Text = ""
-Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-Button.TextSize = 14.000
-
-ImageLabel.Parent = Button
-ImageLabel.Active = true
-ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageLabel.BackgroundTransparency = 1.000
-ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-ImageLabel.Selectable = true
-ImageLabel.Size = UDim2.new(1, 0, 1, 0)
-ImageLabel.ZIndex = 2
-ImageLabel.Image = "rbxassetid://3570695787"
-ImageLabel.ImageColor3 = Color3.fromRGB(41, 74, 122)
-ImageLabel.ScaleType = Enum.ScaleType.Slice
-ImageLabel.SliceCenter = Rect.new(100, 100, 100, 100)
-ImageLabel.SliceScale = 0.050
-
-Layer_2.Name = "Layer"
-Layer_2.Parent = Button
-Layer_2.Active = true
-Layer_2.AnchorPoint = Vector2.new(0.5, 0.5)
-Layer_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Layer_2.BackgroundTransparency = 1.000
-Layer_2.Position = UDim2.new(0.5, 2, 0.5, 2)
-Layer_2.Selectable = true
-Layer_2.Size = UDim2.new(1, 0, 1, 0)
-Layer_2.Image = "rbxassetid://3570695787"
-Layer_2.ImageColor3 = Color3.fromRGB(21, 38, 63)
-Layer_2.ScaleType = Enum.ScaleType.Slice
-Layer_2.SliceCenter = Rect.new(100, 100, 100, 100)
-Layer_2.SliceScale = 0.050
-
-Check.Name = "Check"
-Check.Parent = Button
-Check.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Check.BackgroundTransparency = 1.000
-Check.Position = UDim2.new(0, 3, 0, 3)
-Check.Size = UDim2.new(1, -6, 1, -6)
-Check.ZIndex = 2
-Check.Image = "rbxassetid://7710220183"
-
-Text.Name = "Text"
-Text.Parent = Switch
-Text.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Text.BackgroundTransparency = 1.000
-Text.Position = UDim2.new(0, 28, 0, 0)
-Text.Size = UDim2.new(0, 42, 1, 0)
-Text.Font = Enum.Font.Code
-Text.Text = "Switch"
-Text.TextColor3 = Color3.fromRGB(255, 255, 255)
-Text.TextSize = 14.000
-Text.TextXAlignment = Enum.TextXAlignment.Left
-
-Slider.Name = "Slider"
-Slider.Parent = Presets
-Slider.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Slider.BackgroundTransparency = 1.000
-Slider.Size = UDim2.new(0, 150, 0, 20)
-
-Outer.Name = "Outer"
-Outer.Parent = Slider
-Outer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Outer.BackgroundTransparency = 1.000
-Outer.Size = UDim2.new(0, 150, 1, 0)
-Outer.Image = "rbxassetid://3570695787"
-Outer.ImageColor3 = Color3.fromRGB(59, 59, 68)
-Outer.ScaleType = Enum.ScaleType.Slice
-Outer.SliceCenter = Rect.new(100, 100, 100, 100)
-Outer.SliceScale = 0.050
-
-Inner.Name = "Inner"
-Inner.Parent = Outer
-Inner.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Inner.BackgroundTransparency = 1.000
-Inner.Position = UDim2.new(0, 2, 0, 2)
-Inner.Size = UDim2.new(1, -4, 1, -4)
-Inner.Image = "rbxassetid://3570695787"
-Inner.ImageColor3 = Color3.fromRGB(32, 59, 97)
-Inner.ScaleType = Enum.ScaleType.Slice
-Inner.SliceCenter = Rect.new(100, 100, 100, 100)
-Inner.SliceScale = 0.050
-
-Slider_2.Name = "Slider"
-Slider_2.Parent = Inner
-Slider_2.BackgroundColor3 = Color3.fromRGB(49, 88, 146)
-Slider_2.BorderSizePixel = 0
-Slider_2.Position = UDim2.new(0, 10, 0, 0)
-Slider_2.Size = UDim2.new(0, 5, 1, 0)
-
-Value.Name = "Value"
-Value.Parent = Inner
-Value.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Value.BackgroundTransparency = 1.000
-Value.Size = UDim2.new(1, 0, 1, 0)
-Value.Font = Enum.Font.Code
-Value.Text = "6.00"
-Value.TextColor3 = Color3.fromRGB(255, 255, 255)
-Value.TextSize = 14.000
-
-Text_2.Name = "Text"
-Text_2.Parent = Slider
-Text_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Text_2.BackgroundTransparency = 1.000
-Text_2.Position = UDim2.new(0, 158, 0, 0)
-Text_2.Size = UDim2.new(0, 42, 1, 0)
-Text_2.Font = Enum.Font.Code
-Text_2.Text = "Slider"
-Text_2.TextColor3 = Color3.fromRGB(255, 255, 255)
-Text_2.TextSize = 14.000
-Text_2.TextXAlignment = Enum.TextXAlignment.Left
-
-Button_2.Name = "Button"
-Button_2.Parent = Presets
-Button_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Button_2.BackgroundTransparency = 1.000
-Button_2.BorderSizePixel = 0
-Button_2.Size = UDim2.new(0, 72, 0, 20)
-Button_2.ZIndex = 3
-Button_2.Font = Enum.Font.Code
-Button_2.TextColor3 = Color3.fromRGB(255, 255, 255)
-Button_2.TextSize = 14.000
-
-ImageLabel_2.Parent = Button_2
-ImageLabel_2.Active = true
-ImageLabel_2.AnchorPoint = Vector2.new(0.5, 0.5)
-ImageLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageLabel_2.BackgroundTransparency = 1.000
-ImageLabel_2.Position = UDim2.new(0.5, 0, 0.5, 0)
-ImageLabel_2.Selectable = true
-ImageLabel_2.Size = UDim2.new(1, 0, 1, 0)
-ImageLabel_2.ZIndex = 2
-ImageLabel_2.Image = "rbxassetid://3570695787"
-ImageLabel_2.ImageColor3 = Color3.fromRGB(41, 74, 122)
-ImageLabel_2.ScaleType = Enum.ScaleType.Slice
-ImageLabel_2.SliceCenter = Rect.new(100, 100, 100, 100)
-ImageLabel_2.SliceScale = 0.050
-
-Layer_3.Name = "Layer"
-Layer_3.Parent = Button_2
-Layer_3.Active = true
-Layer_3.AnchorPoint = Vector2.new(0.5, 0.5)
-Layer_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Layer_3.BackgroundTransparency = 1.000
-Layer_3.Position = UDim2.new(0.5, 2, 0.5, 2)
-Layer_3.Selectable = true
-Layer_3.Size = UDim2.new(1, 0, 1, 0)
-Layer_3.Image = "rbxassetid://3570695787"
-Layer_3.ImageColor3 = Color3.fromRGB(21, 38, 63)
-Layer_3.ScaleType = Enum.ScaleType.Slice
-Layer_3.SliceCenter = Rect.new(100, 100, 100, 100)
-Layer_3.SliceScale = 0.050
-
-Card.Name = "Card"
-Card.Parent = Presets
-Card.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Card.BackgroundTransparency = 1.000
-Card.Size = UDim2.new(1, 0, 0, 100)
-Card.Image = "rbxassetid://3570695787"
-Card.ScaleType = Enum.ScaleType.Slice
-Card.SliceCenter = Rect.new(100, 100, 100, 100)
-Card.SliceScale = 0.120
-
-UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(0, 129, 167)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(0, 160, 168))}
-UIGradient.Rotation = 30
-UIGradient.Parent = Card
-
-ImageLabel_3.Parent = Card
-ImageLabel_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageLabel_3.BorderSizePixel = 0
-ImageLabel_3.Position = UDim2.new(0, 24, 0, 24)
-ImageLabel_3.Size = UDim2.new(0, 52, 1, -48)
-ImageLabel_3.ZIndex = 3
-ImageLabel_3.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
-
-Roundify.Name = "Roundify"
-Roundify.Parent = ImageLabel_3
-Roundify.AnchorPoint = Vector2.new(0.5, 0.5)
-Roundify.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Roundify.BackgroundTransparency = 1.000
-Roundify.Position = UDim2.new(0.5, 0, 0.5, 0)
-Roundify.Size = UDim2.new(1, 24, 1, 24)
-Roundify.ZIndex = 3
-Roundify.Image = "rbxassetid://3570695787"
-Roundify.ImageColor3 = Color3.fromRGB(200, 200, 200)
-Roundify.ScaleType = Enum.ScaleType.Slice
-Roundify.SliceCenter = Rect.new(100, 100, 100, 100)
-Roundify.SliceScale = 0.120
-
-heading.Name = "heading"
-heading.Parent = Card
-heading.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-heading.BackgroundTransparency = 1.000
-heading.Position = UDim2.new(0, 100, 0, 24)
-heading.Size = UDim2.new(1, -100, 0, 50)
-heading.ZIndex = 3
-heading.Font = Enum.Font.GothamBlack
-heading.Text = "welcome, singularity"
-heading.TextColor3 = Color3.fromRGB(255, 255, 255)
-heading.TextSize = 14.000
-heading.TextXAlignment = Enum.TextXAlignment.Left
-heading.TextYAlignment = Enum.TextYAlignment.Top
-
-Frame_5.Name = "Frame"
-Frame_5.Parent = Card
-Frame_5.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Frame_5.BackgroundTransparency = 1.000
-Frame_5.Size = UDim2.new(1, 0, 1, 0)
-Frame_5.ZIndex = 2
-Frame_5.Image = "rbxassetid://3570695787"
-Frame_5.ImageColor3 = Color3.fromRGB(0, 0, 0)
-Frame_5.ImageTransparency = 0.500
-Frame_5.ScaleType = Enum.ScaleType.Slice
-Frame_5.SliceCenter = Rect.new(100, 100, 100, 100)
-Frame_5.SliceScale = 0.120
-
-SubHeading.Name = "SubHeading"
-SubHeading.Parent = Card
-SubHeading.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-SubHeading.BackgroundTransparency = 1.000
-SubHeading.Position = UDim2.new(0, 100, 0, 44)
-SubHeading.Size = UDim2.new(1, -100, 0, 50)
-SubHeading.ZIndex = 3
-SubHeading.Font = Enum.Font.Gotham
-SubHeading.Text = "subheading"
-SubHeading.TextColor3 = Color3.fromRGB(255, 255, 255)
-SubHeading.TextSize = 14.000
-SubHeading.TextXAlignment = Enum.TextXAlignment.Left
-SubHeading.TextYAlignment = Enum.TextYAlignment.Top
-
-ColorPicker.Name = "ColorPicker"
-ColorPicker.Parent = Presets
-ColorPicker.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ColorPicker.BackgroundTransparency = 1.000
-ColorPicker.Size = UDim2.new(0, 112, 0, 20)
-
-Button_3.Name = "Button"
-Button_3.Parent = ColorPicker
-Button_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Button_3.BackgroundTransparency = 1.000
-Button_3.BorderSizePixel = 0
-Button_3.Size = UDim2.new(0, 20, 0, 20)
-Button_3.ZIndex = 3
-Button_3.Font = Enum.Font.Code
-Button_3.Text = ""
-Button_3.TextColor3 = Color3.fromRGB(255, 255, 255)
-Button_3.TextSize = 14.000
-
-ImageLabel_4.Parent = Button_3
-ImageLabel_4.Active = true
-ImageLabel_4.AnchorPoint = Vector2.new(0.5, 0.5)
-ImageLabel_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageLabel_4.BackgroundTransparency = 1.000
-ImageLabel_4.Position = UDim2.new(0.5, 0, 0.5, 0)
-ImageLabel_4.Selectable = true
-ImageLabel_4.Size = UDim2.new(1, 0, 1, 0)
-ImageLabel_4.ZIndex = 2
-ImageLabel_4.Image = "rbxassetid://3570695787"
-ImageLabel_4.ImageColor3 = Color3.fromRGB(255, 0, 0)
-ImageLabel_4.ScaleType = Enum.ScaleType.Slice
-ImageLabel_4.SliceCenter = Rect.new(100, 100, 100, 100)
-ImageLabel_4.SliceScale = 0.050
-
-ImageLabel_5.Parent = ImageLabel_4
-ImageLabel_5.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageLabel_5.BackgroundTransparency = 1.000
-ImageLabel_5.Position = UDim2.new(0, 4, 0, 4)
-ImageLabel_5.Size = UDim2.new(1, -8, 1, -8)
-ImageLabel_5.ZIndex = 2
-ImageLabel_5.Image = "rbxassetid://11144378537"
-
-Layer_4.Name = "Layer"
-Layer_4.Parent = Button_3
-Layer_4.Active = true
-Layer_4.AnchorPoint = Vector2.new(0.5, 0.5)
-Layer_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Layer_4.BackgroundTransparency = 1.000
-Layer_4.Position = UDim2.new(0.5, 2, 0.5, 2)
-Layer_4.Selectable = true
-Layer_4.Size = UDim2.new(1, 0, 1, 0)
-Layer_4.Image = "rbxassetid://3570695787"
-Layer_4.ImageColor3 = Color3.fromRGB(127, 0, 0)
-Layer_4.ScaleType = Enum.ScaleType.Slice
-Layer_4.SliceCenter = Rect.new(100, 100, 100, 100)
-Layer_4.SliceScale = 0.050
-
-Text_3.Name = "Text"
-Text_3.Parent = ColorPicker
-Text_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Text_3.BackgroundTransparency = 1.000
-Text_3.Position = UDim2.new(0, 28, 0, 0)
-Text_3.Size = UDim2.new(0, 84, 1, 0)
-Text_3.Font = Enum.Font.Code
-Text_3.Text = "Color Picker"
-Text_3.TextColor3 = Color3.fromRGB(255, 255, 255)
-Text_3.TextSize = 14.000
-Text_3.TextXAlignment = Enum.TextXAlignment.Left
-
-DropdownOption.Name = "DropdownOption"
-DropdownOption.Parent = Presets
-DropdownOption.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-DropdownOption.BackgroundTransparency = 1.000
-DropdownOption.BorderSizePixel = 0
-DropdownOption.Size = UDim2.new(1, 0, 0, 20)
-DropdownOption.ZIndex = 3
-DropdownOption.Font = Enum.Font.Code
-DropdownOption.Text = "  Option"
-DropdownOption.TextColor3 = Color3.fromRGB(255, 255, 255)
-DropdownOption.TextSize = 14.000
-DropdownOption.TextXAlignment = Enum.TextXAlignment.Left
-
-ImageLabel_6.Parent = DropdownOption
-ImageLabel_6.Active = true
-ImageLabel_6.AnchorPoint = Vector2.new(0.5, 0.5)
-ImageLabel_6.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageLabel_6.BackgroundTransparency = 1.000
-ImageLabel_6.Position = UDim2.new(0.5, 0, 0.5, 0)
-ImageLabel_6.Selectable = true
-ImageLabel_6.Size = UDim2.new(1, 0, 1, 0)
-ImageLabel_6.ZIndex = 2
-ImageLabel_6.Image = "rbxassetid://3570695787"
-ImageLabel_6.ImageColor3 = Color3.fromRGB(42, 44, 46)
-ImageLabel_6.ScaleType = Enum.ScaleType.Slice
-ImageLabel_6.SliceCenter = Rect.new(100, 100, 100, 100)
-ImageLabel_6.SliceScale = 0.050
-
-DropdownWindow.Name = "DropdownWindow"
-DropdownWindow.Parent = Presets
-DropdownWindow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-DropdownWindow.BackgroundTransparency = 1.000
-DropdownWindow.Position = UDim2.new(0.496228397, 0, 0.411765426, 0)
-DropdownWindow.Size = UDim2.new(0, 200, 0, 22)
-DropdownWindow.ZIndex = 4
-DropdownWindow.Image = "rbxassetid://3570695787"
-DropdownWindow.ImageColor3 = Color3.fromRGB(10, 10, 10)
-DropdownWindow.ScaleType = Enum.ScaleType.Slice
-DropdownWindow.SliceCenter = Rect.new(100, 100, 100, 100)
-DropdownWindow.SliceScale = 0.050
-
-Frame_6.Parent = DropdownWindow
-Frame_6.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Frame_6.BorderSizePixel = 0
-Frame_6.Position = UDim2.new(0, 0, 1, -10)
-Frame_6.Size = UDim2.new(1, 0, 0, 10)
-Frame_6.ZIndex = 4
-
-Frame_7.Parent = Frame_6
-Frame_7.BackgroundColor3 = Color3.fromRGB(59, 59, 68)
-Frame_7.BorderSizePixel = 0
-Frame_7.Position = UDim2.new(0, 0, 1, 0)
-Frame_7.Size = UDim2.new(1, 0, 0, 2)
-Frame_7.ZIndex = 2
-
-Title_3.Name = "Title"
-Title_3.Parent = DropdownWindow
-Title_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Title_3.BackgroundTransparency = 1.000
-Title_3.Position = UDim2.new(0, 30, 0, 0)
-Title_3.Size = UDim2.new(1, -30, 1, 0)
-Title_3.ZIndex = 4
-Title_3.Font = Enum.Font.Code
-Title_3.Text = "Dropdown"
-Title_3.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title_3.TextSize = 16.000
-Title_3.TextWrapped = true
-Title_3.TextXAlignment = Enum.TextXAlignment.Left
-
-Shadow_2.Name = "Shadow"
-Shadow_2.Parent = DropdownWindow
-Shadow_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Shadow_2.BackgroundTransparency = 1.000
-Shadow_2.Position = UDim2.new(0, 10, 0, 10)
-Shadow_2.Size = UDim2.new(1, 0, 8.72700024, 10)
-Shadow_2.ZIndex = 0
-Shadow_2.Image = "rbxassetid://3570695787"
-Shadow_2.ImageColor3 = Color3.fromRGB(0, 0, 0)
-Shadow_2.ImageTransparency = 0.500
-Shadow_2.ScaleType = Enum.ScaleType.Slice
-Shadow_2.SliceCenter = Rect.new(100, 100, 100, 100)
-Shadow_2.SliceScale = 0.050
-
-Layer_5.Name = "Layer"
-Layer_5.Parent = DropdownWindow
-Layer_5.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Layer_5.BackgroundTransparency = 1.000
-Layer_5.Position = UDim2.new(0, 2, 0, 2)
-Layer_5.Size = UDim2.new(1, 0, 9, 2)
-Layer_5.ZIndex = 0
-Layer_5.Image = "rbxassetid://3570695787"
-Layer_5.ImageColor3 = Color3.fromRGB(10, 10, 11)
-Layer_5.ScaleType = Enum.ScaleType.Slice
-Layer_5.SliceCenter = Rect.new(100, 100, 100, 100)
-Layer_5.SliceScale = 0.050
-
-Content_2.Name = "Content"
-Content_2.Parent = DropdownWindow
-Content_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Content_2.BackgroundTransparency = 1.000
-Content_2.ClipsDescendants = true
-Content_2.Position = UDim2.new(0, 0, 1, 0)
-Content_2.Size = UDim2.new(1, 0, 0, 178)
-Content_2.Image = "rbxassetid://3570695787"
-Content_2.ImageColor3 = Color3.fromRGB(21, 22, 23)
-Content_2.ScaleType = Enum.ScaleType.Slice
-Content_2.SliceCenter = Rect.new(100, 100, 100, 100)
-Content_2.SliceScale = 0.050
-
-Items_4.Name = "Items"
-Items_4.Parent = Content_2
-Items_4.Active = true
-Items_4.BackgroundColor3 = Color3.fromRGB(21, 22, 23)
-Items_4.BorderSizePixel = 0
-Items_4.Position = UDim2.new(0, 10, 0, 30)
-Items_4.Size = UDim2.new(1, -20, 1, -60)
-Items_4.CanvasSize = UDim2.new(0, 0, 0, 0)
-Items_4.ScrollBarThickness = 6
-
-UIListLayout_5.Parent = Items_4
-UIListLayout_5.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout_5.Padding = UDim.new(0, 2)
-
-Search.Name = "Search"
-Search.Parent = Content_2
-Search.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Search.BackgroundTransparency = 1.000
-Search.Position = UDim2.new(0, 5, 0, 6)
-Search.Size = UDim2.new(1, -10, 0, 20)
-
-Outer_2.Name = "Outer"
-Outer_2.Parent = Search
-Outer_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Outer_2.BackgroundTransparency = 1.000
-Outer_2.Size = UDim2.new(1, 0, 1, 0)
-Outer_2.Image = "rbxassetid://3570695787"
-Outer_2.ImageColor3 = Color3.fromRGB(59, 59, 68)
-Outer_2.ScaleType = Enum.ScaleType.Slice
-Outer_2.SliceCenter = Rect.new(100, 100, 100, 100)
-Outer_2.SliceScale = 0.050
-
-Inner_2.Name = "Inner"
-Inner_2.Parent = Outer_2
-Inner_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Inner_2.BackgroundTransparency = 1.000
-Inner_2.Position = UDim2.new(0, 2, 0, 2)
-Inner_2.Size = UDim2.new(1, -4, 1, -4)
-Inner_2.Image = "rbxassetid://3570695787"
-Inner_2.ImageColor3 = Color3.fromRGB(32, 59, 97)
-Inner_2.ScaleType = Enum.ScaleType.Slice
-Inner_2.SliceCenter = Rect.new(100, 100, 100, 100)
-Inner_2.SliceScale = 0.050
-
-ImageLabel_7.Parent = Inner_2
-ImageLabel_7.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageLabel_7.BackgroundTransparency = 1.000
-ImageLabel_7.Position = UDim2.new(0, 5, 1, -16)
-ImageLabel_7.Size = UDim2.new(0, 16, 0, 16)
-ImageLabel_7.Image = "rbxassetid://11146003594"
-
-TextBox.Name = "TextBox"
-TextBox.Parent = Inner_2
-TextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextBox.BackgroundTransparency = 1.000
-TextBox.Position = UDim2.new(0, 30, 0, 0)
-TextBox.Size = UDim2.new(1, -30, 1, 0)
-TextBox.Font = Enum.Font.SourceSans
-TextBox.Text = "Search ..."
-TextBox.TextColor3 = Color3.fromRGB(178, 178, 178)
-TextBox.TextSize = 14.000
-TextBox.TextXAlignment = Enum.TextXAlignment.Left
-
-Selected.Name = "Selected"
-Selected.Parent = Content_2
-Selected.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Selected.BackgroundTransparency = 1.000
-Selected.Position = UDim2.new(0, 10, 1, -30)
-Selected.Size = UDim2.new(1, -10, 0, 30)
-Selected.Font = Enum.Font.Code
-Selected.Text = "Selected: [...]"
-Selected.TextColor3 = Color3.fromRGB(178, 178, 178)
-Selected.TextSize = 12.000
-Selected.TextXAlignment = Enum.TextXAlignment.Left
-
-Expand_3.Name = "Expand"
-Expand_3.Parent = DropdownWindow
-Expand_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Expand_3.BackgroundTransparency = 1.000
-Expand_3.Position = UDim2.new(0, 6, 0, 2)
-Expand_3.Rotation = 90.000
-Expand_3.Size = UDim2.new(0, 18, 0, 18)
-Expand_3.ZIndex = 4
-Expand_3.Image = "rbxassetid://7671465363"
-
-Cache.Name = "Cache"
-Cache.Parent = DropdownWindow
-Cache.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Cache.Size = UDim2.new(0, 100, 0, 100)
-Cache.Visible = false
-
-ColorPickerWindow.Name = "ColorPickerWindow"
-ColorPickerWindow.Parent = Presets
-ColorPickerWindow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ColorPickerWindow.BackgroundTransparency = 1.000
-ColorPickerWindow.Position = UDim2.new(0.712284446, 0, 0.110530853, 0)
-ColorPickerWindow.Size = UDim2.new(0, 200, 0, 22)
-ColorPickerWindow.ZIndex = 4
-ColorPickerWindow.Image = "rbxassetid://3570695787"
-ColorPickerWindow.ImageColor3 = Color3.fromRGB(10, 10, 10)
-ColorPickerWindow.ScaleType = Enum.ScaleType.Slice
-ColorPickerWindow.SliceCenter = Rect.new(100, 100, 100, 100)
-ColorPickerWindow.SliceScale = 0.050
-
-Frame_8.Parent = ColorPickerWindow
-Frame_8.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-Frame_8.BorderSizePixel = 0
-Frame_8.Position = UDim2.new(0, 0, 1, -10)
-Frame_8.Size = UDim2.new(1, 0, 0, 10)
-Frame_8.ZIndex = 4
-
-Frame_9.Parent = Frame_8
-Frame_9.BackgroundColor3 = Color3.fromRGB(59, 59, 68)
-Frame_9.BorderSizePixel = 0
-Frame_9.Position = UDim2.new(0, 0, 1, 0)
-Frame_9.Size = UDim2.new(1, 0, 0, 2)
-Frame_9.ZIndex = 2
-
-Title_4.Name = "Title"
-Title_4.Parent = ColorPickerWindow
-Title_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Title_4.BackgroundTransparency = 1.000
-Title_4.Position = UDim2.new(0, 30, 0, 0)
-Title_4.Size = UDim2.new(1, -30, 1, 0)
-Title_4.ZIndex = 4
-Title_4.Font = Enum.Font.Code
-Title_4.Text = "Color Picker"
-Title_4.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title_4.TextSize = 16.000
-Title_4.TextWrapped = true
-Title_4.TextXAlignment = Enum.TextXAlignment.Left
-
-Shadow_3.Name = "Shadow"
-Shadow_3.Parent = ColorPickerWindow
-Shadow_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Shadow_3.BackgroundTransparency = 1.000
-Shadow_3.Position = UDim2.new(0, 10, 0, 10)
-Shadow_3.Size = UDim2.new(1, 0, 8.72700024, 10)
-Shadow_3.ZIndex = 0
-Shadow_3.Image = "rbxassetid://3570695787"
-Shadow_3.ImageColor3 = Color3.fromRGB(0, 0, 0)
-Shadow_3.ImageTransparency = 0.500
-Shadow_3.ScaleType = Enum.ScaleType.Slice
-Shadow_3.SliceCenter = Rect.new(100, 100, 100, 100)
-Shadow_3.SliceScale = 0.050
-
-Layer_6.Name = "Layer"
-Layer_6.Parent = ColorPickerWindow
-Layer_6.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Layer_6.BackgroundTransparency = 1.000
-Layer_6.Position = UDim2.new(0, 2, 0, 2)
-Layer_6.Size = UDim2.new(1, 0, 9, 2)
-Layer_6.ZIndex = 0
-Layer_6.Image = "rbxassetid://3570695787"
-Layer_6.ImageColor3 = Color3.fromRGB(10, 10, 11)
-Layer_6.ScaleType = Enum.ScaleType.Slice
-Layer_6.SliceCenter = Rect.new(100, 100, 100, 100)
-Layer_6.SliceScale = 0.050
-
-Expand_4.Name = "Expand"
-Expand_4.Parent = ColorPickerWindow
-Expand_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Expand_4.BackgroundTransparency = 1.000
-Expand_4.Position = UDim2.new(0, 6, 0, 2)
-Expand_4.Rotation = 90.000
-Expand_4.Size = UDim2.new(0, 18, 0, 18)
-Expand_4.ZIndex = 4
-Expand_4.Image = "rbxassetid://7671465363"
-
-Content_3.Name = "Content"
-Content_3.Parent = ColorPickerWindow
-Content_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Content_3.BackgroundTransparency = 1.000
-Content_3.ClipsDescendants = true
-Content_3.Position = UDim2.new(0, 0, 1, 0)
-Content_3.Size = UDim2.new(1, 0, 0, 178)
-Content_3.Image = "rbxassetid://3570695787"
-Content_3.ImageColor3 = Color3.fromRGB(21, 22, 23)
-Content_3.ScaleType = Enum.ScaleType.Slice
-Content_3.SliceCenter = Rect.new(100, 100, 100, 100)
-Content_3.SliceScale = 0.050
-
-Palette.Name = "Palette"
-Palette.Parent = Content_3
-Palette.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Palette.BackgroundTransparency = 1.000
-Palette.Position = UDim2.new(0, 10, 0, 10)
-Palette.Size = UDim2.new(1, -45, 1, -45)
-Palette.Image = "rbxassetid://698052001"
-
-Indicator.Name = "Indicator"
-Indicator.Parent = Palette
-Indicator.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Indicator.BackgroundTransparency = 1.000
-Indicator.Size = UDim2.new(0, 5, 0, 5)
-Indicator.Image = "rbxassetid://2851926732"
-
-Saturation.Name = "Saturation"
-Saturation.Parent = Content_3
-Saturation.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Saturation.BackgroundTransparency = 1.000
-Saturation.Position = UDim2.new(1, -25, 0, 10)
-Saturation.Size = UDim2.new(0, 15, 1, -45)
-Saturation.Image = "rbxassetid://3641079629"
-
-Indicator_2.Name = "Indicator"
-Indicator_2.Parent = Saturation
-Indicator_2.BackgroundColor3 = Color3.fromRGB(49, 88, 146)
-Indicator_2.BorderSizePixel = 0
-Indicator_2.Size = UDim2.new(1, 0, 0, 2)
-
-FinalColor.Name = "FinalColor"
-FinalColor.Parent = Content_3
-FinalColor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-FinalColor.BackgroundTransparency = 1.000
-FinalColor.Position = UDim2.new(1, -25, 1, -25)
-FinalColor.Size = UDim2.new(0, 15, 0, 15)
-FinalColor.Image = "rbxassetid://3570695787"
-FinalColor.ScaleType = Enum.ScaleType.Slice
-FinalColor.SliceCenter = Rect.new(100, 100, 100, 100)
-FinalColor.SliceScale = 0.800
-
-SaturationColor.Name = "SaturationColor"
-SaturationColor.Parent = Content_3
-SaturationColor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-SaturationColor.BackgroundTransparency = 1.000
-SaturationColor.Position = UDim2.new(1, -50, 1, -25)
-SaturationColor.Size = UDim2.new(0, 15, 0, 15)
-SaturationColor.Image = "rbxassetid://3570695787"
-SaturationColor.ScaleType = Enum.ScaleType.Slice
-SaturationColor.SliceCenter = Rect.new(100, 100, 100, 100)
-SaturationColor.SliceScale = 0.800
-
-PaletteColor.Name = "PaletteColor"
-PaletteColor.Parent = Content_3
-PaletteColor.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-PaletteColor.BackgroundTransparency = 1.000
-PaletteColor.Position = UDim2.new(1, -75, 1, -25)
-PaletteColor.Size = UDim2.new(0, 15, 0, 15)
-PaletteColor.Image = "rbxassetid://3570695787"
-PaletteColor.ScaleType = Enum.ScaleType.Slice
-PaletteColor.SliceCenter = Rect.new(100, 100, 100, 100)
-PaletteColor.SliceScale = 0.800
-
-TextLabel.Parent = Content_3
-TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel.BackgroundTransparency = 1.000
-TextLabel.Position = UDim2.new(0, 10, 1, -35)
-TextLabel.Size = UDim2.new(1, -10, 0, 35)
-TextLabel.Font = Enum.Font.Code
-TextLabel.Text = "Selected:"
-TextLabel.TextColor3 = Color3.fromRGB(178, 178, 178)
-TextLabel.TextSize = 12.000
-TextLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-Dropdown.Name = "Dropdown"
-Dropdown.Parent = Presets
-Dropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Dropdown.BackgroundTransparency = 1.000
-Dropdown.Size = UDim2.new(0, 150, 0, 20)
-
-Outer_3.Name = "Outer"
-Outer_3.Parent = Dropdown
-Outer_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Outer_3.BackgroundTransparency = 1.000
-Outer_3.Size = UDim2.new(1, 0, 1, 0)
-Outer_3.Image = "rbxassetid://3570695787"
-Outer_3.ImageColor3 = Color3.fromRGB(59, 59, 68)
-Outer_3.ScaleType = Enum.ScaleType.Slice
-Outer_3.SliceCenter = Rect.new(100, 100, 100, 100)
-Outer_3.SliceScale = 0.050
-
-Inner_3.Name = "Inner"
-Inner_3.Parent = Outer_3
-Inner_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Inner_3.BackgroundTransparency = 1.000
-Inner_3.Position = UDim2.new(0, 2, 0, 2)
-Inner_3.Size = UDim2.new(1, -4, 1, -4)
-Inner_3.Image = "rbxassetid://3570695787"
-Inner_3.ImageColor3 = Color3.fromRGB(32, 59, 97)
-Inner_3.ScaleType = Enum.ScaleType.Slice
-Inner_3.SliceCenter = Rect.new(100, 100, 100, 100)
-Inner_3.SliceScale = 0.050
-
-ImageLabel_8.Parent = Inner_3
-ImageLabel_8.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageLabel_8.BackgroundTransparency = 1.000
-ImageLabel_8.Position = UDim2.new(1, -26, 1, -16)
-ImageLabel_8.Size = UDim2.new(0, 16, 0, 16)
-ImageLabel_8.Image = "rbxassetid://11145100810"
-
-Value_2.Name = "Value"
-Value_2.Parent = Inner_3
-Value_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Value_2.BackgroundTransparency = 1.000
-Value_2.Position = UDim2.new(0, 10, 0, 0)
-Value_2.Size = UDim2.new(1, -10, 1, 0)
-Value_2.Font = Enum.Font.Code
-Value_2.Text = "Selected"
-Value_2.TextColor3 = Color3.fromRGB(255, 255, 255)
-Value_2.TextSize = 14.000
-Value_2.TextXAlignment = Enum.TextXAlignment.Left
-
-Text_4.Name = "Text"
-Text_4.Parent = Dropdown
-Text_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Text_4.BackgroundTransparency = 1.000
-Text_4.Position = UDim2.new(0, 158, 0, 0)
-Text_4.Size = UDim2.new(0, 56, 1, 0)
-Text_4.Font = Enum.Font.Code
-Text_4.Text = "Dropdown"
-Text_4.TextColor3 = Color3.fromRGB(255, 255, 255)
-Text_4.TextSize = 14.000
-Text_4.TextXAlignment = Enum.TextXAlignment.Left
-
-Cache_2.Name = "Cache"
-Cache_2.Parent = imgui2
-Cache_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Cache_2.Size = UDim2.new(0, 100, 0, 100)
-Cache_2.Visible = false
-
--- New Resize Handle Preset
-ResizeHandle.Name = "ResizeHandle"
-ResizeHandle.Parent = Presets
-ResizeHandle.BackgroundTransparency = 1
-ResizeHandle.Size = UDim2.new(0, 20, 0, 20)
-
-ResizeGrip.Name = "ResizeGrip"
-ResizeGrip.Parent = ResizeHandle
-ResizeGrip.BackgroundTransparency = 1
-ResizeGrip.Size = UDim2.new(1, 0, 1, 0)
-ResizeGrip.Image = "rbxassetid://3926305904"
-ResizeGrip.ImageColor3 = Color3.fromRGB(255, 255, 255)
-ResizeGrip.ImageTransparency = 0.3
-
-local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
+-- WeedHax GUI Library
+-- A Roblox Luau library for creating exploit-style GUIs with tabs, sections, toggles, sliders, dropdowns, keybinds, and color pickers.
+-- Created on October 03, 2025.
+
+local Library = {}
 local TweenService = game:GetService("TweenService")
-local CoreGui = game:GetService("CoreGui")
-local ScreenGui = CoreGui:FindFirstChild("imgui")
-local ScreenGuiCache = ScreenGui:FindFirstChild("Cache_2") -- Исправлено на Cache_2
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
 
-local colorpicking = false
-local sliding = false
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- Event System
-local function newEvent()
-    local event = setmetatable({Alive = true}, {
-        __tostring = function() return "Event" end,
-        __call = function(self, ...) self:Fire(...) end
-    })
-    local bindable = Instance.new("BindableEvent")
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "WeedHax"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-    function event:Connect(callback)
-        local conn = bindable.Event:Connect(callback)
-        return {Disconnect = function() conn:Disconnect() end}
-    end
+-- Main Frame
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Position = UDim2.new(0, 10, 0, 10)
+MainFrame.Size = UDim2.new(0, 600, 0, 400)
+MainFrame.Active = true
+MainFrame.Draggable = true
 
-    function event:Fire(...) bindable:Fire(...) end
-    function event:Destroy() event.Alive = false bindable:Destroy() end
+-- Top Bar
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Parent = MainFrame
+TopBar.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+TopBar.BorderSizePixel = 0
+TopBar.Size = UDim2.new(1, 0, 0, 30)
 
-    return event
-end
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "Title"
+TitleLabel.Parent = TopBar
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.Size = UDim2.new(1, -20, 1, 0)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "WeedHax"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 14
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 
--- Mouse Handler
-local mouse = {}
-mouse.held = false
-mouse.InputBegan = newEvent()
-mouse.InputEnded = newEvent()
+local BuildLabel = Instance.new("TextLabel")
+BuildLabel.Name = "Build"
+BuildLabel.Parent = TopBar
+BuildLabel.BackgroundTransparency = 1
+BuildLabel.Position = UDim2.new(1, -100, 0, 0)
+BuildLabel.Size = UDim2.new(0, 90, 1, 0)
+BuildLabel.Font = Enum.Font.Gotham
+BuildLabel.Text = "Build: Aug. 17, 2025"
+BuildLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+BuildLabel.TextSize = 12
+BuildLabel.TextXAlignment = Enum.TextXAlignment.Right
 
-UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        mouse.held = true
-        mouse.InputBegan:Fire()
-    end
-end)
+-- Minimize Button (simple toggle for now)
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "Minimize"
+MinimizeButton.Parent = TopBar
+MinimizeButton.BackgroundTransparency = 1
+MinimizeButton.Position = UDim2.new(1, -30, 0, 0)
+MinimizeButton.Size = UDim2.new(0, 20, 1, 0)
+MinimizeButton.Font = Enum.Font.Gotham
+MinimizeButton.Text = "-"
+MinimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeButton.TextSize = 18
+MinimizeButton.TextXAlignment = Enum.TextXAlignment.Center
 
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        mouse.held = false
-        mouse.InputEnded:Fire()
-    end
-end)
+-- Content Frame
+local ContentFrame = Instance.new("Frame")
+ContentFrame.Name = "Content"
+ContentFrame.Parent = MainFrame
+ContentFrame.BackgroundTransparency = 1
+ContentFrame.Position = UDim2.new(0, 0, 0, 30)
+ContentFrame.Size = UDim2.new(1, 0, 1, -30)
+ContentFrame.ClipsDescendants = true
 
-local function getMouse()
-    local loc = UserInputService:GetMouseLocation()
-    return Vector2.new(loc.X + 1, loc.Y - 35)
-end
+-- Tab Buttons Frame
+local TabButtons = Instance.new("Frame")
+TabButtons.Name = "TabButtons"
+TabButtons.Parent = ContentFrame
+TabButtons.BackgroundTransparency = 1
+TabButtons.Position = UDim2.new(0, 0, 0, 0)
+TabButtons.Size = UDim2.new(0, 120, 1, 0)
 
--- Tween Function
-local function resize(part, new, delay)
-    delay = delay or 0.5
-    local tweenInfo = TweenInfo.new(delay, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-    local tween = TweenService:Create(part, tweenInfo, new)
+-- Tab Content
+local TabContent = Instance.new("Frame")
+TabContent.Name = "TabContent"
+TabContent.Parent = ContentFrame
+TabContent.BackgroundTransparency = 1
+TabContent.Position = UDim2.new(0, 120, 0, 0)
+TabContent.Size = UDim2.new(1, -120, 1, 0)
+
+-- Keybinds Panel (overlay)
+local KeybindsPanel = Instance.new("Frame")
+KeybindsPanel.Name = "Keybinds"
+KeybindsPanel.Parent = ScreenGui
+KeybindsPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+KeybindsPanel.BorderSizePixel = 0
+KeybindsPanel.Position = UDim2.new(1, -200, 0, 50)
+KeybindsPanel.Size = UDim2.new(0, 180, 0, 200)
+KeybindsPanel.Visible = false
+
+local KeybindsTitle = Instance.new("TextLabel")
+KeybindsTitle.Name = "Title"
+KeybindsTitle.Parent = KeybindsPanel
+KeybindsTitle.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+KeybindsTitle.BorderSizePixel = 0
+KeybindsTitle.Size = UDim2.new(1, 0, 0, 25)
+KeybindsTitle.Font = Enum.Font.GothamBold
+KeybindsTitle.Text = "Keybinds"
+KeybindsTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+KeybindsTitle.TextSize = 14
+
+-- Chat/Console Frame (bottom)
+local ChatFrame = Instance.new("ScrollingFrame")
+ChatFrame.Name = "Chat"
+ChatFrame.Parent = ScreenGui
+ChatFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+ChatFrame.BorderSizePixel = 0
+ChatFrame.Position = UDim2.new(0, 10, 1, -200)
+ChatFrame.Size = UDim2.new(0, 400, 0, 180)
+ChatFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ChatFrame.ScrollBarThickness = 6
+ChatFrame.ScrollBarImageColor3 = Color3.fromRGB(50, 50, 50)
+
+local ChatLayout = Instance.new("UIListLayout")
+ChatLayout.Parent = ChatFrame
+ChatLayout.SortOrder = Enum.SortOrder.LayoutOrder
+ChatLayout.Padding = UDim.new(0, 2)
+
+-- Local variables
+local CurrentTab = nil
+local Tabs = {}
+local Sections = {}
+local Elements = {}
+
+-- Utility Functions
+local function Tween(obj, props, duration, easing)
+    local tween = TweenService:Create(obj, TweenInfo.new(duration or 0.3, easing or Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props)
     tween:Play()
+    return tween
 end
 
--- Window History & ZIndex
-local windowHistory = {}
-local windowCache = {}
-local browsingWindow = {}
-local mouseCache = {}
+local function CreateSection(parent, name)
+    local Section = Instance.new("Frame")
+    Section.Name = name .. "Section"
+    Section.Parent = parent
+    Section.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+    Section.BorderSizePixel = 0
+    Section.Size = UDim2.new(1, -10, 0, 0)
+    Section.Position = UDim2.new(0, 5, 0, #parent:GetChildren() * 30)
 
-local function updateWindowHistory()
-    for i, v in pairs(windowHistory) do
-        local offset = 9e3 - v * 100
-        i.ZIndex = rawget(windowCache[i], i) + offset
-        for i2, v2 in pairs(i:GetDescendants()) do
-            if v2.ZIndex then
-                if rawget(windowCache[i], v2) then
-                    v2.ZIndex = rawget(windowCache[i], v2) + offset
-                end
+    local SectionTitle = Instance.new("TextLabel")
+    SectionTitle.Name = "Title"
+    SectionTitle.Parent = Section
+    SectionTitle.BackgroundTransparency = 1
+    SectionTitle.Size = UDim2.new(1, 0, 0, 25)
+    SectionTitle.Font = Enum.Font.GothamSemibold
+    SectionTitle.Text = name
+    SectionTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SectionTitle.TextSize = 12
+    SectionTitle.TextXAlignment = Enum.TextXAlignment.Left
+    SectionTitle.Position = UDim2.new(0, 5, 0, 0)
+
+    local SectionContent = Instance.new("Frame")
+    SectionContent.Name = "Content"
+    SectionContent.Parent = Section
+    SectionContent.BackgroundTransparency = 1
+    SectionContent.Position = UDim2.new(0, 0, 0, 25)
+    SectionContent.Size = UDim2.new(1, 0, 1, -25)
+
+    local SectionList = Instance.new("UIListLayout")
+    SectionList.Parent = SectionContent
+    SectionList.SortOrder = Enum.SortOrder.LayoutOrder
+    SectionList.Padding = UDim.new(0, 5)
+
+    SectionList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        Section.Size = UDim2.new(1, -10, 0, SectionList.AbsoluteContentSize.Y + 30)
+    end)
+
+    return SectionContent
+end
+
+-- Tab Creation
+function Library:CreateTab(name)
+    local TabButton = Instance.new("TextButton")
+    TabButton.Name = name
+    TabButton.Parent = TabButtons
+    TabButton.BackgroundTransparency = 1
+    TabButton.Size = UDim2.new(1, 0, 0, 30)
+    TabButton.Font = Enum.Font.Gotham
+    TabButton.Text = name
+    TabButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+    TabButton.TextSize = 12
+    TabButton.TextXAlignment = Enum.TextXAlignment.Left
+    TabButton.Position = UDim2.new(0, 0, 0, (#Tabs * 30))
+
+    local Tab = Instance.new("Frame")
+    Tab.Name = name .. "Tab"
+    Tab.Parent = TabContent
+    Tab.BackgroundTransparency = 1
+    Tab.Size = UDim2.new(1, 0, 1, 0)
+    Tab.Visible = false
+
+    local TabList = Instance.new("UIListLayout")
+    TabList.Parent = Tab
+    TabList.SortOrder = Enum.SortOrder.LayoutOrder
+    TabList.Padding = UDim.new(0, 5)
+    TabList.Position = UDim2.new(0, 5, 0, 5)
+
+    TabList:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        -- Auto-size if needed
+    end)
+
+    table.insert(Tabs, {Button = TabButton, Frame = Tab, Content = TabList})
+
+    if #Tabs == 1 then
+        CurrentTab = Tab
+        Tab.Visible = true
+        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    end
+
+    TabButton.MouseButton1Click:Connect(function()
+        if CurrentTab then
+            CurrentTab.Visible = false
+            Tabs[#Tabs].Button.TextColor3 = Color3.fromRGB(150, 150, 150)  -- Wait, fix to current
+            local currentIndex = 0
+            for i, t in ipairs(Tabs) do
+                if t.Frame == CurrentTab then currentIndex = i break end
             end
+            Tabs[currentIndex].Button.TextColor3 = Color3.fromRGB(150, 150, 150)
         end
-    end
-end
-
-local function cacheWindowHistory(window)
-    rawset(windowCache, window, {})
-    rawset(windowCache[window], window, window.ZIndex)
-    for i, v in pairs(window:GetDescendants()) do
-        if v.ZIndex then
-            rawset(windowCache[window], v, v.ZIndex)
-        end
-    end
-    window.DescendantAdded:Connect(function(desc)
-        if desc.ZIndex then
-            rawset(windowCache[window], desc, desc.ZIndex)
-            updateWindowHistory()
-        end
-    end)
-end
-
-local function setTopMost(window)
-    for i, v in pairs(windowHistory) do
-        if i ~= window then
-            windowHistory[i] = v + 1
-        end
-    end
-    windowHistory[window] = 1
-    updateWindowHistory()
-end
-
-local function isTopMost(window)
-    return rawget(windowHistory, window) == 1
-end
-
-local function isBrowsing(window)
-    return rawget(browsingWindow, window) or rawget(mouseCache, window)
-end
-
-local function findBrowsingTopMost()
-    local copy = {}
-    for i, v in pairs(windowHistory) do
-        if isBrowsing(i) then
-            copy[i] = v
-        end
-    end
-    local level, result = math.huge
-    for i, v in pairs(copy) do
-        if v < level then
-            level = v
-            result = i
-        end
-    end
-    return result
-end
-
--- Dragger
-local dragger = {}
-local draggerCache = {}
-
-function dragger.new(frame)
-    local held = false
-    frame.Active = true
-
-    frame.MouseLeave:Connect(function()
-        draggerCache[frame] = false
+        CurrentTab = Tab
+        Tab.Visible = true
+        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     end)
 
-    frame.MouseEnter:Connect(function()
-        draggerCache[frame] = true
+    return TabList
+end
+
+-- Toggle Creation
+function Library:CreateToggle(parent, options)
+    options = options or {}
+    local name = options.Name or "Toggle"
+    local default = options.Default or false
+    local callback = options.Callback or function() end
+
+    local ToggleFrame = Instance.new("Frame")
+    ToggleFrame.Name = name .. "Toggle"
+    ToggleFrame.Parent = parent
+    ToggleFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    ToggleFrame.BorderSizePixel = 0
+    ToggleFrame.Size = UDim2.new(1, -10, 0, 20)
+
+    local ToggleLabel = Instance.new("TextLabel")
+    ToggleLabel.Name = "Label"
+    ToggleLabel.Parent = ToggleFrame
+    ToggleLabel.BackgroundTransparency = 1
+    ToggleLabel.Position = UDim2.new(0, 5, 0, 0)
+    ToggleLabel.Size = UDim2.new(1, -50, 1, 0)
+    ToggleLabel.Font = Enum.Font.Gotham
+    ToggleLabel.Text = name
+    ToggleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ToggleLabel.TextSize = 12
+    ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local ToggleButton = Instance.new("TextButton")
+    ToggleButton.Name = "Button"
+    ToggleButton.Parent = ToggleFrame
+    ToggleButton.BackgroundColor3 = default and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+    ToggleButton.BorderSizePixel = 0
+    ToggleButton.Position = UDim2.new(1, -25, 0, 2.5)
+    ToggleButton.Size = UDim2.new(0, 15, 0, 15)
+    ToggleButton.Font = Enum.Font.Gotham
+    ToggleButton.Text = ""
+    ToggleButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+
+    local state = default
+    callback(state)
+
+    ToggleButton.MouseButton1Click:Connect(function()
+        state = not state
+        Tween(ToggleButton, {BackgroundColor3 = state and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)}, 0.2)
+        callback(state)
     end)
 
-    mouse.InputBegan:Connect(function()
-        if findBrowsingTopMost() == frame then
-            if not colorpicking and not sliding and not resizing and draggerCache[frame] then
-                local objectPosition = getMouse() - frame.AbsolutePosition
-                while mouse.held do
-                    pcall(function()
-                        resize(frame, {Position = UDim2.new(0, getMouse().X - objectPosition.X + (frame.Size.X.Offset * frame.AnchorPoint.X), 0, getMouse().Y - objectPosition.Y + (frame.Size.Y.Offset * frame.AnchorPoint.Y))}, 0.1)
-                    end)
-                    RunService.Heartbeat:Wait()
-                end
-            end
+    return {
+        Set = function(self, newState)
+            state = newState
+            Tween(ToggleButton, {BackgroundColor3 = state and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)}, 0.2)
+            callback(state)
         end
-    end)
+    }
 end
 
--- Utilities
-local function betweenOpenInterval(n, n1, n2)
-    return n <= n2 and n >= n1
-end
+-- Slider Creation
+function Library:CreateSlider(parent, options)
+    options = options or {}
+    local name = options.Name or "Slider"
+    local min = options.Min or 0
+    local max = options.Max or 100
+    local default = options.Default or min
+    local callback = options.Callback or function() end
 
-local function rgbtohsv(color)
-    local r, g, b = color.R, color.G, color.B
-    local max, min = math.max(r, g, b), math.min(r, g, b)
-    local h, s, v = 0, 0, max
-    local d = max - min
-    s = max == 0 and 0 or d / max
-    if max ~= min then
-        if max == r then h = (g - b) / d + (g < b and 6 or 0)
-        elseif max == g then h = (b - r) / d + 2
-        else h = (r - g) / d + 4 end
-        h = h / 6
+    local SliderFrame = Instance.new("Frame")
+    SliderFrame.Name = name .. "Slider"
+    SliderFrame.Parent = parent
+    SliderFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    SliderFrame.BorderSizePixel = 0
+    SliderFrame.Size = UDim2.new(1, -10, 0, 30)
+
+    local SliderLabel = Instance.new("TextLabel")
+    SliderLabel.Name = "Label"
+    SliderLabel.Parent = SliderFrame
+    SliderLabel.BackgroundTransparency = 1
+    SliderLabel.Position = UDim2.new(0, 5, 0, 0)
+    SliderLabel.Size = UDim2.new(0.5, 0, 0.5, 0)
+    SliderLabel.Font = Enum.Font.Gotham
+    SliderLabel.Text = name .. ": " .. default
+    SliderLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    SliderLabel.TextSize = 12
+    SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local SliderBar = Instance.new("Frame")
+    SliderBar.Name = "Bar"
+    SliderBar.Parent = SliderFrame
+    SliderBar.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    SliderBar.BorderSizePixel = 0
+    SliderBar.Position = UDim2.new(0.5, 5, 0.25, 0)
+    SliderBar.Size = UDim2.new(0.45, 0, 0, 5)
+
+    local SliderFill = Instance.new("Frame")
+    SliderFill.Name = "Fill"
+    SliderFill.Parent = SliderBar
+    SliderFill.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+    SliderFill.BorderSizePixel = 0
+    SliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    SliderFill.ZIndex = 2
+
+    local SliderButton = Instance.new("TextButton")
+    SliderButton.Name = "Button"
+    SliderButton.Parent = SliderFill
+    SliderButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SliderButton.BorderSizePixel = 0
+    SliderButton.Position = UDim2.new(1, -5, -2.5, 0)
+    SliderButton.Size = UDim2.new(0, 10, 0, 10)
+    SliderButton.Font = Enum.Font.Gotham
+    SliderButton.Text = ""
+    SliderButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+    SliderButton.ZIndex = 3
+
+    local dragging = false
+    local value = default
+    callback(value)
+
+    local function UpdateSlider(input)
+        local percent = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
+        value = math.floor(min + (max - min) * percent)
+        SliderFill.Size = UDim2.new(percent, 0, 1, 0)
+        SliderButton.Position = UDim2.new(percent, -5, -2.5, 0)
+        SliderLabel.Text = name .. ": " .. value
+        callback(value)
     end
-    return h, s, v
-end
 
-local function new(n)
-    return Presets:FindFirstChild(n):Clone()
-end
-
-local function tint(c)
-    return Color3.new(c.R * 0.5, c.G * 0.5, c.B * 0.5)
-end
-
-local function bleach(c)
-    return Color3.new(math.min(1, c.R * 1.2), math.min(1, c.G * 1.2), math.min(1, c.B * 1.2))
-end
-
-local function hoverColor(object)
-    local original = object.ImageColor3
-    object.MouseEnter:Connect(function()
-        object.ImageColor3 = tint(original)
+    SliderButton.MouseButton1Down:Connect(function()
+        dragging = true
+        UpdateSlider(UserInputService:GetMouseLocation())
     end)
-    object.MouseLeave:Connect(function()
-        object.ImageColor3 = original
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            UpdateSlider(UserInputService:GetMouseLocation())
+        end
     end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    return {
+        Set = function(self, newValue)
+            value = math.clamp(newValue, min, max)
+            local percent = (value - min) / (max - min)
+            SliderFill.Size = UDim2.new(percent, 0, 1, 0)
+            SliderButton.Position = UDim2.new(percent, -5, -2.5, 0)
+            SliderLabel.Text = name .. ": " .. value
+            callback(value)
+        end
+    }
 end
 
--- Settings
-local settings = {
-    new = function(default)
-        return function(options)
-            local self = {}
-            options = options or {}
-            for i, v in pairs(default) do
-                self[i:lower()] = v
-            end
-            for i, v in pairs(options) do
-                if typeof(default[i:lower()]) == typeof(v) then
-                    self[i:lower()] = v
-                end
-            end
-            return self
-        end
-    end
-}
+-- Dropdown Creation
+function Library:CreateDropdown(parent, options)
+    options = options or {}
+    local name = options.Name or "Dropdown"
+    local optionsList = options.Options or {}
+    local default = options.Default or optionsList[1]
+    local callback = options.Callback or function() end
 
--- Library
-local library = {
-    new = function(options)
-        local cache = {}
-        local self = {isopen = true}
+    local DropdownFrame = Instance.new("Frame")
+    DropdownFrame.Name = name .. "Dropdown"
+    DropdownFrame.Parent = parent
+    DropdownFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    DropdownFrame.BorderSizePixel = 0
+    DropdownFrame.Size = UDim2.new(1, -10, 0, 25)
 
-        options = settings.new({
-            text = "New Window",
-            size = Vector2.new(300, 200),
-            shadow = 10,
-            transparency = 0.2,
-            color = Color3.fromRGB(41, 74, 122),
-            boardcolor = Color3.fromRGB(21, 22, 23),
-            rounding = 5,
-            animation = 0.1,
-            position = UDim2.new(0, 100, 0, 100),
-            keybind = nil,
-        })(options)
+    local DropdownLabel = Instance.new("TextLabel")
+    DropdownLabel.Name = "Label"
+    DropdownLabel.Parent = DropdownFrame
+    DropdownLabel.BackgroundTransparency = 1
+    DropdownLabel.Position = UDim2.new(0, 5, 0, 0)
+    DropdownLabel.Size = UDim2.new(1, -30, 1, 0)
+    DropdownLabel.Font = Enum.Font.Gotham
+    DropdownLabel.Text = name .. ": " .. default
+    DropdownLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    DropdownLabel.TextSize = 12
+    DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-        local main = new("Main")
-        main.Parent = ScreenGui
-        local content = main:FindFirstChild("Content")
-        local tabs = main:FindFirstChild("Tabs")
-        local shadow = main:FindFirstChild("Shadow")
-        local layer = main:FindFirstChild("Layer")
-        local expand = main:FindFirstChild("Expand_2")
-        local title = main:FindFirstChild("Title_2")
+    local DropdownButton = Instance.new("TextButton")
+    DropdownButton.Name = "Button"
+    DropdownButton.Parent = DropdownFrame
+    DropdownButton.BackgroundTransparency = 1
+    DropdownButton.Position = UDim2.new(1, -25, 0, 0)
+    DropdownButton.Size = UDim2.new(0, 20, 1, 0)
+    DropdownButton.Font = Enum.Font.Gotham
+    DropdownButton.Text = "▼"
+    DropdownButton.TextColor3 = Color3.fromRGB(150, 150, 150)
+    DropdownButton.TextSize = 12
 
-        main.Position = options.position
-        content.ImageTransparency = options.transparency
-        layer.ImageTransparency = options.transparency
-        shadow.ImageTransparency = 0.6 * (options.transparency + 1)
+    local DropdownList = Instance.new("Frame")
+    DropdownList.Name = "List"
+    DropdownList.Parent = DropdownFrame
+    DropdownList.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    DropdownList.BorderSizePixel = 0
+    DropdownList.Position = UDim2.new(0, 0, 1, 0)
+    DropdownList.Size = UDim2.new(1, 0, 0, #optionsList * 20)
+    DropdownList.Visible = false
+    DropdownList.ZIndex = 10
 
-        -- Keybind Toggle
-        if options.keybind then
-            UserInputService.InputBegan:Connect(function(input)
-                if input.KeyCode == options.keybind and input.KeyCode ~= Enum.KeyCode.Unknown then
-                    self.isopen = not self.isopen
-                    main.Visible = self.isopen
-                    if self.isopen then self.open() else self.close() end
-                end
-            end)
-        end
+    local ListLayout = Instance.new("UIListLayout")
+    ListLayout.Parent = DropdownList
+    ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ListLayout.Padding = UDim.new(0, 0)
 
-        expand.MouseButton1Click:Connect(function()
-            if self.isopen then
-                self.close()
-            else
-                self.open()
-            end
+    for i, opt in ipairs(optionsList) do
+        local OptButton = Instance.new("TextButton")
+        OptButton.Name = opt
+        OptButton.Parent = DropdownList
+        OptButton.BackgroundTransparency = 1
+        OptButton.Size = UDim2.new(1, 0, 0, 20)
+        OptButton.Font = Enum.Font.Gotham
+        OptButton.Text = opt
+        OptButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+        OptButton.TextSize = 11
+        OptButton.TextXAlignment = Enum.TextXAlignment.Left
+
+        OptButton.MouseButton1Click:Connect(function()
+            default = opt
+            DropdownLabel.Text = name .. ": " .. default
+            callback(default)
+            DropdownList.Visible = false
         end)
 
-        dragger.new(main)
-
-        if title then title.Text = options.text end
-        main.ImageColor3 = options.color
-        local frameChild = main:FindFirstChild("Frame")
-        if frameChild then frameChild.BackgroundColor3 = options.color end
-        main.Size = UDim2.new(0, options.size.X, 0, options.size.Y) -- Фиксированный размер
-        main.SliceScale = options.rounding / 100
-
-        content.ImageColor3 = options.boardcolor
-        content.Size = UDim2.new(1, 0, 1, 0) -- Фиксированный, без ресайза
-        content.SliceScale = options.rounding / 100
-
-        function cache.update_layers(y)
-            if shadow then
-                shadow.Position = UDim2.new(0, options.shadow, 0, options.shadow)
-                shadow.Size = UDim2.new(1, 0, 1, 0)
-                shadow.SliceScale = options.rounding / 100
-            end
-            if layer then
-                layer.Size = UDim2.new(1, 0, 1, 0)
-                layer.SliceScale = options.rounding / 100
-            end
-        end
-        cache.update_layers(main.AbsoluteSize.Y + content.AbsoluteSize.Y)
-
-        content:GetPropertyChangedSignal("Size"):Connect(function()
-            cache.update_layers(main.AbsoluteSize.Y + content.AbsoluteSize.Y)
-        end)
-		
-        -- Tab System
-        function self.new(tabOptions)
-            local tabSelf = {}
-            tabOptions = settings.new({text = "New Tab"})(tabOptions)
-
-            local tabbutton = new("TabButton")
-            local tabbuttons = tabs:FindFirstChild("Items")
-            tabbutton.Parent = tabbuttons
-            tabbutton.Text = tabOptions.text
-            tabbutton.Size = UDim2.new(0, tabbutton.TextBounds.X, 1, 0)
-            tabbutton.TextColor3 = Color3.new(0.4, 0.4, 0.4)
-            tabbutton.MouseButton1Click:Connect(function()
-                tabSelf.show()
-            end)
-
-            local tab = new("Tab")
-            tab.Parent = content
-            local items = tab:FindFirstChild("Items")
-            tab.Visible = false
-
-            local function countSize(o, horizontal)
-                if not o:FindFirstChildOfClass("UIListLayout") then return end
-                local padding = o:FindFirstChildOfClass("UIListLayout").Padding.Offset
-                local X, Y = 0, 0
-                local _horizontal = 0
-                for i, v in pairs(o:GetChildren()) do
-                    if not v:IsA("UIListLayout") then
-                        Y = Y + v.AbsoluteSize.Y + padding
-                        if v.AbsoluteSize.X > X then X = v.AbsoluteSize.X end
-                        _horizontal = _horizontal + v.AbsoluteSize.X + padding
-                    end
-                end
-                if horizontal then return Vector2.new(_horizontal, 0) end
-                return Vector2.new(X, Y)
-            end
-
-            local function updateCanvas()
-                local XY = countSize(items)
-                if XY then items.CanvasSize = UDim2.new(0, XY.X, 0, XY.Y) end
-            end
-
-            items.ScrollBarImageColor3 = Color3.new()
-            items.ChildAdded:Connect(updateCanvas)
-            items.ChildRemoved:Connect(updateCanvas)
-
-            local types = {}
-
-            function types.label(labelOptions)
-                local labelSelf = {}
-                labelOptions = settings.new({text = "New Label", color = Color3.new(1, 1, 1)})(labelOptions)
-
-                local label = new("Label")
-                label.Parent = items
-                if label then
-                    label.Text = labelOptions.text or "Label"
-                    label.Size = UDim2.new(0, label.TextBounds.X, 0, label.Size.Y.Offset)
-                    label.TextColor3 = labelOptions.color
-
-                    function labelSelf.setText(text)
-                        if label then
-                            label.Text = text or ""
-                            label.Size = UDim2.new(0, label.TextBounds.X, 0, label.Size.Y.Offset)
-                        end
-                    end
-
-                    function labelSelf.setColor(color)
-                        if label then label.TextColor3 = color end
-                    end
-
-                    function labelSelf:Destroy()
-                        if label then label:Destroy() end
-                    end
-
-                    labelSelf.self = label
-                end
-                return labelSelf
-            end
-
-            function types.button(buttonOptions)
-                local buttonSelf = {eventBlock = false}
-                buttonOptions = settings.new({text = "New Button", color = options.color, rounding = options.rounding})(buttonOptions)
-
-                local button = new("Button")
-                button.Parent = items
-                button.Text = buttonOptions.text
-                button.Size = UDim2.new(0, button.TextBounds.X + 20, 0, 20)
-                button.MouseButton1Click:Connect(function()
-                    if not buttonSelf.eventBlock then buttonSelf.event:Fire() end
-                end)
-
-                local ImageLabel = button:FindFirstChild("ImageLabel")
-                local Layer = button:FindFirstChild("Layer")
-                ImageLabel.ImageColor3 = buttonOptions.color
-                Layer.ImageColor3 = tint(buttonOptions.color)
-                ImageLabel.SliceScale = buttonOptions.rounding / 100
-                Layer.SliceScale = buttonOptions.rounding / 100
-                hoverColor(ImageLabel)
-
-                function buttonSelf.setColor(color)
-                    ImageLabel.ImageColor3 = color
-                    Layer.ImageColor3 = tint(color)
-                end
-
-                function buttonSelf.getColor()
-                    return ImageLabel.ImageColor3
-                end
-
-                function buttonSelf:Destroy()
-                    button:Destroy()
-                end
-
-                buttonSelf.options = buttonOptions
-                buttonSelf.self = button
-                buttonSelf.event = newEvent()
-                return buttonSelf
-            end
-
-            function types.switch(switchOptions)
-                local switchSelf = {on = false}
-                switchOptions = settings.new({text = "New Switch", on = false, color = options.color, rounding = options.rounding, animation = options.animation})(switchOptions)
-                switchSelf.on = switchOptions.on
-                switchSelf.eventBlock = false
-
-                local switch = new("Switch")
-                switch.Parent = items
-                local button = switch:FindFirstChild("Button")
-                local text = switch:FindFirstChild("Text")
-                local check = button:FindFirstChild("Check")
-                local ImageLabel = button:FindFirstChild("ImageLabel")
-                local layer = button:FindFirstChild("Layer")
-                ImageLabel.ImageColor3 = switchOptions.color
-                layer.ImageColor3 = tint(switchOptions.color)
-                ImageLabel.SliceScale = switchOptions.rounding / 100
-                layer.SliceScale = switchOptions.rounding / 100
-
-                text:GetPropertyChangedSignal("Text"):Connect(function()
-                    switch.Size = UDim2.new(0, 28 + text.TextBounds.X, 0, 20)
-                end)
-
-                text.Text = switchOptions.text
-                check.ImageTransparency = switchSelf.on and 0 or 1
-
-                button.MouseButton1Click:Connect(function()
-                    switchSelf.switch()
-                end)
-
-                function switchSelf.switch()
-                    switchSelf.set(not switchSelf.on)
-                end
-
-                function switchSelf.set(boolean)
-                    if (not not boolean) == switchSelf.on then return end
-                    switchSelf.on = not not boolean
-                    resize(check, {ImageTransparency = switchSelf.on and 0 or 1}, switchOptions.animation)
-                    if not switchSelf.eventBlock then switchSelf.event:Fire(switchSelf.on) end
-                end
-
-                function switchSelf.setColor(color)
-                    ImageLabel.ImageColor3 = color
-                    layer.ImageColor3 = tint(color)
-                end
-
-                function switchSelf.getColor()
-                    return ImageLabel.ImageColor3
-                end
-
-                function switchSelf:Destroy()
-                    switch:Destroy()
-                end
-
-                switchSelf.options = switchOptions
-                switchSelf.self = switch
-                switchSelf.event = newEvent()
-                return switchSelf
-            end
-
-            function types.slider(sliderOptions)
-                local sliderSelf = {}
-                sliderOptions = settings.new({text = "New Slider", size = 150, min = 0, max = 100, value = 0, color = options.color, barcolor = bleach(options.color), rounding = options.rounding, animation = options.animation})(sliderOptions)
-                sliderSelf.value = sliderOptions.value
-                sliderSelf.event = newEvent()
-                sliderSelf.eventBlock = false
-
-                local function round(x, n)
-                    local a = tostring(x * 10^n)
-                    return a:sub(1, -(n + 1)) .. "." .. a:sub(-n)
-                end
-
-                local slider = new("Slider")
-                slider.Parent = items
-
-                local text = slider:FindFirstChild("Text")
-                local outer = slider:FindFirstChild("Outer")
-                local inner = outer:FindFirstChild("Inner")
-                local _slider = inner:FindFirstChild("Slider")
-                local value = inner:FindFirstChild("Value")
-                inner.ClipsDescendants = true
-
-                outer.SliceScale = sliderOptions.rounding / 100
-                inner.SliceScale = sliderOptions.rounding / 100
-                inner.ImageColor3 = sliderOptions.color
-                _slider.BackgroundColor3 = sliderOptions.barcolor
-
-                function sliderSelf.setColor(color)
-                    inner.ImageColor3 = color
-                    _slider.BackgroundColor3 = bleach(color)
-                end
-
-                function sliderSelf.getColor()
-                    return inner.ImageColor3
-                end
-
-                text.Text = sliderOptions.text
-                outer.Size = UDim2.new(0, sliderOptions.size, 0, 20)
-                text.Position = UDim2.new(0, sliderOptions.size + 8, 0, 0)
-                slider.Size = UDim2.new(0, sliderOptions.size + 8 + text.TextBounds.X, 0, 20)
-
-                local function set(p)
-                    resize(_slider, {Position = UDim2.new(p, -2.5, 0, 0)}, sliderOptions.animation)
-                end
-
-                value.Text = round(sliderSelf.value, 2)
-                local old
-
-                function sliderSelf.set(n)
-                    assert(typeof(n) == "number", "invalid type")
-                    local min, max = sliderOptions.min < sliderOptions.max and {sliderOptions.min, sliderOptions.max} or {sliderOptions.max, sliderOptions.min}
-                    n = math.clamp(n, min, max)
-                    sliderSelf.value = n
-                    if sliderSelf.value ~= old then
-                        if not sliderSelf.eventBlock then sliderSelf.event:Fire(sliderSelf.value) end
-                    end
-                    old = sliderSelf.value
-                    value.Text = round(sliderSelf.value, 2)
-                    local d = math.abs(max - min)
-                    local p = (n - min) / d
-                    set(p)
-                end
-                sliderSelf.set(sliderSelf.value)
-
-                local inside = false
-                inner.MouseEnter:Connect(function() inside = true end)
-                inner.MouseLeave:Connect(function() inside = false end)
-
-                mouse.InputBegan:Connect(function()
-                    spawn(function()
-                        if inside and findBrowsingTopMost() == main then
-                            while mouse.held do
-                                sliding = true
-                                local p = getMouse()
-                                local x = math.floor(math.clamp(p.X - inner.AbsolutePosition.X, 0, sliderOptions.size))
-                                local m = sliderOptions.size / math.abs(sliderOptions.max - sliderOptions.min)
-                                local v = math.floor(x / m)
-                                sliderSelf.set(v + min)
-                                RunService.Heartbeat:Wait()
-                            end
-                        end
-                    end)
-                end)
-                mouse.InputEnded:Connect(function() sliding = false end)
-
-                function sliderSelf:Destroy()
-                    slider:Destroy()
-                end
-
-                updateCanvas()
-                sliderSelf.options = sliderOptions
-                sliderSelf.self = slider
-                return sliderSelf
-            end
-
-            function types.color(colorOptions)
-                local colorSelf = {}
-                colorSelf.event = newEvent()
-                colorSelf.isopen = true
-                colorSelf.visible = false
-                colorSelf.eventBlock = false
-
-                colorOptions = settings.new({text = "New Color Picker", color = Color3.new(1, 0, 0), position = UDim2.new(0, 100, 0, 100)})(colorOptions)
-
-                local colorPickerButton = new("ColorPicker")
-                colorPickerButton.Parent = items
-                local colorPicker = new("ColorPickerWindow")
-                colorPicker.Parent = ScreenGui
-                colorPicker.Visible = colorSelf.visible
-                dragger.new(colorPicker)
-
-                local text = colorPickerButton:FindFirstChild("Text")
-                local button = colorPickerButton:FindFirstChild("Button")
-                local ImageLabel = button:FindFirstChild("ImageLabel")
-                local layer = button:FindFirstChild("Layer")
-
-                text:GetPropertyChangedSignal("Text"):Connect(function()
-                    colorPickerButton.Size = UDim2.new(0, 28 + text.TextBounds.X, 0, 20)
-                    colorPicker:FindFirstChild("Title").Text = text.Text
-                end)
-
-                text.Text = colorOptions.text
-
-                button.MouseButton1Click:Connect(function()
-                    colorSelf.visible = not colorSelf.visible
-                    colorPicker.Visible = colorSelf.visible
-                    if colorSelf.visible then
-                        colorPicker.Position = UDim2.new(0, colorPickerButton.AbsolutePosition.X + colorPickerButton.AbsoluteSize.X, 0, colorPickerButton.AbsolutePosition.Y)
-                        colorSelf.open()
-                        setTopMost(colorPicker)
-                    end
-                end)
-
-                local colorCache = {}
-                function colorSelf.close()
-                    if not colorSelf.isopen then return end
-                    colorSelf.isopen = false
-                    resize(colorPicker:FindFirstChild("Expand"), {Rotation = 0}, options.animation)
-                    colorCache.content_size = 200
-                    resize(colorPicker:FindFirstChild("Content"), {Size = UDim2.new(1, 0, 0, 0)}, options.animation)
-                end
-
-                function colorSelf.open()
-                    if colorSelf.isopen then return end
-                    colorSelf.isopen = true
-                    resize(colorPicker:FindFirstChild("Expand"), {Rotation = 90}, options.animation)
-                    resize(colorPicker:FindFirstChild("Content"), {Size = UDim2.new(1, 0, 0, colorCache.content_size)}, options.animation)
-                end
-
-                function colorCache.update_layers(y)
-                    colorPicker:FindFirstChild("Shadow").Position = UDim2.new(0, options.shadow, 0, options.shadow)
-                    colorPicker:FindFirstChild("Shadow").Size = UDim2.new(1, 0, 0, y)
-                    colorPicker:FindFirstChild("Shadow").SliceScale = options.rounding / 100
-                    colorPicker:FindFirstChild("Layer").Size = UDim2.new(1, 0, 0, y)
-                    colorPicker:FindFirstChild("Layer").SliceScale = options.rounding / 100
-                end
-                colorCache.update_layers(colorPicker.AbsoluteSize.Y + colorPicker:FindFirstChild("Content").AbsoluteSize.Y)
-
-                colorPicker:FindFirstChild("Content"):GetPropertyChangedSignal("Size"):Connect(function()
-                    colorCache.update_layers(colorPicker.AbsoluteSize.Y + colorPicker:FindFirstChild("Content").AbsoluteSize.Y)
-                end)
-
-                do
-                    local old = options.animation
-                    options.animation = 0
-                    colorSelf.open()
-                    options.animation = old
-                end
-
-                colorPicker:FindFirstChild("Expand").MouseButton1Click:Connect(function()
-                    if colorSelf.isopen then colorSelf.close() else colorSelf.open() end
-                end)
-
-                -- Color Picking Logic
-                local content = colorPicker:FindFirstChild("Content")
-                local palette = content:FindFirstChild("Palette")
-                local saturation = content:FindFirstChild("Saturation")
-
-                local paletteIndicator = palette:FindFirstChild("Indicator")
-                local saturationIndicator = saturation:FindFirstChild("Indicator")
-
-                local h, s, v = 0, 1, 1
-
-                function colorSelf.get()
-                    return Color3.fromHSV(h, s, v)
-                end
-
-                local function update()
-                    local color = colorSelf.get()
-                    button:FindFirstChild("ImageLabel").ImageColor3 = color
-                    button:FindFirstChild("Layer").ImageColor3 = tint(color)
-                    content:FindFirstChild("FinalColor").ImageColor3 = color
-                    content:FindFirstChild("PaletteColor").ImageColor3 = Color3.fromHSV(h, s, 1)
-                    content:FindFirstChild("SaturationColor").ImageColor3 = Color3.fromHSV(0, 0, v)
-                    local v2 = v < 0.5 and 1 or 0
-                    ImageLabel:FindFirstChild("ImageLabel").ImageColor3 = Color3.fromHSV(0, 0, v2)
-                    if not colorSelf.eventBlock then colorSelf.event:Fire(color) end
-                end
-
-                local Entered1, Entered2 = false, false
-                palette.MouseEnter:Connect(function() Entered1 = true end)
-                palette.MouseLeave:Connect(function() Entered1 = false end)
-                saturation.MouseEnter:Connect(function() Entered2 = true end)
-                saturation.MouseLeave:Connect(function() Entered2 = false end)
-
-                mouse.InputBegan:Connect(function()
-                    if Entered1 and findBrowsingTopMost() == colorPicker then
-                        spawn(function()
-                            colorpicking = true
-                            while mouse.held do
-                                local p = getMouse()
-                                local x1 = math.clamp(p.X - palette.AbsolutePosition.X, 0, palette.AbsoluteSize.X)
-                                local v1 = x1 / palette.AbsoluteSize.X
-                                local x2 = math.clamp(p.Y - palette.AbsolutePosition.Y, 0, palette.AbsoluteSize.Y)
-                                local v2 = x2 / palette.AbsoluteSize.Y
-                                h = 1 - v1
-                                s = 1 - v2
-
-                                local sv1 = math.clamp(v1, 0, (palette.AbsoluteSize.X - 6) / palette.AbsoluteSize.X)
-                                local sv2 = math.clamp(v2, 0, (palette.AbsoluteSize.Y - 6) / palette.AbsoluteSize.Y)
-                                resize(paletteIndicator, {Position = UDim2.new(sv1, 0, sv2, 0)}, options.animation)
-
-                                update()
-                                RunService.Heartbeat:Wait()
-                            end
-                        end)
-                    end
-                    if Entered2 and findBrowsingTopMost() == colorPicker then
-                        spawn(function()
-                            colorpicking = true
-                            while mouse.held do
-                                local p = getMouse()
-                                local x1 = math.clamp(p.Y - saturation.AbsolutePosition.Y, 0, saturation.AbsoluteSize.Y)
-                                local v1 = x1 / saturation.AbsoluteSize.Y
-                                v = 1 - v1
-
-                                local sv1 = math.clamp(v1, 0, (saturation.AbsoluteSize.Y - 2) / saturation.AbsoluteSize.Y)
-                                resize(saturationIndicator, {Position = UDim2.new(0, 0, sv1, 0)}, options.animation)
-
-                                update()
-                                RunService.Heartbeat:Wait()
-                            end
-                        end)
-                    end
-                end)
-
-                mouse.InputEnded:Connect(function()
-                    colorpicking = false
-                end)
-
-                function colorSelf.set(color)
-                    local h2, s2, v2 = rgbtohsv(color)
-                    h, s, v = h2, s2, v2
-
-                    local hx = math.clamp(1 - h, 0, (palette.AbsoluteSize.X - 6) / palette.AbsoluteSize.X)
-                    local sx = math.clamp(1 - s, 0, (palette.AbsoluteSize.Y - 6) / palette.AbsoluteSize.Y)
-                    local vx = math.clamp(1 - v, 0, (saturation.AbsoluteSize.Y - 2) / saturation.AbsoluteSize.Y)
-                    resize(paletteIndicator, {Position = UDim2.new(hx, 0, sx, 0)}, options.animation)
-                    resize(saturationIndicator, {Position = UDim2.new(0, 0, vx, 0)}, options.animation)
-
-                    update()
-                end
-
-                update()
-                function colorSelf.setPosition(position)
-                    colorPicker.Position = position
-                end
-
-                function colorSelf:Destroy()
-                    colorPickerButton:Destroy()
-                    colorPicker:Destroy()
-                end
-
-                colorSelf.self = colorPickerButton
-                if colorOptions.color ~= Color3.new(1, 0, 0) then colorSelf.set(colorOptions.color) end
-                colorSelf.close()
-                return colorSelf
-            end
-
-            function types.dropdown(dropdownOptions)
-                local dropdownSelf = {}
-                dropdownSelf.isopen = true
-                dropdownSelf.visible = false
-                dropdownSelf.selected = nil
-                dropdownSelf.event = newEvent()
-                dropdownSelf.eventBlock = false
-
-                dropdownOptions = settings.new({text = "New Dropdown", size = 150, color = Color3.fromRGB(32, 59, 97), rounding = options.rounding, selectioncolor = Color3.fromRGB(32, 59, 97)})(dropdownOptions)
-
-                local dropdownButton = new("Dropdown")
-                local dropdownWindow = new("DropdownWindow")
-                dropdownWindow.Parent = ScreenGui
-                dropdownWindow.Visible = dropdownSelf.visible
-                dragger.new(dropdownWindow)
-                dropdownButton.Parent = items
-
-                local text = dropdownButton:FindFirstChild("Text")
-                local outer = dropdownButton:FindFirstChild("Outer")
-                local inner = outer:FindFirstChild("Inner")
-                inner.ImageColor3 = dropdownOptions.color
-                outer.SliceScale = dropdownOptions.rounding / 100
-                inner.SliceScale = dropdownOptions.rounding / 100
-                inner:FindFirstChild("Value").Text = "[...]"
-
-                text.Text = dropdownOptions.text
-                dropdownWindow:FindFirstChild("Title").Text = dropdownOptions.text
-                outer.Size = UDim2.new(0, dropdownOptions.size, 0, 20)
-                text.Position = UDim2.new(0, dropdownOptions.size + 8, 0, 0)
-
-                inner.MouseButton1Click:Connect(function()
-                    dropdownSelf.visible = not dropdownSelf.visible
-                    dropdownWindow.Visible = dropdownSelf.visible
-                    if dropdownSelf.visible then
-                        dropdownWindow.Position = UDim2.new(0, dropdownButton.AbsolutePosition.X + dropdownButton.AbsoluteSize.X, 0, dropdownButton.AbsolutePosition.Y)
-                        dropdownSelf.open()
-                        setTopMost(dropdownWindow)
-                    end
-                end)
-
-                dropdownWindow:FindFirstChild("Expand").MouseButton1Click:Connect(function()
-                    if dropdownSelf.isopen then dropdownSelf.close() else dropdownSelf.open() end
-                end)
-
-                local dropdownCache = {}
-                function dropdownSelf.close()
-                    if not dropdownSelf.isopen then return end
-                    dropdownSelf.isopen = false
-                    resize(dropdownWindow:FindFirstChild("Expand"), {Rotation = 0}, options.animation)
-                    dropdownCache.content_size = 200
-                    resize(dropdownWindow:FindFirstChild("Content"), {Size = UDim2.new(1, 0, 0, 0)}, options.animation)
-                end
-
-                function dropdownSelf.open()
-                    if dropdownSelf.isopen then return end
-                    dropdownSelf.isopen = true
-                    resize(dropdownWindow:FindFirstChild("Expand"), {Rotation = 90}, options.animation)
-                    resize(dropdownWindow:FindFirstChild("Content"), {Size = UDim2.new(1, 0, 0, dropdownCache.content_size)}, options.animation)
-                end
-
-                function dropdownCache.update_layers(y)
-                    dropdownWindow:FindFirstChild("Shadow").Position = UDim2.new(0, options.shadow, 0, options.shadow)
-                    dropdownWindow:FindFirstChild("Shadow").Size = UDim2.new(1, 0, 0, y)
-                    dropdownWindow:FindFirstChild("Shadow").SliceScale = options.rounding / 100
-                    dropdownWindow:FindFirstChild("Layer").Size = UDim2.new(1, 0, 0, y)
-                    dropdownWindow:FindFirstChild("Layer").SliceScale = options.rounding / 100
-                end
-                dropdownCache.update_layers(dropdownWindow.AbsoluteSize.Y + dropdownWindow:FindFirstChild("Content").AbsoluteSize.Y)
-
-                dropdownWindow:FindFirstChild("Content"):GetPropertyChangedSignal("Size"):Connect(function()
-                    dropdownCache.update_layers(dropdownWindow.AbsoluteSize.Y + dropdownWindow:FindFirstChild("Content").AbsoluteSize.Y)
-                end)
-
-                local dropdownItems = dropdownWindow:FindFirstChild("Content"):FindFirstChild("Items")
-                local function updateCanvas()
-                    local XY = countSize(dropdownItems)
-                    if XY then dropdownItems.CanvasSize = UDim2.new(0, 0, 0, XY.Y) end
-                end
-
-                dropdownItems.ScrollBarImageColor3 = Color3.new()
-                dropdownItems.ChildAdded:Connect(updateCanvas)
-                dropdownItems.ChildRemoved:Connect(updateCanvas)
-
-                local dropdownObjects = {}
-                function dropdownSelf.new(name)
-                    local dropdownObject = {selected = false, name = name}
-                    assert(not dropdownObjects[name], string.format("object already exists in dropdown '%s'", dropdownOptions.text))
-                    dropdownObjects[name] = dropdownObject
-
-                    local dropdownOption = new("DropdownOption")
-                    dropdownObject.object = dropdownOption
-                    dropdownOption.Parent = dropdownItems
-                    dropdownOption.Text = "  " .. name
-                    dropdownOption.TextColor3 = Color3.fromRGB(178, 178, 178)
-                    dropdownOption.MouseButton1Click:Connect(function()
-                        if findBrowsingTopMost() == dropdownWindow then dropdownObject:Select() end
-                    end)
-
-                    function dropdownObject.Select()
-                        dropdownSelf.selected = name
-                        for i, v in pairs(dropdownObjects) do
-                            v.selected = false
-                            resize(v.object, {TextColor3 = Color3.fromRGB(178, 178, 178)}, 0.1)
-                            resize(v.object:GetChildren()[1], {ImageColor3 = Color3.fromRGB(42, 44, 46)}, 0.1)
-                        end
-                        dropdownObjects[name].selected = true
-                        resize(dropdownOption, {TextColor3 = Color3.new(1, 1, 1)}, 0.1)
-                        resize(dropdownOption:GetChildren()[1], {ImageColor3 = dropdownOptions.selectioncolor}, 0.1)
-                        inner:FindFirstChild("Value").Text = string.format("[ %s ]", name)
-                        dropdownWindow:FindFirstChild("Content"):FindFirstChild("Selected").Text = string.format("[ %s ]", name)
-                        if not dropdownSelf.eventBlock then dropdownSelf.event:Fire(name) end
-                    end
-
-                    function dropdownObject.Destroy()
-                        if dropdownObjects[name] then
-                            inner:FindFirstChild("Value").Text = "[...]"
-                            dropdownWindow:FindFirstChild("Content"):FindFirstChild("Selected").Text = "[...]"
-                        end
-                        dropdownSelf.selected = nil
-                        dropdownObjects[name] = nil
-                    end
-
-                    return dropdownObject
-                end
-
-                function dropdownSelf.search(key)
-                    for name, dropdownObject in pairs(dropdownObjects) do
-                        dropdownObject.object.Parent = dropdownWindow:FindFirstChild("Cache")
-                        if dropdownObject.name:match(key) then
-                            dropdownObject.object.Parent = dropdownItems
-                        end
-                    end
-                end
-
-                -- Search Bar Logic
-                local TextBox = dropdownWindow:FindFirstChild("Content"):FindFirstChild("Search"):FindFirstChild("Outer"):FindFirstChild("Inner"):FindFirstChild("TextBox")
-                local inTextBox = false
-                TextBox.MouseEnter:Connect(function() inTextBox = true end)
-                TextBox.MouseLeave:Connect(function() inTextBox = false end)
-
-                local lastTick = tick()
-                local lastTickN = 1
-                local text = ""
-                local canSearch = false
-                local shift = false
-                local backspace = false
-                local function updateTextBox()
-                    lastTick = tick()
-                    lastTickN = 1
-                    dropdownSelf.search(text)
-                end
-
-                mouse.InputBegan:Connect(function()
-                    canSearch = inTextBox and findBrowsingTopMost() == dropdownWindow
-                    if canSearch then
-                        TextBox.TextColor3 = Color3.new(1, 1, 1)
-                        spawn(function()
-                            while canSearch do
-                                TextBox.Text = text .. (lastTickN == 1 and "|" or "")
-                                if (tick() - lastTick) >= 0.5 then
-                                    lastTick = tick()
-                                    lastTickN = 1 - lastTickN
-                                end
-                                RunService.Heartbeat:Wait()
-                            end
-                            lastTickN = 0
-                            TextBox.Text = text .. (lastTickN == 1 and "|" or "")
-                            TextBox.TextColor3 = Color3.fromRGB(178, 178, 178)
-                            if text == "" then TextBox.Text = "Search ..." end
-                        end)
-                    end
-                end)
-
-                UserInputService.InputBegan:Connect(function(inputObject)
-                    local keycode = inputObject.KeyCode
-                    if keycode == Enum.KeyCode.LeftShift then shift = true end
-                    if canSearch then
-                        if keycode == Enum.KeyCode.Backspace then
-                            backspace = true
-                            text = text:sub(1, -2)
-                            updateTextBox()
-                            local backspaceTick = tick()
-                            local backspaceN = 0.5
-                            spawn(function()
-                                while backspace do
-                                    if (tick() - backspaceTick) >= backspaceN then
-                                        backspaceN = 0.05
-                                        backspaceTick = tick()
-                                        text = text:sub(1, -2)
-                                        updateTextBox()
-                                    end
-                                    RunService.Heartbeat:Wait()
-                                end
-                                backspaceN = 0.5
-                            end)
-                        elseif keycode == Enum.KeyCode.Space then
-                            text = text .. " "
-                            updateTextBox()
-                        end
-                        if betweenOpenInterval(keycode.Value, 48, 57) then
-                            local name = ({Zero = 0, One = 1, Two = 2, Three = 3, Four = 4, Five = 5, Six = 6, Seven = 7, Eight = 8, Nine = 9})[keycode.Name]
-                            text = text .. name
-                            updateTextBox()
-                        end
-                        if betweenOpenInterval(keycode.Value, 97, 122) then
-                            local name = (not shift) and keycode.Name:lower() or keycode.Name
-                            text = text .. name
-                            updateTextBox()
-                        end
-                    end
-                end)
-                UserInputService.InputEnded:Connect(function(inputObject)
-                    if inputObject.KeyCode == Enum.KeyCode.LeftShift then shift = false end
-                    if inputObject.KeyCode == Enum.KeyCode.Backspace then backspace = false end
-                end)
-
-                function dropdownSelf.setPosition(position)
-                    dropdownWindow.Position = position
-                end
-
-                function dropdownSelf:Destroy()
-                    dropdownButton:Destroy()
-                    dropdownWindow:Destroy()
-                end
-
-                dropdownSelf.self = dropdownButton
-                dropdownSelf.close()
-                return dropdownSelf
-            end
-
-            function types.dock(dockOptions)
-                local dockSelf = {}
-                dockOptions = settings.new({})(dockOptions)
-
-                local dock = new("Dock")
-                dock.Parent = items
-
-                dock.ChildAdded:Connect(function()
-                    local size = countSize(dock, true).X
-                    dock.Size = UDim2.new(0, size, 0, 22)
-                    updateCanvas()
-                end)
-
-                function dockSelf.new(type, typeOptions)
-                    assert(typeof(type) == "string", "expected string as #1 argument")
-                    type = type:lower()
-                    assert(type ~= "folder", "illegal type")
-
-                    local p = rawget(types, type)
-                    assert(p, "invalid type")
-                    local o = p(typeOptions)
-                    o.type = type
-                    o.self.Parent = dockSelf.self
-
-                    return o
-                end
-
-                dockSelf.updated = newEvent()
-                dock.ChildAdded:Connect(function() dockSelf.updated:Fire() end)
-                dock.ChildRemoved:Connect(function() dockSelf.updated:Fire() end)
-
-                function dockSelf:Destroy()
-                    dock:Destroy()
-                end
-
-                dockSelf.options = dockOptions
-                dockSelf.self = dock
-                return dockSelf
-            end
-
-            function types.folder(folderOptions)
-                local folderSelf = {isopen = false}
-                folderOptions = settings.new({text = "New Folder", isopen = false, color = options.color, rounding = options.rounding, animation = options.animation})(folderOptions)
-                folderSelf.isopen = folderOptions.isopen
-
-                local folder = new("Folder")
-                folder.Parent = items
-
-                local _folder = folder:FindFirstChild("Folder")
-                local folderItems = folder:FindFirstChild("Items")
-                _folder.SliceScale = folderOptions.rounding / 100
-                _folder.ImageColor3 = folderOptions.color
-
-                function folderSelf.setColor(color)
-                    _folder.ImageColor3 = color
-                end
-
-                function folderSelf.getColor()
-                    return _folder.ImageColor3
-                end
-
-                local title = _folder:FindFirstChild("Title")
-                local expand = _folder:FindFirstChild("Expand")
-                title.Text = folderOptions.text
-
-                function folderSelf.close()
-                    resize(folder, {Size = UDim2.new(1, 0, 0, 20)}, folderOptions.animation)
-                    resize(expand, {Rotation = 0}, folderOptions.animation)
-                    folderSelf.isopen = false
-                end
-
-                function folderSelf.open()
-                    local size = countSize(folderItems, true).X
-                    resize(folder, {Size = UDim2.new(1, 0, 0, 20 + countSize(folderItems).Y + 2)}, folderOptions.animation)
-                    resize(expand, {Rotation = 90}, folderOptions.animation)
-                    folderSelf.isopen = true
-                end
-
-                function folderSelf.switch()
-                    if folderSelf.isopen then folderSelf.close() else folderSelf.open() end
-                end
-
-                expand.MouseButton1Click:Connect(function()
-                    folderSelf.switch()
-                end)
-
-                local folderCache = {}
-                function folderSelf.new(type, typeOptions)
-                    assert(typeof(type) == "string", "expected string as #1 argument")
-                    type = type:lower()
-                    local p = rawget(types, type)
-                    assert(p, "invalid type")
-                    local o = p(typeOptions)
-                    table.insert(folderCache, o)
-                    o.type = type
-                    o.self.Parent = folderItems
-
-                    if folderSelf.isopen then folderSelf.open() end
-
-                    if o.type == "folder" then
-                        o.updated:Connect(function() if folderSelf.isopen then folderSelf.open() end end)
-                    end
-
-                    if o.type == "dock" then
-                        o.updated:Connect(function() if folderSelf.isopen then folderSelf.open() end end)
-                    end
-
-                    return o
-                end
-
-                folderSelf.updated = folder:GetPropertyChangedSignal("Size")
-
-                function folderSelf:Destroy()
-                    for i, v in pairs(folderCache) do v:Destroy() end
-                    folder:Destroy()
-                end
-
-                folderSelf.close()
-                if folderSelf.isopen then folderSelf.open() end
-                folderSelf.options = folderOptions
-                folderSelf.self = folder
-                return folderSelf
-            end
-
-            function tabSelf.new(type, typeOptions)
-                assert(typeof(type) == "string", "expected string as #1 argument")
-                type = type:lower()
-
-                local p = rawget(types, type)
-                assert(p, "invalid type")
-                local o = p(typeOptions)
-                o.type = type
-
-                if o.type == "folder" then
-                    o.updated:Connect(updateCanvas)
-                end
-
-                return setmetatable(o, {
-                    __index = function(self, idx)
-                        return rawget(rawget(self, "event"), idx)
-                    end,
-                    __newindex = function() end
-                })
-            end
-
-            function tabSelf.show()
-                for i, v in pairs(tabbuttons:GetChildren()) do
-                    if not v:IsA("UIListLayout") then
-                        resize(v, {TextColor3 = Color3.new(0.4, 0.4, 0.4)}, options.animation)
-                    end
-                end
-                for i, v in pairs(content:GetChildren()) do
-                    if v.Name == "Tab" then v.Visible = false end
-                end
-                resize(tabbutton, {TextColor3 = Color3.new(1, 1, 1)}, options.animation)
-                tab.Visible = true
-            end
-
-            tabSelf.show()
-            return tabSelf
-        end
-
-        function self.close()
-            if not self.isopen then return end
-            self.isopen = false
-            if expand then resize(expand, {Rotation = 0}, options.animation) end
-            cache.content_size = content and content.Size.Y.Offset or 0
-            cache.tabs_size = tabs and tabs.Size.Y.Offset or 0
-            if content then resize(content, {Size = UDim2.new(1, 0, 0, 0)}, options.animation) end
-            if tabs then resize(tabs, {Size = UDim2.new(1, 0, 0, 0)}, options.animation) end
-        end
-
-        function self.open()
-            if self.isopen then return end
-            self.isopen = true
-            if expand then resize(expand, {Rotation = 90}, options.animation) end
-            if content then resize(content, {Size = UDim2.new(1, 0, 0, cache.content_size or 200)}, options.animation) end
-            if tabs then resize(tabs, {Size = UDim2.new(1, 0, 0, cache.tabs_size or 28)}, options.animation) end
-        end
-
-        function self.setPosition(pos)
-            if main then main.Position = pos end
-        end
-		
-        do
-            local old = options.animation
-            options.animation = 0
-            self.close()
-            options.animation = old
-        end
-
-        -- Window History Setup
-        main.MouseEnter:Connect(function() mouseCache[main] = true end)
-        content.MouseEnter:Connect(function() browsingWindow[main] = true end)
-        main.MouseLeave:Connect(function() mouseCache[main] = false end)
-        content.MouseLeave:Connect(function() browsingWindow[main] = false end)
-
-        cacheWindowHistory(main)
-        for i, v in pairs(windowHistory) do windowHistory[i] = v + 1 end
-        windowHistory[main] = 1
-        updateWindowHistory()
-
-        mouse.InputBegan:Connect(function()
-            wait()
-            if not colorpicking and not sliding and not resizing then
-                local lastZIndex, focused = math.huge
-                for i, v in pairs(mouseCache) do
-                    if v and windowHistory[i] < lastZIndex then
-                        lastZIndex = windowHistory[i]
-                        focused = i
-                    end
-                end
-                if focused then setTopMost(focused) end
-            end
+        OptButton.MouseEnter:Connect(function()
+            OptButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
         end)
 
-        return self
+        OptButton.MouseLeave:Connect(function()
+            OptButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        end)
     end
-}
 
-return library
+    DropdownButton.MouseButton1Click:Connect(function()
+        DropdownList.Visible = not DropdownList.Visible
+    end)
+
+    return {
+        Set = function(self, newValue)
+            for _, opt in ipairs(optionsList) do
+                if opt == newValue then
+                    default = newValue
+                    DropdownLabel.Text = name .. ": " .. default
+                    callback(default)
+                    break
+                end
+            end
+        end
+    }
+end
+
+-- Keybind Creation
+local KeybindStates = {}
+
+function Library:CreateKeybind(parent, options)
+    options = options or {}
+    local name = options.Name or "Keybind"
+    local default = options.Default or Enum.KeyCode.F
+    local callback = options.Callback or function() end
+
+    local KeybindFrame = Instance.new("Frame")
+    KeybindFrame.Name = name .. "Keybind"
+    KeybindFrame.Parent = parent
+    KeybindFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    KeybindFrame.BorderSizePixel = 0
+    KeybindFrame.Size = UDim2.new(1, -10, 0, 20)
+
+    local KeybindLabel = Instance.new("TextLabel")
+    KeybindLabel.Name = "Label"
+    KeybindLabel.Parent = KeybindFrame
+    KeybindLabel.BackgroundTransparency = 1
+    KeybindLabel.Position = UDim2.new(0, 5, 0, 0)
+    KeybindLabel.Size = UDim2.new(1, -50, 1, 0)
+    KeybindLabel.Font = Enum.Font.Gotham
+    KeybindLabel.Text = name .. ": "
+    KeybindLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KeybindLabel.TextSize = 12
+    KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    local KeybindButton = Instance.new("TextButton")
+    KeybindButton.Name = "Button"
+    KeybindButton.Parent = KeybindFrame
+    KeybindButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    KeybindButton.BorderSizePixel = 0
+    KeybindButton.Position = UDim2.new(1, -40, 0, 0)
+    KeybindButton.Size = UDim2.new(0, 30, 1, 0)
+    KeybindButton.Font = Enum.Font.GothamBold
+    KeybindButton.Text = default.Name
+    KeybindButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KeybindButton.TextSize = 10
+    KeybindButton.TextXAlignment = Enum.TextXAlignment.Center
+
+    local listening = false
+    KeybindStates[name] = default
+
+    KeybindButton.MouseButton1Click:Connect(function()
+        listening = true
+        KeybindButton.Text = "..."
+        KeybindButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    end)
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then return end
+        if listening and input.KeyCode ~= Enum.KeyCode.Unknown then
+            local newKey = input.KeyCode
+            KeybindStates[name] = newKey
+            KeybindButton.Text = newKey.Name
+            KeybindButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            listening = false
+            callback(newKey)
+        end
+    end)
+
+    -- Add to keybinds panel
+    local KbEntry = Instance.new("TextLabel")
+    KbEntry.Name = name
+    KbEntry.Parent = KeybindsPanel
+    KbEntry.BackgroundTransparency = 1
+    KbEntry.Position = UDim2.new(0, 5, 0, 25 + (#KeybindsPanel:GetChildren() - 1) * 20)
+    KbEntry.Size = UDim2.new(1, -10, 0, 20)
+    KbEntry.Font = Enum.Font.Gotham
+    KbEntry.Text = name .. ": " .. default.Name
+    KbEntry.TextColor3 = Color3.fromRGB(255, 255, 255)
+    KbEntry.TextSize = 11
+    KbEntry.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Update panel when changed
+    KeybindButton:GetPropertyChangedSignal("Text"):Connect(function()
+        KbEntry.Text = name .. ": " .. KeybindButton.Text
+    end)
+
+    return {
+        Set = function(self, newKey)
+            KeybindStates[name] = newKey
+            KeybindButton.Text = newKey.Name
+            callback(newKey)
+            KbEntry.Text = name .. ": " .. newKey.Name
+        end
+    }
+end
+
+-- Color Picker (Simple, using a basic frame for now; full picker would be more complex)
+function Library:CreateColorPicker(parent, options)
+    options = options or {}
+    local name = options.Name or "ColorPicker"
+    local default = options.Default or Color3.fromRGB(255, 255, 255)
+    local callback = options.Callback or function() end
+
+    local ColorFrame = Instance.new("Frame")
+    ColorFrame.Name = name .. "ColorPicker"
+    ColorFrame.Parent = parent
+    ColorFrame.BackgroundColor3 = default
+    ColorFrame.BorderSizePixel = 0
+    ColorFrame.Size = UDim2.new(1, -10, 0, 20)
+
+    local ColorLabel = Instance.new("TextLabel")
+    ColorLabel.Name = "Label"
+    ColorLabel.Parent = ColorFrame
+    ColorLabel.BackgroundTransparency = 1
+    ColorLabel.Position = UDim2.new(0, 25, 0, 0)
+    ColorLabel.Size = UDim2.new(1, -30, 1, 0)
+    ColorLabel.Font = Enum.Font.Gotham
+    ColorLabel.Text = name
+    ColorLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ColorLabel.TextSize = 12
+    ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- Simple button to open picker (placeholder; full implementation would need HSV picker)
+    local ColorButton = Instance.new("TextButton")
+    ColorButton.Name = "Button"
+    ColorButton.Parent = ColorFrame
+    ColorButton.BackgroundTransparency = 1
+    ColorButton.Position = UDim2.new(0, 0, 0, 0)
+    ColorButton.Size = UDim2.new(0, 20, 1, 0)
+    ColorButton.Font = Enum.Font.Gotham
+    ColorButton.Text = "🎨"
+    ColorButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    ColorButton.TextSize = 12
+
+    ColorButton.MouseButton1Click:Connect(function()
+        -- For simplicity, cycle through colors; in full lib, open a picker GUI
+        local colors = {Color3.fromRGB(255,0,0), Color3.fromRGB(0,255,0), Color3.fromRGB(0,0,255), Color3.fromRGB(255,255,0)}
+        default = colors[math.random(1, #colors)]
+        ColorFrame.BackgroundColor3 = default
+        callback(default)
+    end)
+
+    return {
+        Set = function(self, newColor)
+            default = newColor
+            ColorFrame.BackgroundColor3 = default
+            callback(default)
+        end
+    }
+end
+
+-- Chat/Console Functions
+function Library:AddMessage(text, isDamage)
+    local MessageFrame = Instance.new("Frame")
+    MessageFrame.Name = "Message"
+    MessageFrame.Parent = ChatFrame
+    MessageFrame.BackgroundTransparency = 1
+    MessageFrame.Size = UDim2.new(1, -10, 0, 20)
+
+    local MessageLabel = Instance.new("TextLabel")
+    MessageLabel.Name = "Text"
+    MessageLabel.Parent = MessageFrame
+    MessageLabel.BackgroundTransparency = 1
+    MessageLabel.Size = UDim2.new(1, 0, 1, 0)
+    MessageLabel.Font = Enum.Font.Gotham
+    MessageLabel.Text = text
+    MessageLabel.TextColor3 = isDamage and Color3.fromRGB(255, 0, 0) or Color3.fromRGB(255, 255, 255)
+    MessageLabel.TextSize = 11
+    MessageLabel.TextXAlignment = Enum.TextXAlignment.Left
+    MessageLabel.TextWrapped = true
+
+    ChatFrame.CanvasSize = UDim2.new(0, 0, 0, ChatLayout.AbsoluteContentSize.Y)
+    ChatFrame.CanvasPosition = Vector2.new(0, ChatFrame.CanvasSize.Y.Offset)
+
+    -- Auto-remove old messages if too many
+    if #ChatFrame:GetChildren() > 50 then
+        ChatFrame:GetChildren()[1]:Destroy()
+    end
+end
+
+-- Keybind Global Handler
+UserInputService.InputBegan:Connect(function(input)
+    for name, key in pairs(KeybindStates) do
+        if input.KeyCode == key then
+            -- Fire callback if needed; here just print for demo
+            print("Keybind triggered: " .. name)
+            -- Add damage message example
+            Library:AddMessage("Hit noob in the head for 100 damage (UpperTorso)", true)
+        end
+    end
+end)
+
+-- Minimize Functionality
+local minimized = false
+MinimizeButton.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    Tween(MainFrame, {Size = minimized and UDim2.new(0, 600, 0, 30) or UDim2.new(0, 600, 0, 400)}, 0.3)
+    ContentFrame.Visible = not minimized
+    MinimizeButton.Text = minimized and "+" or "-"
+end)
+
+-- Toggle Keybinds Panel
+local kbVisible = false
+-- Add a button to toggle keybinds, e.g., on TopBar
+local KbToggle = Instance.new("TextButton")
+KbToggle.Name = "KbToggle"
+KbToggle.Parent = TopBar
+KbToggle.BackgroundTransparency = 1
+KbToggle.Position = UDim2.new(1, -60, 0, 0)
+KbToggle.Size = UDim2.new(0, 20, 1, 0)
+KbToggle.Font = Enum.Font.Gotham
+KbToggle.Text = "KB"
+KbToggle.TextColor3 = Color3.fromRGB(150, 150, 150)
+KbToggle.TextSize = 12
+
+KbToggle.MouseButton1Click:Connect(function()
+    kbVisible = not kbVisible
+    KeybindsPanel.Visible = kbVisible
+    Tween(KeybindsPanel, {Position = kbVisible and UDim2.new(1, -200, 0, 50) or UDim2.new(1, 0, 0, 50)}, 0.3, Enum.EasingStyle.Back)
+end)
+
+-- Example Usage (to match screenshot)
+local ExampleTab = Library:CreateTab("Example")
+
+local Section1 = CreateSection(ExampleTab, "Title")
+
+Library:CreateToggle(Section1, {Name = "Toggle", Default = false})
+Library:CreateSlider(Section1, {Name = "Slider", Min = 0, Max = 100, Default = 50})
+Library:CreateDropdown(Section1, {Name = "Example Dropdown", Options = {"Option 1", "Option 2", "Option 3"}, Default = "Option 1"})
+Library:CreateKeybind(Section1, {Name = "Example Keybind", Default = Enum.KeyCode.F})
+Library:CreateColorPicker(Section1, {Name = "Color Keybind", Default = Color3.fromRGB(255, 0, 0)})
+
+local SettingsTab = Library:CreateTab("Settings")
+
+local Section2 = CreateSection(SettingsTab, "Title")
+
+Library:CreateToggle(Section2, {Name = "Toggle", Default = true})
+Library:CreateSlider(Section2, {Name = "Slider", Min = 0, Max = 100, Default = 50})
+Library:CreateDropdown(Section2, {Name = "Example Dropdown", Options = {"Option 1"}, Default = "Option 1"})
+Library:CreateKeybind(Section2, {Name = "Example Keybind", Default = Enum.KeyCode.NONE})
+
+-- Example messages
+Library:AddMessage("Hello there!! This is textThis is textThis is textThis is textThis is text")
+Library:AddMessage("Hit noob in the head for 100 damage (UpperTorso)", true)
+Library:AddMessage("Hello there!! This is textThis is textThis is textThis is textThis is text")
+Library:AddMessage("Hit noob in the head for 100 damage (UpperTorso)", true)
+Library:AddMessage("Hello there!! This is textThis is textThis is textThis is textThis is text")
+Library:AddMessage("Hit noob in the head for 100 damage (UpperTorso)", true)
+Library:AddMessage("Hello there!! This is textThis is textThis is textThis is textThis is text")
+Library:AddMessage("Hit noob in the head for 100 damage (UpperTorso)", true)
+
+-- Return the library
+return Library
