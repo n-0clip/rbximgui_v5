@@ -1408,7 +1408,7 @@ local library = {
             rounding = 5,
             animation = 0.1,
             position = UDim2.new(0, 100, 0, 100),
-            keybind = nil, -- New: Keybind for toggle
+            keybind = nil,
         })(options)
 
         local main = new("Main")
@@ -1417,20 +1417,23 @@ local library = {
         local tabs = main:FindFirstChild("Tabs")
         local shadow = main:FindFirstChild("Shadow")
         local layer = main:FindFirstChild("Layer")
-        local expand = main:FindFirstChild("Expand")
-        local title = main:FindFirstChild("Title_2")
+        local expand = main:FindFirstChild("Expand_2") -- FIX: "Expand_2" instead of "Expand"
+        local title = main:FindFirstChild("Title_2") -- Already correct
+
+        if not expand then warn("Expand_2 not found in Main preset!") return end -- Safety check
 
         main.Position = options.position
         content.ImageTransparency = options.transparency
         layer.ImageTransparency = options.transparency
         shadow.ImageTransparency = 0.6 * (options.transparency + 1)
 
-        -- Keybind Toggle (New)
+        -- Keybind Toggle (fixed: use self.isopen for visibility)
         if options.keybind then
             UserInputService.InputBegan:Connect(function(input)
-                if input.KeyCode == options.keybind then
+                if input.KeyCode == options.keybind and not input.KeyCode == Enum.KeyCode.Unknown then
                     self.isopen = not self.isopen
                     main.Visible = self.isopen
+                    if self.isopen then self.open() else self.close() end -- Sync with open/close
                 end
             end)
         end
@@ -1444,11 +1447,12 @@ local library = {
         end)
 
         dragger.new(main)
-        resizer.new(main, content) -- New Resize
+        resizer.new(main, content)
 
-        title.Text = options.text
+        if title then title.Text = options.text end -- Nil check
         main.ImageColor3 = options.color
-        main:FindFirstChild("Frame").BackgroundColor3 = options.color
+        local frameChild = main:FindFirstChild("Frame")
+        if frameChild then frameChild.BackgroundColor3 = options.color end
         main.Size = UDim2.new(0, options.size.X, 0, main.Size.Y.Offset)
         main.SliceScale = options.rounding / 100
 
@@ -1457,11 +1461,15 @@ local library = {
         content.SliceScale = options.rounding / 100
 
         function cache.update_layers(y)
-            shadow.Position = UDim2.new(0, options.shadow, 0, options.shadow)
-            shadow.Size = UDim2.new(1, 0, 0, y)
-            shadow.SliceScale = options.rounding / 100
-            layer.Size = UDim2.new(1, 0, 0, y)
-            layer.SliceScale = options.rounding / 100
+            if shadow then
+                shadow.Position = UDim2.new(0, options.shadow, 0, options.shadow)
+                shadow.Size = UDim2.new(1, 0, 0, y)
+                shadow.SliceScale = options.rounding / 100
+            end
+            if layer then
+                layer.Size = UDim2.new(1, 0, 0, y)
+                layer.SliceScale = options.rounding / 100
+            end
         end
         cache.update_layers(main.AbsoluteSize.Y + content.AbsoluteSize.Y)
 
@@ -1516,32 +1524,36 @@ local library = {
 
             local types = {}
 
-            function types.label(labelOptions)
-                local labelSelf = {}
-                labelOptions = settings.new({text = "New Label", color = Color3.new(1, 1, 1)})(labelOptions)
-
-                local label = new("Label")
-                label.Parent = items
-                label.Text = labelOptions.text
-                label.Size = UDim2.new(0, label.TextBounds.X, 0, label.Size.Y.Offset)
-                label.TextColor3 = labelOptions.color
-
-                function labelSelf.setText(text)
-                    label.Text = text
-                    label.Size = UDim2.new(0, label.TextBounds.X, 0, label.Size.Y.Offset)
-                end
-
-                function labelSelf.setColor(color)
-                    label.TextColor3 = color
-                end
-
-                function labelSelf:Destroy()
-                    label:Destroy()
-                end
-
-                labelSelf.self = label
-                return labelSelf
-            end
+	        function types.label(labelOptions)
+	            local labelSelf = {}
+	            labelOptions = settings.new({text = "New Label", color = Color3.new(1, 1, 1)})(labelOptions)
+	
+	            local label = new("Label")
+	            label.Parent = items
+	            if label then -- Nil check
+	                label.Text = labelOptions.text or "Label"
+	                label.Size = UDim2.new(0, label.TextBounds.X, 0, label.Size.Y.Offset)
+	                label.TextColor3 = labelOptions.color
+	
+	                function labelSelf.setText(text)
+	                    if label then
+	                        label.Text = text or ""
+	                        label.Size = UDim2.new(0, label.TextBounds.X, 0, label.Size.Y.Offset)
+	                    end
+	                end
+	
+	                function labelSelf.setColor(color)
+	                    if label then label.TextColor3 = color end
+	                end
+	
+	                function labelSelf:Destroy()
+	                    if label then label:Destroy() end
+	                end
+	
+	                labelSelf.self = label
+	            end
+	            return labelSelf
+	        end
 
             function types.button(buttonOptions)
                 local buttonSelf = {eventBlock = false}
