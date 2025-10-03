@@ -11,7 +11,7 @@ if game:GetService("CoreGui"):FindFirstChild("imgui2") then
 end
 
 -- Load items (Full Presets) - Moved outside do block for global access
-local imgui2 = Instance.new("ScreenGui")
+local imgui = Instance.new("ScreenGui")
 local Presets = Instance.new("Frame")
 local Label = Instance.new("TextLabel")
 local TabButton = Instance.new("TextButton")
@@ -111,9 +111,6 @@ local ImageLabel_8 = Instance.new("ImageLabel")
 local Value_2 = Instance.new("TextLabel")
 local Text_4 = Instance.new("TextLabel")
 local Cache_2 = Instance.new("Frame")
--- New Resize Handle Preset
-local ResizeHandle = Instance.new("Frame")
-local ResizeGrip = Instance.new("ImageLabel")
 
 imgui2.Name = "imgui2"
 imgui2.Parent = game:GetService("CoreGui")
@@ -1132,12 +1129,11 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
-local ScreenGui = CoreGui:FindFirstChild("imgui2")
-local ScreenGuiCache = ScreenGui:FindFirstChild("Cache")
+local ScreenGui = CoreGui:FindFirstChild("imgui")
+local ScreenGuiCache = ScreenGui:FindFirstChild("Cache_2") -- Исправлено на Cache_2
 
 local colorpicking = false
 local sliding = false
-local resizing = false
 
 -- Event System
 local function newEvent()
@@ -1293,42 +1289,6 @@ function dragger.new(frame)
     end)
 end
 
--- Resizer (New)
-local resizer = {}
-function resizer.new(frame, content)
-    local handle = Presets.ResizeHandle:Clone()
-    handle.Parent = frame
-    handle.Position = UDim2.new(1, -20, 1, -20)
-
-    local held = false
-    handle.MouseEnter:Connect(function()
-        UserInputService.MouseIcon = Enum.MouseIcon.Size4
-    end)
-    handle.MouseLeave:Connect(function()
-        if not held then
-            UserInputService.MouseIcon = Enum.MouseIcon.Arrow
-        end
-    end)
-
-    mouse.InputBegan:Connect(function()
-        if findBrowsingTopMost() == frame and draggerCache[handle] then
-            held = true
-            resizing = true
-            local startPos = getMouse()
-            local startSize = frame.AbsoluteSize
-            while mouse.held do
-                local delta = getMouse() - startPos
-                frame.Size = UDim2.new(0, math.max(100, startSize.X + delta.X), 0, math.max(100, startSize.Y + delta.Y))
-                content.Size = UDim2.new(1, 0, 0, frame.AbsoluteSize.Y - 22)
-                RunService.Heartbeat:Wait()
-            end
-            held = false
-            resizing = false
-            UserInputService.MouseIcon = Enum.MouseIcon.Arrow
-        end
-    end)
-end
-
 -- Utilities
 local function betweenOpenInterval(n, n1, n2)
     return n <= n2 and n >= n1
@@ -1418,8 +1378,6 @@ local library = {
         local expand = main:FindFirstChild("Expand_2")
         local title = main:FindFirstChild("Title_2")
 
-        if not expand then warn("Expand_2 not found in Main preset!") return end
-
         main.Position = options.position
         content.ImageTransparency = options.transparency
         layer.ImageTransparency = options.transparency
@@ -1428,7 +1386,7 @@ local library = {
         -- Keybind Toggle
         if options.keybind then
             UserInputService.InputBegan:Connect(function(input)
-                if input.KeyCode == options.keybind and not input.KeyCode == Enum.KeyCode.Unknown then
+                if input.KeyCode == options.keybind and input.KeyCode ~= Enum.KeyCode.Unknown then
                     self.isopen = not self.isopen
                     main.Visible = self.isopen
                     if self.isopen then self.open() else self.close() end
@@ -1445,27 +1403,26 @@ local library = {
         end)
 
         dragger.new(main)
-        resizer.new(main, content)
 
         if title then title.Text = options.text end
         main.ImageColor3 = options.color
         local frameChild = main:FindFirstChild("Frame")
         if frameChild then frameChild.BackgroundColor3 = options.color end
-        main.Size = UDim2.new(0, options.size.X, 0, main.Size.Y.Offset)
+        main.Size = UDim2.new(0, options.size.X, 0, options.size.Y) -- Фиксированный размер
         main.SliceScale = options.rounding / 100
 
         content.ImageColor3 = options.boardcolor
-        content.Size = UDim2.new(1, 0, 0, options.size.Y)
+        content.Size = UDim2.new(1, 0, 1, 0) -- Фиксированный, без ресайза
         content.SliceScale = options.rounding / 100
 
         function cache.update_layers(y)
             if shadow then
                 shadow.Position = UDim2.new(0, options.shadow, 0, options.shadow)
-                shadow.Size = UDim2.new(1, 0, 0, y)
+                shadow.Size = UDim2.new(1, 0, 1, 0)
                 shadow.SliceScale = options.rounding / 100
             end
             if layer then
-                layer.Size = UDim2.new(1, 0, 0, y)
+                layer.Size = UDim2.new(1, 0, 1, 0)
                 layer.SliceScale = options.rounding / 100
             end
         end
@@ -1474,7 +1431,7 @@ local library = {
         content:GetPropertyChangedSignal("Size"):Connect(function()
             cache.update_layers(main.AbsoluteSize.Y + content.AbsoluteSize.Y)
         end)
-
+		
         -- Tab System
         function self.new(tabOptions)
             local tabSelf = {}
