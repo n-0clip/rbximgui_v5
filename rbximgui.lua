@@ -112,11 +112,11 @@ local Value_2 = Instance.new("TextLabel")
 local Text_4 = Instance.new("TextLabel")
 local Cache_2 = Instance.new("Frame")
 
-imgui2.Name = "imgui2"
-imgui2.Parent = game:GetService("CoreGui")
+imgui.Name = "imgui"
+imgui.Parent = game:GetService("CoreGui")
 
 Presets.Name = "Presets"
-Presets.Parent = imgui2
+Presets.Parent = imgui
 Presets.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 Presets.Size = UDim2.new(0, 100, 0, 100)
 Presets.Visible = false
