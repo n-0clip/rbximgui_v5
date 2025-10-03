@@ -1,9 +1,7 @@
 --[[
 	rbimgui-2
-	version 1.3 (Rewritten with Keybind & Resize)
-	by Singularity (enhanced)
-        https://v3rmillion.net/member.php?action=profile&uid=947830
-        Singularity#5490
+	version 1.4 (Rewritten with Keybind & Resize)
+	by n0clip
 	Enhancements: Keybind support for toggling windows, resizable corners.
 --]]
 
