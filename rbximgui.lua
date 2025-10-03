@@ -1124,7 +1124,7 @@ do -- Load items (Full Presets)
     ResizeGrip.Parent = ResizeHandle
     ResizeGrip.BackgroundTransparency = 1
     ResizeGrip.Size = UDim2.new(1, 0, 1, 0)
-    ResizeGrip.Image = "rbxassetid://3926305904"  -- Resize icon
+    ResizeGrip.Image = "rbxassetid://3926305904"
     ResizeGrip.ImageColor3 = Color3.fromRGB(255, 255, 255)
     ResizeGrip.ImageTransparency = 0.3
 end
@@ -2312,28 +2312,28 @@ local library = {
             return tabSelf
         end
 
-        function self.close()
+		function self.close()
             if not self.isopen then return end
             self.isopen = false
-            resize(expand, {Rotation = 0}, options.animation)
-            cache.content_size = content.Size.Y.Offset
-            cache.tabs_size = tabs.Size.Y.Offset
-            resize(content, {Size = UDim2.new(1, 0, 0, 0)}, options.animation)
-            resize(tabs, {Size = UDim2.new(1, 0, 0, 0)}, options.animation)
+            if expand then resize(expand, {Rotation = 0}, options.animation) end
+            cache.content_size = content and content.Size.Y.Offset or 0
+            cache.tabs_size = tabs and tabs.Size.Y.Offset or 0
+            if content then resize(content, {Size = UDim2.new(1, 0, 0, 0)}, options.animation) end
+            if tabs then resize(tabs, {Size = UDim2.new(1, 0, 0, 0)}, options.animation) end
         end
 
         function self.open()
             if self.isopen then return end
             self.isopen = true
-            resize(expand, {Rotation = 90}, options.animation)
-            resize(content, {Size = UDim2.new(1, 0, 0, cache.content_size)}, options.animation)
-            resize(tabs, {Size = UDim2.new(1, 0, 0, cache.tabs_size)}, options.animation)
+            if expand then resize(expand, {Rotation = 90}, options.animation) end
+            if content then resize(content, {Size = UDim2.new(1, 0, 0, cache.content_size or 200)}, options.animation) end
+            if tabs then resize(tabs, {Size = UDim2.new(1, 0, 0, cache.tabs_size or 28)}, options.animation) end
         end
 
         function self.setPosition(pos)
-            main.Position = pos
+            if main then main.Position = pos end
         end
-
+		
         do
             local old = options.animation
             options.animation = 0
