@@ -1,4 +1,4 @@
--- v4
+-- v3
 
 local library = loadstring(game:GetObjects("rbxassetid://7657867786")[1].Source)()
 local Wait = library.subs.Wait
