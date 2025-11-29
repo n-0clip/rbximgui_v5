@@ -9,6 +9,7 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
@@ -20,7 +21,7 @@ Core.SupportedGames = {
     [286090429] = "Arsenal",
     [142823291] = "Murder Mystery 2",
     [3837841034] = "Bad Business",
-    [7839240260] = "Flick"
+    [7839390065] = "Flick"
 }
 
 Core.PlaceId = game.PlaceId
@@ -33,19 +34,18 @@ Core.ESPSettings = {
     Health = {On = false, Position = "Left"},
     Distance = {On = false, Color = Color3.new(1,1,1)},
     Skeleton = {On = false, Color = Color3.new(1,1,1)},
-    Chams = {On = false, Color = Color3.fromRGB(212,133,240), Transparency = 0.5, OutlineColor = Color3.new(1,1,1)},
+    Chams = {On = false, Color = Color3.fromRGB(212,133,240), Transparency = 0.5},
     Tracers = {On = false, Origin = "Bottom", Color = Color3.new(1,1,1)},
     HeadDot = {On = false, Color = Color3.new(1,0,0)},
     Weapon = {On = false, Color = Color3.new(1,1,1)},
     Flags = {On = false, Color = Color3.new(1,1,1)},
-    OffScreenArrows = {On = false, Color = Color3.new(1,0,0), Size = 15, Radius = 150},
+    OffScreenArrows = {On = false, Color = Color3.new(1,0,0), Size = 15},
     MaxDist = 2000,
     TeamCheck = false,
     ShowRole = true,
     Rainbow = {On = false, Speed = 1},
-    VisibleColor = Color3.new(0,1,0),
-    HiddenColor = Color3.new(1,0,0),
-    UseVisibilityColor = false,
+    OutlineThickness = 1,
+    BoxThickness = 1,
     MurdererColor = Color3.fromRGB(255,0,0),
     SheriffColor = Color3.fromRGB(0,100,255),
     InnocentColor = Color3.fromRGB(0,255,0)
@@ -78,57 +78,64 @@ Core.TriggerSettings = {
 }
 
 Core.WorldSettings = {
-    Time = 12,
+    Time = 14,
     Brightness = 1,
-    Ambient = Color3.fromRGB(127,127,127),
-    OutdoorAmbient = Color3.fromRGB(127,127,127),
-    FogEnabled = true,
-    FogEnd = 1000,
-    FogColor = Color3.fromRGB(192,192,192),
+    Ambient = Color3.fromRGB(127, 127, 127),
+    OutdoorAmbient = Color3.fromRGB(127, 127, 127),
+    FogEnd = 100000,
+    FogColor = Color3.new(1,1,1),
     Skybox = "Default"
 }
 
 Core.Skyboxes = {
     Default = nil,
     Night = {
-        SkyboxBk = "rbxassetid://1081853136",
-        SkyboxDn = "rbxassetid://1081853136",
-        SkyboxFt = "rbxassetid://1081853136",
-        SkyboxLf = "rbxassetid://1081853136",
-        SkyboxRt = "rbxassetid://1081853136",
-        SkyboxUp = "rbxassetid://1081853136"
-    },
-    Sunset = {
-        SkyboxBk = "rbxassetid://1081853300",
-        SkyboxDn = "rbxassetid://1081853300",
-        SkyboxFt = "rbxassetid://1081853300",
-        SkyboxLf = "rbxassetid://1081853300",
-        SkyboxRt = "rbxassetid://1081853300",
-        SkyboxUp = "rbxassetid://1081853300"
+        SkyboxBk = "rbxassetid://12064107",
+        SkyboxDn = "rbxassetid://12064152",
+        SkyboxFt = "rbxassetid://12064121",
+        SkyboxLf = "rbxassetid://12064115",
+        SkyboxRt = "rbxassetid://12064134",
+        SkyboxUp = "rbxassetid://12064131"
     },
     Galaxy = {
-        SkyboxBk = "rbxassetid://159454286",
-        SkyboxDn = "rbxassetid://159454286",
-        SkyboxFt = "rbxassetid://159454286",
+        SkyboxBk = "rbxassetid://159454299",
+        SkyboxDn = "rbxassetid://159454296",
+        SkyboxFt = "rbxassetid://159454293",
         SkyboxLf = "rbxassetid://159454286",
-        SkyboxRt = "rbxassetid://159454286",
-        SkyboxUp = "rbxassetid://159454286"
+        SkyboxRt = "rbxassetid://159454300",
+        SkyboxUp = "rbxassetid://159454288"
+    },
+    Sunset = {
+        SkyboxBk = "rbxassetid://1012890",
+        SkyboxDn = "rbxassetid://1012891",
+        SkyboxFt = "rbxassetid://1012887",
+        SkyboxLf = "rbxassetid://1012889",
+        SkyboxRt = "rbxassetid://1012888",
+        SkyboxUp = "rbxassetid://1014449"
     },
     Cloudy = {
-        SkyboxBk = "rbxassetid://252768657",
-        SkyboxDn = "rbxassetid://252768657",
-        SkyboxFt = "rbxassetid://252768657",
-        SkyboxLf = "rbxassetid://252768657",
-        SkyboxRt = "rbxassetid://252768657",
-        SkyboxUp = "rbxassetid://252768657"
+        SkyboxBk = "rbxassetid://552628637",
+        SkyboxDn = "rbxassetid://552628637",
+        SkyboxFt = "rbxassetid://552628637",
+        SkyboxLf = "rbxassetid://552628637",
+        SkyboxRt = "rbxassetid://552628637",
+        SkyboxUp = "rbxassetid://552628637"
     },
     Pink = {
-        SkyboxBk = "rbxassetid://170880816",
-        SkyboxDn = "rbxassetid://170880816",
-        SkyboxFt = "rbxassetid://170880816",
-        SkyboxLf = "rbxassetid://170880816",
-        SkyboxRt = "rbxassetid://170880816",
-        SkyboxUp = "rbxassetid://170880816"
+        SkyboxBk = "rbxassetid://2909673068",
+        SkyboxDn = "rbxassetid://2909673068",
+        SkyboxFt = "rbxassetid://2909673068",
+        SkyboxLf = "rbxassetid://2909673068",
+        SkyboxRt = "rbxassetid://2909673068",
+        SkyboxUp = "rbxassetid://2909673068"
+    },
+    Vaporwave = {
+        SkyboxBk = "rbxassetid://1417494030",
+        SkyboxDn = "rbxassetid://1417494146",
+        SkyboxFt = "rbxassetid://1417494253",
+        SkyboxLf = "rbxassetid://1417494402",
+        SkyboxRt = "rbxassetid://1417494499",
+        SkyboxUp = "rbxassetid://1417494643"
     }
 }
 
@@ -154,40 +161,36 @@ Core.CBSettings = {
 Core.ArsenalSettings = {
     InfAmmo = false,
     NoRecoil = false,
+    NoSpread = false,
     RapidFire = false,
-    KillAll = false,
-    AutoKnife = false,
-    BHop = false
+    AutoKill = false
 }
 
 Core.PFSettings = {
     NoRecoil = false,
     NoSpread = false,
-    InfAmmo = false,
     NoSway = false,
-    InstantAim = false,
-    WalkSpeed = 16,
-    JumpPower = 50
+    InstaReload = false,
+    NoFlash = false,
+    NoSmoke = false,
+    RapidFire = false
 }
 
 Core.RivalsSettings = {
     NoRecoil = false,
     NoSpread = false,
     InfAmmo = false,
-    RapidFire = false,
-    NoFlash = false,
-    BHop = false
+    AutoWin = false
 }
 
 Core.FlickSettings = {
-    AutoWin = false,
-    InfCoins = false,
-    Speed = false,
-    SpeedValue = 16
+    AutoClick = false,
+    ClickDelay = 0,
+    AutoBuy = false
 }
 
-Core.GameLoops = {}
-Core.OriginalValues = {}
+Core.CBLoops = {}
+Core.CBOriginalValues = {}
 Core.ESPObjects = {}
 Core.ChamsObjects = {}
 Core.Connections = {}
@@ -196,6 +199,7 @@ Core.LockedTarget = nil
 Core.RainbowHue = 0
 Core.SilentAimTarget = nil
 Core.OriginalSkybox = nil
+Core.OriginalLighting = {}
 
 Core.SkeletonParts = {
     {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
@@ -240,16 +244,6 @@ function Core.GetRainbowColor()
     return Color3.fromHSV(Core.RainbowHue, 1, 1)
 end
 
-function Core.GetPlayerWeapon(player)
-    if not player or not player.Character then return "None" end
-    for _, v in pairs(player.Character:GetChildren()) do
-        if v:IsA("Tool") then
-            return v.Name
-        end
-    end
-    return "None"
-end
-
 function Core.GetMM2Role(player)
     if Core.GameName ~= "Murder Mystery 2" then return "Innocent" end
     if Core.MM2Roles[player] then return Core.MM2Roles[player] end
@@ -280,27 +274,53 @@ function Core.GetMM2Role(player)
     return Core.MM2Roles[player]
 end
 
-function Core.GetESPColor(player, part)
+function Core.GetESPColor(player)
     if Core.ESPSettings.Rainbow.On then
         return Core.GetRainbowColor()
     end
-    
-    if Core.ESPSettings.UseVisibilityColor and part then
-        if Core.IsVisible(part) then
-            return Core.ESPSettings.VisibleColor
-        else
-            return Core.ESPSettings.HiddenColor
-        end
-    end
-    
     if Core.GameName == "Murder Mystery 2" and Core.ESPSettings.ShowRole then
         local role = Core.GetMM2Role(player)
         if role == "Murderer" then return Core.ESPSettings.MurdererColor end
         if role == "Sheriff" then return Core.ESPSettings.SheriffColor end
         return Core.ESPSettings.InnocentColor
     end
-    
     return Core.ESPSettings.Box.Color
+end
+
+function Core.GetPlayerWeapon(player)
+    if not player.Character then return "None" end
+    for _, v in pairs(player.Character:GetChildren()) do
+        if v:IsA("Tool") then
+            return v.Name
+        end
+    end
+    return "None"
+end
+
+function Core.GetPlayerFlags(player)
+    local flags = {}
+    if not player.Character then return flags end
+    
+    local hum = player.Character:FindFirstChild("Humanoid")
+    if hum then
+        if hum.Health < hum.MaxHealth * 0.3 then
+            table.insert(flags, "LOW HP")
+        end
+    end
+    
+    local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+    if hrp and hrp.AssemblyLinearVelocity.Magnitude > 50 then
+        table.insert(flags, "FAST")
+    end
+    
+    if Core.GameName == "Murder Mystery 2" then
+        local role = Core.GetMM2Role(player)
+        if role ~= "Innocent" then
+            table.insert(flags, role:upper())
+        end
+    end
+    
+    return flags
 end
 
 function Core.GetClosestPlayer()
@@ -421,25 +441,25 @@ function Core.CreateESP(plr)
     Core.ESPObjects[plr] = {
         Box = Core.CreateDrawing("Square", {Thickness = 1, Filled = false, ZIndex = 2}),
         BoxOutline = Core.CreateDrawing("Square", {Thickness = 3, Filled = false, Color = Color3.new(0,0,0), ZIndex = 1}),
-        BoxFilled = Core.CreateDrawing("Square", {Thickness = 1, Filled = true, Transparency = 0.3, ZIndex = 0}),
+        BoxFill = Core.CreateDrawing("Square", {Filled = true, Transparency = 0.5, ZIndex = 0}),
         CornerTL = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
         CornerTR = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
         CornerBL = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
         CornerBR = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerTL2 = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerTR2 = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerBL2 = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerBR2 = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
+        CornerTLV = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
+        CornerTRV = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
+        CornerBLV = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
+        CornerBRV = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
         Name = Core.CreateDrawing("Text", {Size = 13, Center = true, Outline = true, Font = 2, ZIndex = 3}),
         Health = Core.CreateDrawing("Square", {Filled = true, ZIndex = 2}),
         HealthOutline = Core.CreateDrawing("Square", {Filled = true, Color = Color3.new(0,0,0), ZIndex = 1}),
         HealthText = Core.CreateDrawing("Text", {Size = 10, Center = true, Outline = true, Font = 2, ZIndex = 3}),
         Distance = Core.CreateDrawing("Text", {Size = 11, Center = true, Outline = true, Font = 2, ZIndex = 3}),
-        Weapon = Core.CreateDrawing("Text", {Size = 11, Center = true, Outline = true, Font = 2, ZIndex = 3}),
-        Flags = Core.CreateDrawing("Text", {Size = 11, Center = false, Outline = true, Font = 2, ZIndex = 3}),
         HeadDot = Core.CreateDrawing("Circle", {Filled = true, Radius = 3, ZIndex = 3}),
         Tracer = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 1}),
-        Arrow = Core.CreateDrawing("Triangle", {Filled = true, ZIndex = 3}),
+        Weapon = Core.CreateDrawing("Text", {Size = 11, Center = true, Outline = true, Font = 2, ZIndex = 3}),
+        Flags = Core.CreateDrawing("Text", {Size = 10, Center = false, Outline = true, Font = 2, ZIndex = 3}),
+        Arrow = Core.CreateDrawing("Triangle", {Filled = true, ZIndex = 5}),
         Skeleton = {}
     }
     
@@ -470,71 +490,94 @@ function Core.RemoveESP(plr)
 end
 
 function Core.HideESP(esp)
-    for k, v in pairs(esp) do
-        if type(v) == "table" then
-            for _, line in pairs(v) do line.Visible = false end
-        else
-            v.Visible = false
-        end
-    end
+    esp.Box.Visible = false
+    esp.BoxOutline.Visible = false
+    esp.BoxFill.Visible = false
+    esp.CornerTL.Visible = false
+    esp.CornerTR.Visible = false
+    esp.CornerBL.Visible = false
+    esp.CornerBR.Visible = false
+    esp.CornerTLV.Visible = false
+    esp.CornerTRV.Visible = false
+    esp.CornerBLV.Visible = false
+    esp.CornerBRV.Visible = false
+    esp.Name.Visible = false
+    esp.Health.Visible = false
+    esp.HealthOutline.Visible = false
+    esp.HealthText.Visible = false
+    esp.Distance.Visible = false
+    esp.HeadDot.Visible = false
+    esp.Tracer.Visible = false
+    esp.Weapon.Visible = false
+    esp.Flags.Visible = false
+    esp.Arrow.Visible = false
+    for _, line in pairs(esp.Skeleton) do line.Visible = false end
 end
 
-function Core.DrawCornerBox(esp, x, y, width, height, color)
-    local cornerLength = height / 4
+function Core.DrawCornerBox(esp, x, y, width, height, color, thickness)
+    local cornerSize = math.min(width, height) / 4
     
     esp.CornerTL.From = Vector2.new(x, y)
-    esp.CornerTL.To = Vector2.new(x + cornerLength, y)
+    esp.CornerTL.To = Vector2.new(x + cornerSize, y)
     esp.CornerTL.Color = color
+    esp.CornerTL.Thickness = thickness
     esp.CornerTL.Visible = true
     
-    esp.CornerTL2.From = Vector2.new(x, y)
-    esp.CornerTL2.To = Vector2.new(x, y + cornerLength)
-    esp.CornerTL2.Color = color
-    esp.CornerTL2.Visible = true
+    esp.CornerTLV.From = Vector2.new(x, y)
+    esp.CornerTLV.To = Vector2.new(x, y + cornerSize)
+    esp.CornerTLV.Color = color
+    esp.CornerTLV.Thickness = thickness
+    esp.CornerTLV.Visible = true
     
     esp.CornerTR.From = Vector2.new(x + width, y)
-    esp.CornerTR.To = Vector2.new(x + width - cornerLength, y)
+    esp.CornerTR.To = Vector2.new(x + width - cornerSize, y)
     esp.CornerTR.Color = color
+    esp.CornerTR.Thickness = thickness
     esp.CornerTR.Visible = true
     
-    esp.CornerTR2.From = Vector2.new(x + width, y)
-    esp.CornerTR2.To = Vector2.new(x + width, y + cornerLength)
-    esp.CornerTR2.Color = color
-    esp.CornerTR2.Visible = true
+    esp.CornerTRV.From = Vector2.new(x + width, y)
+    esp.CornerTRV.To = Vector2.new(x + width, y + cornerSize)
+    esp.CornerTRV.Color = color
+    esp.CornerTRV.Thickness = thickness
+    esp.CornerTRV.Visible = true
     
     esp.CornerBL.From = Vector2.new(x, y + height)
-    esp.CornerBL.To = Vector2.new(x + cornerLength, y + height)
+    esp.CornerBL.To = Vector2.new(x + cornerSize, y + height)
     esp.CornerBL.Color = color
+    esp.CornerBL.Thickness = thickness
     esp.CornerBL.Visible = true
     
-    esp.CornerBL2.From = Vector2.new(x, y + height)
-    esp.CornerBL2.To = Vector2.new(x, y + height - cornerLength)
-    esp.CornerBL2.Color = color
-    esp.CornerBL2.Visible = true
+    esp.CornerBLV.From = Vector2.new(x, y + height)
+    esp.CornerBLV.To = Vector2.new(x, y + height - cornerSize)
+    esp.CornerBLV.Color = color
+    esp.CornerBLV.Thickness = thickness
+    esp.CornerBLV.Visible = true
     
     esp.CornerBR.From = Vector2.new(x + width, y + height)
-    esp.CornerBR.To = Vector2.new(x + width - cornerLength, y + height)
+    esp.CornerBR.To = Vector2.new(x + width - cornerSize, y + height)
     esp.CornerBR.Color = color
+    esp.CornerBR.Thickness = thickness
     esp.CornerBR.Visible = true
     
-    esp.CornerBR2.From = Vector2.new(x + width, y + height)
-    esp.CornerBR2.To = Vector2.new(x + width, y + height - cornerLength)
-    esp.CornerBR2.Color = color
-    esp.CornerBR2.Visible = true
+    esp.CornerBRV.From = Vector2.new(x + width, y + height)
+    esp.CornerBRV.To = Vector2.new(x + width, y + height - cornerSize)
+    esp.CornerBRV.Color = color
+    esp.CornerBRV.Thickness = thickness
+    esp.CornerBRV.Visible = true
 end
 
 function Core.HideCornerBox(esp)
     esp.CornerTL.Visible = false
-    esp.CornerTL2.Visible = false
     esp.CornerTR.Visible = false
-    esp.CornerTR2.Visible = false
     esp.CornerBL.Visible = false
-    esp.CornerBL2.Visible = false
     esp.CornerBR.Visible = false
-    esp.CornerBR2.Visible = false
+    esp.CornerTLV.Visible = false
+    esp.CornerTRV.Visible = false
+    esp.CornerBLV.Visible = false
+    esp.CornerBRV.Visible = false
 end
 
-function Core.DrawOffScreenArrow(esp, targetPos, color)
+function Core.DrawOffScreenArrow(esp, targetPos, color, size)
     local screenCenter = Camera.ViewportSize / 2
     local screenPos, onScreen = Camera:WorldToViewportPoint(targetPos)
     
@@ -544,13 +587,12 @@ function Core.DrawOffScreenArrow(esp, targetPos, color)
     end
     
     local direction = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Unit
-    local arrowPos = screenCenter + direction * Core.ESPSettings.OffScreenArrows.Radius
-    local arrowSize = Core.ESPSettings.OffScreenArrows.Size
+    local arrowPos = screenCenter + direction * (math.min(screenCenter.X, screenCenter.Y) - 50)
     
     local angle = math.atan2(direction.Y, direction.X)
-    local p1 = arrowPos + Vector2.new(math.cos(angle) * arrowSize, math.sin(angle) * arrowSize)
-    local p2 = arrowPos + Vector2.new(math.cos(angle + 2.5) * arrowSize * 0.5, math.sin(angle + 2.5) * arrowSize * 0.5)
-    local p3 = arrowPos + Vector2.new(math.cos(angle - 2.5) * arrowSize * 0.5, math.sin(angle - 2.5) * arrowSize * 0.5)
+    local p1 = arrowPos + Vector2.new(math.cos(angle) * size, math.sin(angle) * size)
+    local p2 = arrowPos + Vector2.new(math.cos(angle + 2.5) * size * 0.5, math.sin(angle + 2.5) * size * 0.5)
+    local p3 = arrowPos + Vector2.new(math.cos(angle - 2.5) * size * 0.5, math.sin(angle - 2.5) * size * 0.5)
     
     esp.Arrow.PointA = p1
     esp.Arrow.PointB = p2
@@ -588,33 +630,55 @@ function Core.UpdateESP()
         local pos, onScreen = Camera:WorldToViewportPoint(root.Position)
         local dist = (root.Position - Camera.CFrame.Position).Magnitude
         
-        if dist > Core.ESPSettings.MaxDist then
-            Core.HideESP(esp)
-            if Core.ChamsObjects[plr] then Core.ChamsObjects[plr].Enabled = false end
-            continue
-        end
-        
-        local color = Core.GetESPColor(plr, head)
-        
         if not onScreen then
-            Core.HideESP(esp)
             if Core.ESPSettings.OffScreenArrows.On then
-                Core.DrawOffScreenArrow(esp, root.Position, Core.ESPSettings.OffScreenArrows.Color)
+                Core.DrawOffScreenArrow(esp, root.Position, Core.ESPSettings.OffScreenArrows.Color, Core.ESPSettings.OffScreenArrows.Size)
+            else
+                esp.Arrow.Visible = false
             end
+            Core.HideESP(esp)
+            esp.Arrow.Visible = Core.ESPSettings.OffScreenArrows.On
             if Core.ChamsObjects[plr] then Core.ChamsObjects[plr].Enabled = false end
             continue
         end
         
         esp.Arrow.Visible = false
         
+        if dist > Core.ESPSettings.MaxDist then
+            Core.HideESP(esp)
+            if Core.ChamsObjects[plr] then Core.ChamsObjects[plr].Enabled = false end
+            continue
+        end
+        
         local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
         local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
         local height = math.abs(legPos.Y - headPos.Y)
         local width = height * 0.6
         local x, y = pos.X - width / 2, headPos.Y
+        local color = Core.GetESPColor(plr)
         
         if Core.ESPSettings.Box.On then
-            if Core.ESPSettings.Box.Type == "Full" then
+            local boxType = Core.ESPSettings.Box.Type
+            
+            if boxType == "Full" then
+                Core.HideCornerBox(esp)
+                esp.BoxOutline.Size = Vector2.new(width, height)
+                esp.BoxOutline.Position = Vector2.new(x, y)
+                esp.BoxOutline.Thickness = Core.ESPSettings.OutlineThickness + 2
+                esp.BoxOutline.Visible = true
+                esp.Box.Size = Vector2.new(width, height)
+                esp.Box.Position = Vector2.new(x, y)
+                esp.Box.Color = color
+                esp.Box.Thickness = Core.ESPSettings.BoxThickness
+                esp.Box.Visible = true
+                esp.BoxFill.Visible = false
+            elseif boxType == "Corner" then
+                esp.Box.Visible = false
+                esp.BoxOutline.Visible = false
+                esp.BoxFill.Visible = false
+                Core.DrawCornerBox(esp, x, y, width, height, color, Core.ESPSettings.BoxThickness)
+            elseif boxType == "Filled" then
+                Core.HideCornerBox(esp)
                 esp.BoxOutline.Size = Vector2.new(width, height)
                 esp.BoxOutline.Position = Vector2.new(x, y)
                 esp.BoxOutline.Visible = true
@@ -622,27 +686,16 @@ function Core.UpdateESP()
                 esp.Box.Position = Vector2.new(x, y)
                 esp.Box.Color = color
                 esp.Box.Visible = true
-                Core.HideCornerBox(esp)
-            elseif Core.ESPSettings.Box.Type == "Corner" then
-                esp.Box.Visible = false
-                esp.BoxOutline.Visible = false
-                Core.DrawCornerBox(esp, x, y, width, height, color)
-            elseif Core.ESPSettings.Box.Type == "Filled" then
-                esp.BoxFilled.Size = Vector2.new(width, height)
-                esp.BoxFilled.Position = Vector2.new(x, y)
-                esp.BoxFilled.Color = color
-                esp.BoxFilled.Visible = true
-                esp.Box.Size = Vector2.new(width, height)
-                esp.Box.Position = Vector2.new(x, y)
-                esp.Box.Color = color
-                esp.Box.Visible = true
-                esp.BoxOutline.Visible = false
-                Core.HideCornerBox(esp)
+                esp.BoxFill.Size = Vector2.new(width, height)
+                esp.BoxFill.Position = Vector2.new(x, y)
+                esp.BoxFill.Color = color
+                esp.BoxFill.Transparency = 0.7
+                esp.BoxFill.Visible = true
             end
         else
             esp.Box.Visible = false
             esp.BoxOutline.Visible = false
-            esp.BoxFilled.Visible = false
+            esp.BoxFill.Visible = false
             Core.HideCornerBox(esp)
         end
         
@@ -662,27 +715,20 @@ function Core.UpdateESP()
         if Core.ESPSettings.Health.On then
             local hp = hum.Health / hum.MaxHealth
             local barH = height * hp
+            local healthX = Core.ESPSettings.Health.Position == "Left" and (x - 6) or (x + width + 2)
             
-            if Core.ESPSettings.Health.Position == "Left" then
-                esp.HealthOutline.Size = Vector2.new(4, height)
-                esp.HealthOutline.Position = Vector2.new(x - 6, y)
-                esp.Health.Size = Vector2.new(2, barH)
-                esp.Health.Position = Vector2.new(x - 5, y + height - barH)
-            else
-                esp.HealthOutline.Size = Vector2.new(4, height)
-                esp.HealthOutline.Position = Vector2.new(x + width + 2, y)
-                esp.Health.Size = Vector2.new(2, barH)
-                esp.Health.Position = Vector2.new(x + width + 3, y + height - barH)
-            end
-            
+            esp.HealthOutline.Size = Vector2.new(4, height)
+            esp.HealthOutline.Position = Vector2.new(healthX, y)
             esp.HealthOutline.Visible = true
+            esp.Health.Size = Vector2.new(2, barH)
+            esp.Health.Position = Vector2.new(healthX + 1, y + height - barH)
             esp.Health.Color = Color3.fromRGB(255 - 255 * hp, 255 * hp, 0)
             esp.Health.Visible = true
             
-            esp.HealthText.Text = math.floor(hum.Health) .. ""
-            esp.HealthText.Position = Vector2.new(esp.Health.Position.X, esp.Health.Position.Y - 12)
-            esp.HealthText.Color = esp.Health.Color
-            esp.HealthText.Visible = true
+            esp.HealthText.Text = math.floor(hum.Health)
+            esp.HealthText.Position = Vector2.new(healthX + 2, y + height - barH - 10)
+            esp.HealthText.Color = Color3.new(1,1,1)
+            esp.HealthText.Visible = hp < 1
         else
             esp.Health.Visible = false
             esp.HealthOutline.Visible = false
@@ -700,7 +746,7 @@ function Core.UpdateESP()
         
         if Core.ESPSettings.Weapon.On then
             local weapon = Core.GetPlayerWeapon(plr)
-            esp.Weapon.Text = "[" .. weapon .. "]"
+            esp.Weapon.Text = weapon
             esp.Weapon.Position = Vector2.new(x + width / 2, y + height + (Core.ESPSettings.Distance.On and 14 or 2))
             esp.Weapon.Color = Core.ESPSettings.Weapon.Color
             esp.Weapon.Visible = true
@@ -709,18 +755,11 @@ function Core.UpdateESP()
         end
         
         if Core.ESPSettings.Flags.On then
-            local flags = {}
-            if hum.WalkSpeed > 16 then table.insert(flags, "SPEED") end
-            if hum.JumpPower > 50 then table.insert(flags, "JUMP") end
-            
-            if #flags > 0 then
-                esp.Flags.Text = table.concat(flags, "\n")
-                esp.Flags.Position = Vector2.new(x + width + 4, y)
-                esp.Flags.Color = Core.ESPSettings.Flags.Color
-                esp.Flags.Visible = true
-            else
-                esp.Flags.Visible = false
-            end
+            local flags = Core.GetPlayerFlags(plr)
+            esp.Flags.Text = table.concat(flags, "\n")
+            esp.Flags.Position = Vector2.new(x + width + 4, y)
+            esp.Flags.Color = Core.ESPSettings.Flags.Color
+            esp.Flags.Visible = #flags > 0
         else
             esp.Flags.Visible = false
         end
@@ -781,81 +820,12 @@ function Core.UpdateESP()
             end
             local hl = Core.ChamsObjects[plr]
             hl.FillColor = color
-            hl.OutlineColor = Core.ESPSettings.Chams.OutlineColor
             hl.FillTransparency = Core.ESPSettings.Chams.Transparency
             hl.OutlineTransparency = 0
             hl.Enabled = true
         else
             if Core.ChamsObjects[plr] then Core.ChamsObjects[plr].Enabled = false end
         end
-    end
-end
-
-function Core.SetTime(time)
-    Core.WorldSettings.Time = time
-    Lighting.ClockTime = time
-end
-
-function Core.SetBrightness(brightness)
-    Core.WorldSettings.Brightness = brightness
-    Lighting.Brightness = brightness
-end
-
-function Core.SetAmbient(color)
-    Core.WorldSettings.Ambient = color
-    Lighting.Ambient = color
-end
-
-function Core.SetOutdoorAmbient(color)
-    Core.WorldSettings.OutdoorAmbient = color
-    Lighting.OutdoorAmbient = color
-end
-
-function Core.SetFog(enabled, fogEnd, fogColor)
-    Core.WorldSettings.FogEnabled = enabled
-    if enabled then
-        Lighting.FogEnd = fogEnd or Core.WorldSettings.FogEnd
-        Lighting.FogColor = fogColor or Core.WorldSettings.FogColor
-    else
-        Lighting.FogEnd = 100000
-    end
-end
-
-function Core.SetSkybox(skyboxName)
-    Core.WorldSettings.Skybox = skyboxName
-    
-    local sky = Lighting:FindFirstChildOfClass("Sky")
-    
-    if skyboxName == "Default" then
-        if sky and Core.OriginalSkybox then
-            for prop, val in pairs(Core.OriginalSkybox) do
-                sky[prop] = val
-            end
-        end
-        return
-    end
-    
-    local skyboxData = Core.Skyboxes[skyboxName]
-    if not skyboxData then return end
-    
-    if not sky then
-        sky = Instance.new("Sky")
-        sky.Parent = Lighting
-    end
-    
-    if not Core.OriginalSkybox then
-        Core.OriginalSkybox = {
-            SkyboxBk = sky.SkyboxBk,
-            SkyboxDn = sky.SkyboxDn,
-            SkyboxFt = sky.SkyboxFt,
-            SkyboxLf = sky.SkyboxLf,
-            SkyboxRt = sky.SkyboxRt,
-            SkyboxUp = sky.SkyboxUp
-        }
-    end
-    
-    for prop, val in pairs(skyboxData) do
-        sky[prop] = val
     end
 end
 
@@ -868,6 +838,99 @@ function Core.GetCurrentGun()
         end
     end
     return nil
+end
+
+function Core.SaveLighting()
+    Core.OriginalLighting = {
+        ClockTime = Lighting.ClockTime,
+        Brightness = Lighting.Brightness,
+        Ambient = Lighting.Ambient,
+        OutdoorAmbient = Lighting.OutdoorAmbient,
+        FogEnd = Lighting.FogEnd,
+        FogColor = Lighting.FogColor,
+        GlobalShadows = Lighting.GlobalShadows
+    }
+    
+    local sky = Lighting:FindFirstChildOfClass("Sky")
+    if sky then
+        Core.OriginalSkybox = sky:Clone()
+    end
+end
+
+function Core.SetTime(value)
+    Core.WorldSettings.Time = value
+    Lighting.ClockTime = value
+end
+
+function Core.SetBrightness(value)
+    Core.WorldSettings.Brightness = value
+    Lighting.Brightness = value
+end
+
+function Core.SetAmbient(color)
+    Core.WorldSettings.Ambient = color
+    Lighting.Ambient = color
+end
+
+function Core.SetOutdoorAmbient(color)
+    Core.WorldSettings.OutdoorAmbient = color
+    Lighting.OutdoorAmbient = color
+end
+
+function Core.SetFogEnd(value)
+    Core.WorldSettings.FogEnd = value
+    Lighting.FogEnd = value
+end
+
+function Core.SetFogColor(color)
+    Core.WorldSettings.FogColor = color
+    Lighting.FogColor = color
+end
+
+function Core.SetSkybox(name)
+    Core.WorldSettings.Skybox = name
+    
+    local existingSky = Lighting:FindFirstChildOfClass("Sky")
+    if existingSky then existingSky:Destroy() end
+    
+    if name == "Default" then
+        if Core.OriginalSkybox then
+            Core.OriginalSkybox:Clone().Parent = Lighting
+        end
+        return
+    end
+    
+    local skyData = Core.Skyboxes[name]
+    if skyData then
+        local sky = Instance.new("Sky")
+        sky.SkyboxBk = skyData.SkyboxBk
+        sky.SkyboxDn = skyData.SkyboxDn
+        sky.SkyboxFt = skyData.SkyboxFt
+        sky.SkyboxLf = skyData.SkyboxLf
+        sky.SkyboxRt = skyData.SkyboxRt
+        sky.SkyboxUp = skyData.SkyboxUp
+        sky.Parent = Lighting
+    end
+end
+
+function Core.SetFullbright(enabled)
+    if enabled then 
+        Lighting.Brightness = 2 
+        Lighting.ClockTime = 14 
+        Lighting.FogEnd = 100000 
+        Lighting.GlobalShadows = false
+        Lighting.Ambient = Color3.new(1,1,1)
+        Lighting.OutdoorAmbient = Color3.new(1,1,1)
+    else 
+        Lighting.Brightness = Core.OriginalLighting.Brightness or 1
+        Lighting.GlobalShadows = Core.OriginalLighting.GlobalShadows or true
+        Lighting.Ambient = Core.OriginalLighting.Ambient or Color3.fromRGB(127,127,127)
+        Lighting.OutdoorAmbient = Core.OriginalLighting.OutdoorAmbient or Color3.fromRGB(127,127,127)
+    end
+end
+
+function Core.SetNoFog(enabled)
+    Lighting.FogEnd = enabled and 100000 or (Core.OriginalLighting.FogEnd or 1000)
 end
 
 function Core.CBNoSpread(enabled)
@@ -883,8 +946,8 @@ function Core.CBNoSpread(enabled)
             if spread then
                 for _, v in ipairs(spread:GetDescendants()) do
                     if v:IsA("NumberValue") then
-                        if not Core.OriginalValues[v] then
-                            Core.OriginalValues[v] = v.Value
+                        if not Core.CBOriginalValues[v] then
+                            Core.CBOriginalValues[v] = v.Value
                         end
                         v.Value = 0
                     end
@@ -892,7 +955,7 @@ function Core.CBNoSpread(enabled)
             end
         end
     else
-        for v, originalValue in pairs(Core.OriginalValues) do
+        for v, originalValue in pairs(Core.CBOriginalValues) do
             if v and v.Parent and v:IsA("NumberValue") then
                 v.Value = originalValue
             end
@@ -907,22 +970,33 @@ function Core.CBNoRecoil(enabled)
     local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
     if not WeaponsFolder then return end
     
-    local recoilNames = {"Recoil", "CamRecoil", "KickBack"}
+    local recoilNames = {"Recoil", "CamRecoil", "KickBack", "RecoilUp", "RecoilSide"}
     
     if enabled then
         for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
             for _, name in ipairs(recoilNames) do
                 local recoil = weapon:FindFirstChild(name)
-                if recoil and recoil:IsA("NumberValue") then
-                    if not Core.OriginalValues[recoil] then
-                        Core.OriginalValues[recoil] = recoil.Value
+                if recoil then
+                    if recoil:IsA("NumberValue") then
+                        if not Core.CBOriginalValues[recoil] then
+                            Core.CBOriginalValues[recoil] = recoil.Value
+                        end
+                        recoil.Value = 0
+                    elseif recoil:IsA("Folder") or recoil:IsA("Configuration") then
+                        for _, v in ipairs(recoil:GetDescendants()) do
+                            if v:IsA("NumberValue") then
+                                if not Core.CBOriginalValues[v] then
+                                    Core.CBOriginalValues[v] = v.Value
+                                end
+                                v.Value = 0
+                            end
+                        end
                     end
-                    recoil.Value = 0
                 end
             end
         end
     else
-        for v, originalValue in pairs(Core.OriginalValues) do
+        for v, originalValue in pairs(Core.CBOriginalValues) do
             if v and v.Parent and v:IsA("NumberValue") then
                 v.Value = originalValue
             end
@@ -941,14 +1015,14 @@ function Core.CBRapidFire(enabled)
         for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
             local fireRate = weapon:FindFirstChild("FireRate")
             if fireRate and fireRate:IsA("NumberValue") then
-                if not Core.OriginalValues[fireRate] then
-                    Core.OriginalValues[fireRate] = fireRate.Value
+                if not Core.CBOriginalValues[fireRate] then
+                    Core.CBOriginalValues[fireRate] = fireRate.Value
                 end
                 fireRate.Value = 0.01
             end
         end
     else
-        for v, originalValue in pairs(Core.OriginalValues) do
+        for v, originalValue in pairs(Core.CBOriginalValues) do
             if v and v.Parent and v:IsA("NumberValue") then
                 v.Value = originalValue
             end
@@ -961,8 +1035,8 @@ function Core.CBInfAmmo(enabled)
     Core.CBSettings.InfAmmo = enabled
     
     if enabled then
-        if Core.GameLoops.CBInfAmmo then Core.GameLoops.CBInfAmmo:Disconnect() end
-        Core.GameLoops.CBInfAmmo = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.InfAmmo then Core.CBLoops.InfAmmo:Disconnect() end
+        Core.CBLoops.InfAmmo = RunService.RenderStepped:Connect(function()
             local gun = Core.GetCurrentGun()
             if gun then
                 local ammo = gun:FindFirstChild("Ammo")
@@ -972,10 +1046,7 @@ function Core.CBInfAmmo(enabled)
             end
         end)
     else
-        if Core.GameLoops.CBInfAmmo then
-            Core.GameLoops.CBInfAmmo:Disconnect()
-            Core.GameLoops.CBInfAmmo = nil
-        end
+        if Core.CBLoops.InfAmmo then Core.CBLoops.InfAmmo:Disconnect() Core.CBLoops.InfAmmo = nil end
     end
 end
 
@@ -984,8 +1055,8 @@ function Core.CBKillAll(enabled)
     Core.CBSettings.KillAll = enabled
     
     if enabled then
-        if Core.GameLoops.CBKillAll then Core.GameLoops.CBKillAll:Disconnect() end
-        Core.GameLoops.CBKillAll = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.KillAll then Core.CBLoops.KillAll:Disconnect() end
+        Core.CBLoops.KillAll = RunService.RenderStepped:Connect(function()
             pcall(function()
                 if not Core.IsAlive(LocalPlayer) then return end
                 local gun = LocalPlayer.Character:FindFirstChildOfClass("Tool")
@@ -997,24 +1068,9 @@ function Core.CBKillAll(enabled)
                         
                         local head = v.Character:FindFirstChild("Head")
                         if head then
-                            local args = {
-                                [1] = head,
-                                [2] = head.Position,
-                                [3] = "Banana",
-                                [4] = 100,
-                                [5] = gun,
-                                [8] = 100,
-                                [9] = false,
-                                [10] = false,
-                                [11] = Vector3.new(),
-                                [12] = 100,
-                                [13] = Vector3.new()
-                            }
-                            
+                            local args = {[1] = head, [2] = head.Position, [3] = "Banana", [4] = 100, [5] = gun, [8] = 100, [9] = false, [10] = false, [11] = Vector3.new(), [12] = 100, [13] = Vector3.new()}
                             local hitEvent = ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("HitPart")
-                            if hitEvent then
-                                hitEvent:FireServer(unpack(args))
-                            end
+                            if hitEvent then hitEvent:FireServer(unpack(args)) end
                         end
                     end
                 end
@@ -1022,10 +1078,7 @@ function Core.CBKillAll(enabled)
             task.wait(0.1)
         end)
     else
-        if Core.GameLoops.CBKillAll then
-            Core.GameLoops.CBKillAll:Disconnect()
-            Core.GameLoops.CBKillAll = nil
-        end
+        if Core.CBLoops.KillAll then Core.CBLoops.KillAll:Disconnect() Core.CBLoops.KillAll = nil end
     end
 end
 
@@ -1038,17 +1091,12 @@ function Core.CBInfCash(enabled)
             local cash = LocalPlayer:FindFirstChild("Cash")
             if cash then
                 cash.Value = 16000
-                if Core.GameLoops.CBInfCash then Core.GameLoops.CBInfCash:Disconnect() end
-                Core.GameLoops.CBInfCash = cash:GetPropertyChangedSignal("Value"):Connect(function()
-                    cash.Value = 16000
-                end)
+                if Core.CBLoops.InfCash then Core.CBLoops.InfCash:Disconnect() end
+                Core.CBLoops.InfCash = cash:GetPropertyChangedSignal("Value"):Connect(function() cash.Value = 16000 end)
             end
         end)
     else
-        if Core.GameLoops.CBInfCash then
-            Core.GameLoops.CBInfCash:Disconnect()
-            Core.GameLoops.CBInfCash = nil
-        end
+        if Core.CBLoops.InfCash then Core.CBLoops.InfCash:Disconnect() Core.CBLoops.InfCash = nil end
     end
 end
 
@@ -1057,8 +1105,8 @@ function Core.CBBHop(enabled)
     Core.CBSettings.BHop = enabled
     
     if enabled then
-        if Core.GameLoops.CBBHop then Core.GameLoops.CBBHop:Disconnect() end
-        Core.GameLoops.CBBHop = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.BHop then Core.CBLoops.BHop:Disconnect() end
+        Core.CBLoops.BHop = RunService.RenderStepped:Connect(function()
             if Core.IsAlive(LocalPlayer) then
                 local hum = LocalPlayer.Character.Humanoid
                 if hum.FloorMaterial ~= Enum.Material.Air then
@@ -1067,10 +1115,7 @@ function Core.CBBHop(enabled)
             end
         end)
     else
-        if Core.GameLoops.CBBHop then
-            Core.GameLoops.CBBHop:Disconnect()
-            Core.GameLoops.CBBHop = nil
-        end
+        if Core.CBLoops.BHop then Core.CBLoops.BHop:Disconnect() Core.CBLoops.BHop = nil end
     end
 end
 
@@ -1079,10 +1124,9 @@ function Core.CBAntiAimbot(enabled)
     Core.CBSettings.AntiAimbot = enabled
     
     if enabled then
-        if Core.GameLoops.CBAntiAimbot then Core.GameLoops.CBAntiAimbot:Disconnect() end
-        Core.GameLoops.CBAntiAimbot = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.AntiAimbot then Core.CBLoops.AntiAimbot:Disconnect() end
+        Core.CBLoops.AntiAimbot = RunService.RenderStepped:Connect(function()
             if not Core.IsAlive(LocalPlayer) then return end
-            
             local char = LocalPlayer.Character
             local hum = char.Humanoid
             local hrp = char.HumanoidRootPart
@@ -1097,37 +1141,24 @@ function Core.CBAntiAimbot(enabled)
             local yaw = Core.CBSettings.AntiAimbotYaw
             if yaw ~= "Default" then
                 hum.AutoRotate = false
-                
-                if yaw == "Backward" then
-                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position - Camera.CFrame.LookVector)
-                elseif yaw == "Left" then
-                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position - Camera.CFrame.RightVector)
-                elseif yaw == "Right" then
-                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Camera.CFrame.RightVector)
-                elseif yaw == "Spin" then
-                    hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(Core.CBSettings.AntiAimbotSpeed), 0)
-                elseif yaw == "Random" then
-                    hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(math.random(-180, 180)), 0)
-                end
+                if yaw == "Backward" then hrp.CFrame = CFrame.new(hrp.Position, hrp.Position - Camera.CFrame.LookVector)
+                elseif yaw == "Left" then hrp.CFrame = CFrame.new(hrp.Position, hrp.Position - Camera.CFrame.RightVector)
+                elseif yaw == "Right" then hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Camera.CFrame.RightVector)
+                elseif yaw == "Spin" then hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(Core.CBSettings.AntiAimbotSpeed), 0)
+                elseif yaw == "Random" then hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(math.random(-180, 180)), 0) end
             else
                 hum.AutoRotate = true
             end
         end)
     else
-        if Core.GameLoops.CBAntiAimbot then
-            Core.GameLoops.CBAntiAimbot:Disconnect()
-            Core.GameLoops.CBAntiAimbot = nil
-        end
-        if Core.IsAlive(LocalPlayer) then
-            LocalPlayer.Character.Humanoid.AutoRotate = true
-        end
+        if Core.CBLoops.AntiAimbot then Core.CBLoops.AntiAimbot:Disconnect() Core.CBLoops.AntiAimbot = nil end
+        if Core.IsAlive(LocalPlayer) then LocalPlayer.Character.Humanoid.AutoRotate = true end
     end
 end
 
 function Core.CBNoScope(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.NoScope = enabled
-    
     pcall(function()
         local gui = LocalPlayer.PlayerGui:FindFirstChild("GUI")
         if not gui then return end
@@ -1135,10 +1166,11 @@ function Core.CBNoScope(enabled)
         if not crosshairs then return end
         local scope = crosshairs:FindFirstChild("Scope")
         if not scope then return end
-        
         scope.ImageTransparency = enabled and 1 or 0
         if scope:FindFirstChild("Scope") then
             scope.Scope.ImageTransparency = enabled and 1 or 0
+            scope.Scope.Size = enabled and UDim2.new(2,0,2,0) or UDim2.new(1,0,1,0)
+            scope.Scope.Position = enabled and UDim2.new(-0.5,0,-0.5,0) or UDim2.new(0,0,0,0)
         end
     end)
 end
@@ -1146,7 +1178,6 @@ end
 function Core.CBNoFlash(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.NoFlash = enabled
-    
     pcall(function()
         local blnd = LocalPlayer.PlayerGui:FindFirstChild("Blnd")
         if blnd then blnd.Enabled = not enabled end
@@ -1156,256 +1187,223 @@ end
 function Core.CBNoSmoke(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.NoSmoke = enabled
-    
     if enabled then
-        if Core.GameLoops.CBNoSmoke then Core.GameLoops.CBNoSmoke:Disconnect() end
-        Core.GameLoops.CBNoSmoke = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.NoSmoke then Core.CBLoops.NoSmoke:Disconnect() end
+        Core.CBLoops.NoSmoke = RunService.RenderStepped:Connect(function()
             pcall(function()
                 local rayIgnore = Workspace:FindFirstChild("Ray_Ignore")
-                if rayIgnore then
-                    local smokes = rayIgnore:FindFirstChild("Smokes")
-                    if smokes then
-                        for _, v in pairs(smokes:GetChildren()) do
-                            if v.Name == "Smoke" then v:Destroy() end
-                        end
+                if rayIgnore and rayIgnore:FindFirstChild("Smokes") then
+                    for _, v in pairs(rayIgnore.Smokes:GetChildren()) do
+                        if v.Name == "Smoke" then v:Destroy() end
                     end
                 end
             end)
         end)
     else
-        if Core.GameLoops.CBNoSmoke then
-            Core.GameLoops.CBNoSmoke:Disconnect()
-            Core.GameLoops.CBNoSmoke = nil
-        end
+        if Core.CBLoops.NoSmoke then Core.CBLoops.NoSmoke:Disconnect() Core.CBLoops.NoSmoke = nil end
     end
 end
 
-function Core.ArsenalKillAll(enabled)
-    if Core.GameName ~= "Arsenal" then return end
-    Core.ArsenalSettings.KillAll = enabled
-    
+function Core.CBNoBulletHoles(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.NoBulletHoles = enabled
     if enabled then
-        if Core.GameLoops.ArsenalKillAll then Core.GameLoops.ArsenalKillAll:Disconnect() end
-        Core.GameLoops.ArsenalKillAll = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.NoBulletHoles then Core.CBLoops.NoBulletHoles:Disconnect() end
+        Core.CBLoops.NoBulletHoles = RunService.RenderStepped:Connect(function()
             pcall(function()
-                if not Core.IsAlive(LocalPlayer) then return end
-                
-                for _, v in pairs(Players:GetPlayers()) do
-                    if v ~= LocalPlayer and Core.IsAlive(v) then
-                        if v.Team == LocalPlayer.Team and v.Team ~= nil then continue end
-                        
-                        local head = v.Character:FindFirstChild("Head")
-                        if head then
-                            local args = {
-                                v.Character,
-                                head.Position,
-                                LocalPlayer.Character
-                            }
-                            
-                            local event = ReplicatedStorage:FindFirstChild("MainEvent")
-                            if event then
-                                event:FireServer("HitPart", unpack(args))
-                            end
-                        end
-                    end
-                end
+                local debris = Workspace:FindFirstChild("Debris")
+                if debris then for _, v in pairs(debris:GetChildren()) do if v.Name == "Bullet" then v:Destroy() end end end
             end)
-            task.wait(0.1)
         end)
     else
-        if Core.GameLoops.ArsenalKillAll then
-            Core.GameLoops.ArsenalKillAll:Disconnect()
-            Core.GameLoops.ArsenalKillAll = nil
-        end
+        if Core.CBLoops.NoBulletHoles then Core.CBLoops.NoBulletHoles:Disconnect() Core.CBLoops.NoBulletHoles = nil end
     end
 end
 
-function Core.ArsenalAutoKnife(enabled)
-    if Core.GameName ~= "Arsenal" then return end
-    Core.ArsenalSettings.AutoKnife = enabled
-    
+function Core.CBNoBlood(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.NoBlood = enabled
     if enabled then
-        if Core.GameLoops.ArsenalAutoKnife then Core.GameLoops.ArsenalAutoKnife:Disconnect() end
-        Core.GameLoops.ArsenalAutoKnife = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.NoBlood then Core.CBLoops.NoBlood:Disconnect() end
+        Core.CBLoops.NoBlood = RunService.RenderStepped:Connect(function()
             pcall(function()
-                if not Core.IsAlive(LocalPlayer) then return end
-                
-                for _, v in pairs(Players:GetPlayers()) do
-                    if v ~= LocalPlayer and Core.IsAlive(v) then
-                        local hrp = v.Character:FindFirstChild("HumanoidRootPart")
-                        local myHrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                        if hrp and myHrp then
-                            local dist = (hrp.Position - myHrp.Position).Magnitude
-                            if dist <= 10 then
-                                local event = ReplicatedStorage:FindFirstChild("MainEvent")
-                                if event then
-                                    event:FireServer("KnifeHit", v.Character)
-                                end
-                            end
+                local debris = Workspace:FindFirstChild("Debris")
+                if debris then for _, v in pairs(debris:GetChildren()) do if v:IsA("SurfaceGui") then v:Destroy() end end end
+            end)
+        end)
+    else
+        if Core.CBLoops.NoBlood then Core.CBLoops.NoBlood:Disconnect() Core.CBLoops.NoBlood = nil end
+    end
+end
+
+function Core.ArsenalNoRecoil(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    Core.ArsenalSettings.NoRecoil = enabled
+    if enabled then
+        if Core.CBLoops.ArsenalRecoil then Core.CBLoops.ArsenalRecoil:Disconnect() end
+        Core.CBLoops.ArsenalRecoil = RunService.RenderStepped:Connect(function()
+            pcall(function()
+                local gun = Core.GetCurrentGun()
+                if gun then
+                    for _, v in pairs(gun:GetDescendants()) do
+                        if v.Name:lower():find("recoil") and v:IsA("NumberValue") then v.Value = 0 end
+                    end
+                end
+            end)
+        end)
+    else
+        if Core.CBLoops.ArsenalRecoil then Core.CBLoops.ArsenalRecoil:Disconnect() Core.CBLoops.ArsenalRecoil = nil end
+    end
+end
+
+function Core.ArsenalNoSpread(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    Core.ArsenalSettings.NoSpread = enabled
+    if enabled then
+        if Core.CBLoops.ArsenalSpread then Core.CBLoops.ArsenalSpread:Disconnect() end
+        Core.CBLoops.ArsenalSpread = RunService.RenderStepped:Connect(function()
+            pcall(function()
+                local gun = Core.GetCurrentGun()
+                if gun then
+                    for _, v in pairs(gun:GetDescendants()) do
+                        if v.Name:lower():find("spread") and v:IsA("NumberValue") then v.Value = 0 end
+                    end
+                end
+            end)
+        end)
+    else
+        if Core.CBLoops.ArsenalSpread then Core.CBLoops.ArsenalSpread:Disconnect() Core.CBLoops.ArsenalSpread = nil end
+    end
+end
+
+function Core.ArsenalRapidFire(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    Core.ArsenalSettings.RapidFire = enabled
+    if enabled then
+        if Core.CBLoops.ArsenalRapid then Core.CBLoops.ArsenalRapid:Disconnect() end
+        Core.CBLoops.ArsenalRapid = RunService.RenderStepped:Connect(function()
+            pcall(function()
+                local gun = Core.GetCurrentGun()
+                if gun then
+                    for _, v in pairs(gun:GetDescendants()) do
+                        if (v.Name:lower():find("firerate") or v.Name:lower():find("fire_rate") or v.Name:lower():find("cooldown")) and v:IsA("NumberValue") then
+                            v.Value = 0.01
                         end
                     end
                 end
             end)
         end)
     else
-        if Core.GameLoops.ArsenalAutoKnife then
-            Core.GameLoops.ArsenalAutoKnife:Disconnect()
-            Core.GameLoops.ArsenalAutoKnife = nil
-        end
-    end
-end
-
-function Core.ArsenalBHop(enabled)
-    if Core.GameName ~= "Arsenal" then return end
-    Core.ArsenalSettings.BHop = enabled
-    
-    if enabled then
-        if Core.GameLoops.ArsenalBHop then Core.GameLoops.ArsenalBHop:Disconnect() end
-        Core.GameLoops.ArsenalBHop = RunService.RenderStepped:Connect(function()
-            if Core.IsAlive(LocalPlayer) then
-                local hum = LocalPlayer.Character.Humanoid
-                if hum.FloorMaterial ~= Enum.Material.Air then
-                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end
-        end)
-    else
-        if Core.GameLoops.ArsenalBHop then
-            Core.GameLoops.ArsenalBHop:Disconnect()
-            Core.GameLoops.ArsenalBHop = nil
-        end
+        if Core.CBLoops.ArsenalRapid then Core.CBLoops.ArsenalRapid:Disconnect() Core.CBLoops.ArsenalRapid = nil end
     end
 end
 
 function Core.PFNoRecoil(enabled)
     if Core.GameName ~= "Phantom Forces" then return end
     Core.PFSettings.NoRecoil = enabled
-    
     if enabled then
-        if Core.GameLoops.PFNoRecoil then Core.GameLoops.PFNoRecoil:Disconnect() end
-        Core.GameLoops.PFNoRecoil = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.PFRecoil then Core.CBLoops.PFRecoil:Disconnect() end
+        Core.CBLoops.PFRecoil = RunService.RenderStepped:Connect(function()
             pcall(function()
                 local char = LocalPlayer.Character
                 if char then
-                    for _, v in pairs(char:GetDescendants()) do
-                        if v.Name == "Recoil" or v.Name == "CameraRecoil" then
-                            if v:IsA("NumberValue") then v.Value = 0 end
+                    local gun = char:FindFirstChildOfClass("Tool")
+                    if gun then
+                        for _, v in pairs(gun:GetDescendants()) do
+                            if v:IsA("NumberValue") and (v.Name:find("Recoil") or v.Name:find("Kick") or v.Name:find("Sway")) then
+                                v.Value = 0
+                            end
                         end
                     end
                 end
             end)
         end)
     else
-        if Core.GameLoops.PFNoRecoil then
-            Core.GameLoops.PFNoRecoil:Disconnect()
-            Core.GameLoops.PFNoRecoil = nil
-        end
+        if Core.CBLoops.PFRecoil then Core.CBLoops.PFRecoil:Disconnect() Core.CBLoops.PFRecoil = nil end
     end
 end
 
 function Core.PFNoSpread(enabled)
     if Core.GameName ~= "Phantom Forces" then return end
     Core.PFSettings.NoSpread = enabled
-    
     if enabled then
-        if Core.GameLoops.PFNoSpread then Core.GameLoops.PFNoSpread:Disconnect() end
-        Core.GameLoops.PFNoSpread = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.PFSpread then Core.CBLoops.PFSpread:Disconnect() end
+        Core.CBLoops.PFSpread = RunService.RenderStepped:Connect(function()
             pcall(function()
                 local char = LocalPlayer.Character
                 if char then
-                    for _, v in pairs(char:GetDescendants()) do
-                        if v.Name == "Spread" or v.Name == "HipSpread" or v.Name == "AimSpread" then
-                            if v:IsA("NumberValue") then v.Value = 0 end
+                    local gun = char:FindFirstChildOfClass("Tool")
+                    if gun then
+                        for _, v in pairs(gun:GetDescendants()) do
+                            if v:IsA("NumberValue") and v.Name:find("Spread") then
+                                v.Value = 0
+                            end
                         end
                     end
                 end
             end)
         end)
     else
-        if Core.GameLoops.PFNoSpread then
-            Core.GameLoops.PFNoSpread:Disconnect()
-            Core.GameLoops.PFNoSpread = nil
-        end
+        if Core.CBLoops.PFSpread then Core.CBLoops.PFSpread:Disconnect() Core.CBLoops.PFSpread = nil end
     end
 end
 
 function Core.RivalsNoRecoil(enabled)
     if Core.GameName ~= "Rivals" then return end
     Core.RivalsSettings.NoRecoil = enabled
-    
     if enabled then
-        if Core.GameLoops.RivalsNoRecoil then Core.GameLoops.RivalsNoRecoil:Disconnect() end
-        Core.GameLoops.RivalsNoRecoil = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.RivalsRecoil then Core.CBLoops.RivalsRecoil:Disconnect() end
+        Core.CBLoops.RivalsRecoil = RunService.RenderStepped:Connect(function()
             pcall(function()
-                local weapons = ReplicatedStorage:FindFirstChild("Weapons")
-                if weapons then
-                    for _, weapon in pairs(weapons:GetDescendants()) do
-                        if weapon.Name:lower():find("recoil") and weapon:IsA("NumberValue") then
-                            weapon.Value = 0
+                local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+                if playerGui then
+                    for _, v in pairs(playerGui:GetDescendants()) do
+                        if v:IsA("NumberValue") and v.Name:lower():find("recoil") then
+                            v.Value = 0
                         end
                     end
                 end
             end)
         end)
     else
-        if Core.GameLoops.RivalsNoRecoil then
-            Core.GameLoops.RivalsNoRecoil:Disconnect()
-            Core.GameLoops.RivalsNoRecoil = nil
-        end
+        if Core.CBLoops.RivalsRecoil then Core.CBLoops.RivalsRecoil:Disconnect() Core.CBLoops.RivalsRecoil = nil end
     end
 end
 
 function Core.RivalsNoSpread(enabled)
     if Core.GameName ~= "Rivals" then return end
     Core.RivalsSettings.NoSpread = enabled
-    
     if enabled then
-        if Core.GameLoops.RivalsNoSpread then Core.GameLoops.RivalsNoSpread:Disconnect() end
-        Core.GameLoops.RivalsNoSpread = RunService.RenderStepped:Connect(function()
+        if Core.CBLoops.RivalsSpread then Core.CBLoops.RivalsSpread:Disconnect() end
+        Core.CBLoops.RivalsSpread = RunService.RenderStepped:Connect(function()
             pcall(function()
-                local weapons = ReplicatedStorage:FindFirstChild("Weapons")
-                if weapons then
-                    for _, weapon in pairs(weapons:GetDescendants()) do
-                        if weapon.Name:lower():find("spread") and weapon:IsA("NumberValue") then
-                            weapon.Value = 0
+                local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+                if playerGui then
+                    for _, v in pairs(playerGui:GetDescendants()) do
+                        if v:IsA("NumberValue") and v.Name:lower():find("spread") then
+                            v.Value = 0
                         end
                     end
                 end
             end)
         end)
     else
-        if Core.GameLoops.RivalsNoSpread then
-            Core.GameLoops.RivalsNoSpread:Disconnect()
-            Core.GameLoops.RivalsNoSpread = nil
-        end
+        if Core.CBLoops.RivalsSpread then Core.CBLoops.RivalsSpread:Disconnect() Core.CBLoops.RivalsSpread = nil end
     end
 end
 
-function Core.RivalsBHop(enabled)
-    if Core.GameName ~= "Rivals" then return end
-    Core.RivalsSettings.BHop = enabled
-    
+function Core.FlickAutoClick(enabled)
+    if Core.GameName ~= "Flick" then return end
+    Core.FlickSettings.AutoClick = enabled
     if enabled then
-        if Core.GameLoops.RivalsBHop then Core.GameLoops.RivalsBHop:Disconnect() end
-        Core.GameLoops.RivalsBHop = RunService.RenderStepped:Connect(function()
-            if Core.IsAlive(LocalPlayer) then
-                local hum = LocalPlayer.Character.Humanoid
-                if hum.FloorMaterial ~= Enum.Material.Air then
-                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
-                end
-            end
+        if Core.CBLoops.FlickClick then Core.CBLoops.FlickClick:Disconnect() end
+        Core.CBLoops.FlickClick = RunService.RenderStepped:Connect(function()
+            if mouse1click then mouse1click() end
+            task.wait(Core.FlickSettings.ClickDelay / 1000)
         end)
     else
-        if Core.GameLoops.RivalsBHop then
-            Core.GameLoops.RivalsBHop:Disconnect()
-            Core.GameLoops.RivalsBHop = nil
-        end
+        if Core.CBLoops.FlickClick then Core.CBLoops.FlickClick:Disconnect() Core.CBLoops.FlickClick = nil end
     end
-end
-
-function Core.FlickAutoWin(enabled)
-    if Core.GameName ~= "Flick" then return end
-    Core.FlickSettings.AutoWin = enabled
 end
 
 function Core.SilentAimCameraMethod()
@@ -1414,24 +1412,17 @@ function Core.SilentAimCameraMethod()
 end
 
 function Core.GetSilentAimPosition()
-    if not Core.SilentAimSettings.Enabled or not Core.SilentAimTarget then
-        return nil
-    end
-    
+    if not Core.SilentAimSettings.Enabled or not Core.SilentAimTarget then return nil end
     local target = Core.SilentAimTarget
     if not target.Player or not Core.IsAlive(target.Player) or not target.Part then
         Core.SilentAimTarget = nil
         return nil
     end
-    
     local targetPos = target.Part.Position
     if Core.SilentAimSettings.Prediction > 0 then
         local root = target.Player.Character:FindFirstChild("HumanoidRootPart")
-        if root then
-            targetPos = targetPos + (root.AssemblyLinearVelocity * (Core.SilentAimSettings.Prediction / 10))
-        end
+        if root then targetPos = targetPos + (root.AssemblyLinearVelocity * (Core.SilentAimSettings.Prediction / 10)) end
     end
-    
     return targetPos
 end
 
@@ -1457,22 +1448,6 @@ function Core.GetJoinScript()
     return 'game:GetService("TeleportService"):TeleportToPlaceInstance(' .. Core.PlaceId .. ', "' .. game.JobId .. '", game.Players.LocalPlayer)'
 end
 
-function Core.SetFullbright(enabled)
-    if enabled then 
-        Lighting.Brightness = 2 
-        Lighting.ClockTime = 14 
-        Lighting.FogEnd = 100000 
-        Lighting.GlobalShadows = false
-    else 
-        Lighting.Brightness = 1 
-        Lighting.GlobalShadows = true 
-    end
-end
-
-function Core.SetNoFog(enabled)
-    Lighting.FogEnd = enabled and 100000 or 1000
-end
-
 function Core.LoadInfYield()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 end
@@ -1489,68 +1464,50 @@ function Core.LoadRemoteSpy()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/infyiff/backup/main/SimpleSpyV3/main.lua"))()
 end
 
-function Core.LoadCMDX()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/cmdx/cmdx-scripts/main/cmdx-ui"))()
+function Core.LoadCmd()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/CommandDev/Toh-Admin/main/Source.lua"))()
 end
 
-function Core.LoadBTools()
-    loadstring(game:HttpGet("https://pastebin.com/raw/JpnVbLzE"))()
+function Core.LoadDarkDex()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/FullDarkDex.lua"))()
 end
 
-function Core.LoadFlingScript()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/Jeanny04/DemonicHub/main/FlingWorld.lua"))()
+function Core.LoadServerSide()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/RegularVynworken/Vynwhirl-VynAdmin/refs/heads/main/VynAdmin.lua"))()
 end
 
-function Core.LoadScriptDumper()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/JohnnyMorganz/SynapseDumper/master/main.lua"))()
+function Core.LoadOhio()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/realredz/ohio/main/NewOhio"))()
 end
 
 function Core.SetupSilentAim()
     if not getrawmetatable then return false end
-    
     local mouse = LocalPlayer:GetMouse()
     local mt = getrawmetatable(mouse)
     if not mt then return false end
-    
     local oldIndex = mt.__index
-    
     if setreadonly then setreadonly(mt, false) end
-    
     local newIndex = function(self, key)
         if Core.SilentAimSettings.Enabled then
             local targetPos = Core.GetSilentAimPosition()
             if targetPos then
-                if key == "Hit" then
-                    return CFrame.new(targetPos)
-                elseif key == "Target" then
-                    if Core.SilentAimTarget and Core.SilentAimTarget.Part then
-                        return Core.SilentAimTarget.Part
-                    end
-                elseif key == "X" then
-                    return Camera:WorldToViewportPoint(targetPos).X
-                elseif key == "Y" then
-                    return Camera:WorldToViewportPoint(targetPos).Y
-                elseif key == "UnitRay" then
-                    local origin = Camera.CFrame.Position
-                    return Ray.new(origin, (targetPos - origin).Unit)
-                end
+                if key == "Hit" then return CFrame.new(targetPos)
+                elseif key == "Target" then if Core.SilentAimTarget and Core.SilentAimTarget.Part then return Core.SilentAimTarget.Part end
+                elseif key == "X" then return Camera:WorldToViewportPoint(targetPos).X
+                elseif key == "Y" then return Camera:WorldToViewportPoint(targetPos).Y
+                elseif key == "UnitRay" then return Ray.new(Camera.CFrame.Position, (targetPos - Camera.CFrame.Position).Unit) end
             end
         end
         return oldIndex(self, key)
     end
-    
-    if newcclosure then
-        mt.__index = newcclosure(newIndex)
-    else
-        mt.__index = newIndex
-    end
-    
+    if newcclosure then mt.__index = newcclosure(newIndex) else mt.__index = newIndex end
     if setreadonly then setreadonly(mt, true) end
-    
     return true
 end
 
 function Core.Init()
+    Core.SaveLighting()
+    
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then Core.CreateESP(plr) end
     end
@@ -1559,20 +1516,12 @@ function Core.Init()
     Players.PlayerRemoving:Connect(function(plr) Core.RemoveESP(plr) end)
     
     if Core.GameName == "Murder Mystery 2" then
-        task.spawn(function()
-            while task.wait(2) do
-                Core.MM2Roles = {}
-            end
-        end)
+        task.spawn(function() while task.wait(2) do Core.MM2Roles = {} end end)
     end
     
-    if getrawmetatable then
-        Core.SetupSilentAim()
-    end
+    if getrawmetatable then Core.SetupSilentAim() end
     
-    RunService.RenderStepped:Connect(function()
-        Core.SilentAimCameraMethod()
-    end)
+    RunService.RenderStepped:Connect(function() Core.SilentAimCameraMethod() end)
 end
 
 return Core
