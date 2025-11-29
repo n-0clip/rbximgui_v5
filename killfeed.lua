@@ -162,31 +162,27 @@ if Core.GameName == "Counter Blox" then
     CBEffects:AddToggle("CB_NoSmoke", {Text = "No Smoke", Default = false, Callback = function(v) Core.CBNoSmoke(v) end})
 end
 
-if Core.GameName == "Arsenal" then
-    local ArsenalTabBox = Tabs.Game:AddLeftTabbox("Arsenal")
-    local ArsenalWeapon = ArsenalTabBox:AddTab("Weapon")
-    local ArsenalMisc = ArsenalTabBox:AddTab("Misc")
+if Core.GameName == "Brookhaven" then
+    local BHTabBox = Tabs.Game:AddLeftTabbox("Trolling")
+    local BHSpam = BHTabBox:AddTab("Spam")
+    local BHDestroy = BHTabBox:AddTab("Destroy")
+    local BHFun = BHTabBox:AddTab("Fun")
     
-    ArsenalWeapon:AddToggle("Arsenal_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.ArsenalNoRecoil(v) end})
-    ArsenalWeapon:AddToggle("Arsenal_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.ArsenalNoSpread(v) end})
-    ArsenalWeapon:AddToggle("Arsenal_RapidFire", {Text = "Rapid Fire", Default = false, Callback = function(v) Core.ArsenalRapidFire(v) end})
-    ArsenalWeapon:AddButton({Text = "Infinite Ammo", Func = function() Core.ArsenalInfAmmo(true) Library:Notify("Infinite Ammo Applied") end})
-    ArsenalWeapon:AddButton({Text = "Infinite Range", Func = function() Core.ArsenalInfRange(true) Library:Notify("Infinite Range Applied") end})
-    ArsenalWeapon:AddButton({Text = "100% Accuracy", Func = function() Core.ArsenalFullAccuracy(true) Library:Notify("Full Accuracy Applied") end})
-    ArsenalWeapon:AddButton({Text = "Auto Weapons", Func = function() Core.ArsenalAutoWeapons(true) Library:Notify("All Weapons Auto") end})
+    BHSpam:AddToggle("BH_SpamChat", {Text = "Spam Chat", Default = false, Callback = function(v) Core.BrookhavenSpamChat(v) end})
+    BHSpam:AddInput("BH_SpamMsg", {Default = "killfeed.cc on top", Text = "Message", Callback = function(v) Core.BrookhavenSettings.SpamMessage = v end})
+    BHSpam:AddSlider("BH_SpamDelay", {Text = "Delay", Default = 1, Min = 0.1, Max = 5, Rounding = 1, Callback = function(v) Core.BrookhavenSettings.SpamDelay = v end})
+    BHSpam:AddButton({Text = "Sound Spam (Annoying)", Func = function() Core.BrookhavenSoundSpam() Library:Notify("Playing loud sound...") end})
+    BHSpam:AddToggle("BH_SpamEmotes", {Text = "Spam Emotes", Default = false, Callback = function(v) Core.BrookhavenSpamEmotes(v) end})
+    BHSpam:AddToggle("BH_SpamVehicles", {Text = "Spam Vehicles", Default = false, Callback = function(v) Core.BrookhavenSpamVehicles(v) end})
     
-    ArsenalMisc:AddButton({Text = "Instant Reload", Func = function() Core.ArsenalInstantReload(true) Library:Notify("Instant Reload Applied") end})
-    ArsenalMisc:AddButton({Text = "Apply Everything", Func = function()
-        Core.ArsenalNoRecoil(true)
-        Core.ArsenalNoSpread(true)
-        Core.ArsenalRapidFire(true)
-        Core.ArsenalInfAmmo(true)
-        Core.ArsenalInfRange(true)
-        Core.ArsenalFullAccuracy(true)
-        Core.ArsenalAutoWeapons(true)
-        Core.ArsenalInstantReload(true)
-        Library:Notify("All Arsenal Mods Applied!")
-    end})
+    BHDestroy:AddButton({Text = "Remove All Houses", Func = function() Core.BrookhavenRemoveHouses() Library:Notify("Houses Removed") end})
+    BHDestroy:AddButton({Text = "Flood Server", Func = function() Core.BrookhavenFloodServer() Library:Notify("Server Flooded") end})
+    BHDestroy:AddButton({Text = "Explode Everyone", Func = function() Core.BrookhavenExplodeAll() Library:Notify("Exploded Everyone") end})
+    BHDestroy:AddButton({Text = "Kick All", Func = function() Core.BrookhavenKickAll() Library:Notify("Attempting to kick everyone...") end})
+    
+    BHFun:AddToggle("BH_Fling", {Text = "Fling Aura", Default = false, Callback = function(v) Core.BrookhavenFling(v) end})
+    BHFun:AddButton({Text = "TP All to Me", Func = function() Core.BrookhavenTPAll() Library:Notify("Teleported Players") end})
+    BHFun:AddToggle("BH_Freeze", {Text = "Freeze Everyone", Default = false, Callback = function(v) Core.BrookhavenFreezePlayers(v) end})
 end
 
 if Core.GameName == "Murder Mystery 2" then
@@ -195,6 +191,7 @@ if Core.GameName == "Murder Mystery 2" then
     MM2Box:AddLabel("Murderer"):AddColorPicker("MM2_Murd", {Default = Color3.fromRGB(255,0,0), Callback = function(v) Core.ESPSettings.MurdererColor = v end})
     MM2Box:AddLabel("Sheriff"):AddColorPicker("MM2_Sher", {Default = Color3.fromRGB(0,100,255), Callback = function(v) Core.ESPSettings.SheriffColor = v end})
     MM2Box:AddLabel("Innocent"):AddColorPicker("MM2_Inno", {Default = Color3.fromRGB(0,255,0), Callback = function(v) Core.ESPSettings.InnocentColor = v end})
+    MM2Box:AddButton({Text = "Coin Farm", Func = function() Core.MM2CoinFarm() end})
 end
 
 local ScriptsBox = Tabs.Scripts:AddLeftGroupbox("Admin Scripts")
@@ -203,10 +200,7 @@ ScriptsBox:AddButton({Text = "Nameless Admin", Func = function() Library:Notify(
 
 local ScriptsUtil = Tabs.Scripts:AddRightGroupbox("Utilities")
 ScriptsUtil:AddButton({Text = "Dex Explorer", Func = function() Library:Notify("Loading...") Core.LoadScript("Dex Explorer") end})
-ScriptsUtil:AddButton({Text = "Dark Dex", Func = function() Library:Notify("Loading...") Core.LoadScript("Dark Dex") end})
 ScriptsUtil:AddButton({Text = "Remote Spy", Func = function() Library:Notify("Loading...") Core.LoadScript("Remote Spy") end})
-ScriptsUtil:AddButton({Text = "Chat Spy", Func = function() Library:Notify("Loading...") Core.LoadScript("Chat Spy") end})
-ScriptsUtil:AddButton({Text = "Anti AFK", Func = function() Library:Notify("Loading...") Core.LoadScript("Anti AFK") end})
 
 RunService.RenderStepped:Connect(function()
     pcall(function() FOVCircle.Visible = Toggles.Aim_DrawFOV.Value and Core.AimbotSettings.Enabled end)
