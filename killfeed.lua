@@ -163,9 +163,30 @@ if Core.GameName == "Counter Blox" then
 end
 
 if Core.GameName == "Arsenal" then
-    local ArsenalBox = Tabs.Game:AddLeftGroupbox("Arsenal")
-    ArsenalBox:AddToggle("Arsenal_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.ArsenalNoRecoil(v) end})
-    ArsenalBox:AddToggle("Arsenal_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.ArsenalNoSpread(v) end})
+    local ArsenalTabBox = Tabs.Game:AddLeftTabbox("Arsenal")
+    local ArsenalWeapon = ArsenalTabBox:AddTab("Weapon")
+    local ArsenalMisc = ArsenalTabBox:AddTab("Misc")
+    
+    ArsenalWeapon:AddToggle("Arsenal_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.ArsenalNoRecoil(v) end})
+    ArsenalWeapon:AddToggle("Arsenal_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.ArsenalNoSpread(v) end})
+    ArsenalWeapon:AddToggle("Arsenal_RapidFire", {Text = "Rapid Fire", Default = false, Callback = function(v) Core.ArsenalRapidFire(v) end})
+    ArsenalWeapon:AddButton({Text = "Infinite Ammo", Func = function() Core.ArsenalInfAmmo(true) Library:Notify("Infinite Ammo Applied") end})
+    ArsenalWeapon:AddButton({Text = "Infinite Range", Func = function() Core.ArsenalInfRange(true) Library:Notify("Infinite Range Applied") end})
+    ArsenalWeapon:AddButton({Text = "100% Accuracy", Func = function() Core.ArsenalFullAccuracy(true) Library:Notify("Full Accuracy Applied") end})
+    ArsenalWeapon:AddButton({Text = "Auto Weapons", Func = function() Core.ArsenalAutoWeapons(true) Library:Notify("All Weapons Auto") end})
+    
+    ArsenalMisc:AddButton({Text = "Instant Reload", Func = function() Core.ArsenalInstantReload(true) Library:Notify("Instant Reload Applied") end})
+    ArsenalMisc:AddButton({Text = "Apply Everything", Func = function()
+        Core.ArsenalNoRecoil(true)
+        Core.ArsenalNoSpread(true)
+        Core.ArsenalRapidFire(true)
+        Core.ArsenalInfAmmo(true)
+        Core.ArsenalInfRange(true)
+        Core.ArsenalFullAccuracy(true)
+        Core.ArsenalAutoWeapons(true)
+        Core.ArsenalInstantReload(true)
+        Library:Notify("All Arsenal Mods Applied!")
+    end})
 end
 
 if Core.GameName == "Murder Mystery 2" then
