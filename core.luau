@@ -180,15 +180,14 @@ function Core.CreateDrawing(t, props)
         return Drawing.new(t)
     end)
     
-    if not success or not d or type(d) == "number" then
-        return {
+    if not success or not d or type(d) ~= "table" and type(d) ~= "userdata" then
+        local fake = {
             Visible = false,
-            Remove = function() end,
             Color = Color3.new(1,1,1),
             Thickness = 1,
             Filled = false,
             Transparency = 1,
-            Size = 13,
+            Size = Vector2.new(0,0),
             Position = Vector2.new(0,0),
             From = Vector2.new(0,0),
             To = Vector2.new(0,0),
@@ -199,8 +198,10 @@ function Core.CreateDrawing(t, props)
             PointA = Vector2.new(0,0),
             PointB = Vector2.new(0,0),
             PointC = Vector2.new(0,0),
-            Font = 2
+            Font = 2,
+            Remove = function() end
         }
+        return fake
     end
     
     for k, v in pairs(props or {}) do
@@ -210,6 +211,14 @@ function Core.CreateDrawing(t, props)
     end
     
     return d
+end
+
+function Core.SafeSet(obj, prop, value)
+    if obj and value ~= nil then
+        pcall(function()
+            obj[prop] = value
+        end)
+    end
 end
 
 function Core.IsAlive(plr)
@@ -469,15 +478,31 @@ function Core.RemoveESP(plr)
 end
 
 function Core.HideESP(esp)
-    for k, v in pairs(esp) do
-        if type(v) == "table" then
-            if v.Visible ~= nil then
-                pcall(function() v.Visible = false end)
-            else
-                for _, line in pairs(v) do 
-                    pcall(function() line.Visible = false end) 
-                end
-            end
+    if not esp then return end
+    
+    pcall(function() esp.Box.Visible = false end)
+    pcall(function() esp.BoxOutline.Visible = false end)
+    pcall(function() esp.Name.Visible = false end)
+    pcall(function() esp.Health.Visible = false end)
+    pcall(function() esp.HealthOutline.Visible = false end)
+    pcall(function() esp.HealthText.Visible = false end)
+    pcall(function() esp.Distance.Visible = false end)
+    pcall(function() esp.HeadDot.Visible = false end)
+    pcall(function() esp.Tracer.Visible = false end)
+    pcall(function() esp.Weapon.Visible = false end)
+    pcall(function() esp.Arrow.Visible = false end)
+    pcall(function() esp.CornerTL.Visible = false end)
+    pcall(function() esp.CornerTR.Visible = false end)
+    pcall(function() esp.CornerBL.Visible = false end)
+    pcall(function() esp.CornerBR.Visible = false end)
+    pcall(function() esp.CornerTL2.Visible = false end)
+    pcall(function() esp.CornerTR2.Visible = false end)
+    pcall(function() esp.CornerBL2.Visible = false end)
+    pcall(function() esp.CornerBR2.Visible = false end)
+    
+    if esp.Skeleton then
+        for _, line in pairs(esp.Skeleton) do
+            pcall(function() line.Visible = false end)
         end
     end
 end
@@ -486,19 +511,30 @@ function Core.UpdateESP()
     Camera = Workspace.CurrentCamera
     
     for plr, esp in pairs(Core.ESPObjects) do
+        if not esp then continue end
+        
         if not Core.ESPSettings.Enabled or not Core.IsAlive(plr) or plr == LocalPlayer then
             Core.HideESP(esp)
-            if Core.ChamsObjects[plr] then Core.ChamsObjects[plr].Enabled = false end
+            if Core.ChamsObjects[plr] then 
+                pcall(function() Core.ChamsObjects[plr].Enabled = false end)
+            end
             continue
         end
         
         if Core.ESPSettings.TeamCheck and plr.Team == LocalPlayer.Team and plr.Team ~= nil then
             Core.HideESP(esp)
-            if Core.ChamsObjects[plr] then Core.ChamsObjects[plr].Enabled = false end
+            if Core.ChamsObjects[plr] then 
+                pcall(function() Core.ChamsObjects[plr].Enabled = false end)
+            end
             continue
         end
         
         local char = plr.Character
+        if not char then
+            Core.HideESP(esp)
+            continue
+        end
+        
         local root = char:FindFirstChild("HumanoidRootPart")
         local head = char:FindFirstChild("Head")
         local hum = char:FindFirstChild("Humanoid")
@@ -513,7 +549,9 @@ function Core.UpdateESP()
         
         if dist > Core.ESPSettings.MaxDist then
             Core.HideESP(esp)
-            if Core.ChamsObjects[plr] then Core.ChamsObjects[plr].Enabled = false end
+            if Core.ChamsObjects[plr] then 
+                pcall(function() Core.ChamsObjects[plr].Enabled = false end)
+            end
             continue
         end
         
@@ -522,31 +560,35 @@ function Core.UpdateESP()
         if not onScreen then
             Core.HideESP(esp)
             
-            if Core.ESPSettings.OffScreenArrows.On then
-                local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-                local screenPos = Camera:WorldToViewportPoint(root.Position)
-                local dir = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Unit
-                local arrowPos = screenCenter + dir * Core.ESPSettings.OffScreenArrows.Radius
-                
-                local angle = math.atan2(dir.Y, dir.X)
-                local size = Core.ESPSettings.OffScreenArrows.Size
-                
-                local p1 = arrowPos + Vector2.new(math.cos(angle) * size, math.sin(angle) * size)
-                local p2 = arrowPos + Vector2.new(math.cos(angle + 2.5) * size * 0.5, math.sin(angle + 2.5) * size * 0.5)
-                local p3 = arrowPos + Vector2.new(math.cos(angle - 2.5) * size * 0.5, math.sin(angle - 2.5) * size * 0.5)
-                
-                esp.Arrow.PointA = p1
-                esp.Arrow.PointB = p2
-                esp.Arrow.PointC = p3
-                esp.Arrow.Color = Core.ESPSettings.OffScreenArrows.Color
-                esp.Arrow.Visible = true
+            if Core.ESPSettings.OffScreenArrows and Core.ESPSettings.OffScreenArrows.On then
+                pcall(function()
+                    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+                    local screenPos = Camera:WorldToViewportPoint(root.Position)
+                    local dir = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Unit
+                    local arrowPos = screenCenter + dir * Core.ESPSettings.OffScreenArrows.Radius
+                    
+                    local angle = math.atan2(dir.Y, dir.X)
+                    local size = Core.ESPSettings.OffScreenArrows.Size
+                    
+                    local p1 = arrowPos + Vector2.new(math.cos(angle) * size, math.sin(angle) * size)
+                    local p2 = arrowPos + Vector2.new(math.cos(angle + 2.5) * size * 0.5, math.sin(angle + 2.5) * size * 0.5)
+                    local p3 = arrowPos + Vector2.new(math.cos(angle - 2.5) * size * 0.5, math.sin(angle - 2.5) * size * 0.5)
+                    
+                    esp.Arrow.PointA = p1
+                    esp.Arrow.PointB = p2
+                    esp.Arrow.PointC = p3
+                    esp.Arrow.Color = Core.ESPSettings.OffScreenArrows.Color
+                    esp.Arrow.Visible = true
+                end)
             end
             
-            if Core.ChamsObjects[plr] then Core.ChamsObjects[plr].Enabled = false end
+            if Core.ChamsObjects[plr] then 
+                pcall(function() Core.ChamsObjects[plr].Enabled = false end)
+            end
             continue
         end
         
-        esp.Arrow.Visible = false
+        pcall(function() esp.Arrow.Visible = false end)
         
         local headPos = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
         local legPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
@@ -554,200 +596,234 @@ function Core.UpdateESP()
         local width = height * 0.6
         local x, y = pos.X - width / 2, headPos.Y
         
-        if Core.ESPSettings.Box.On then
-            esp.Box.Size = Vector2.new(width, height)
-            esp.Box.Position = Vector2.new(x, y)
-            esp.Box.Color = color
-            esp.Box.Visible = true
-            
-            if Core.ESPSettings.Box.Outline then
-                esp.BoxOutline.Size = Vector2.new(width, height)
-                esp.BoxOutline.Position = Vector2.new(x, y)
-                esp.BoxOutline.Visible = true
-            else
+        if Core.ESPSettings.Box and Core.ESPSettings.Box.On then
+            pcall(function()
+                esp.Box.Size = Vector2.new(width, height)
+                esp.Box.Position = Vector2.new(x, y)
+                esp.Box.Color = color
+                esp.Box.Visible = true
+                
+                if Core.ESPSettings.Box.Outline then
+                    esp.BoxOutline.Size = Vector2.new(width, height)
+                    esp.BoxOutline.Position = Vector2.new(x, y)
+                    esp.BoxOutline.Visible = true
+                else
+                    esp.BoxOutline.Visible = false
+                end
+            end)
+        else
+            pcall(function() 
+                esp.Box.Visible = false
                 esp.BoxOutline.Visible = false
-            end
-        else
-            esp.Box.Visible = false
-            esp.BoxOutline.Visible = false
+            end)
         end
         
-        if Core.ESPSettings.CornerBox.On then
-            local cornerLen = height / 4
-            esp.CornerTL.From = Vector2.new(x, y)
-            esp.CornerTL.To = Vector2.new(x + cornerLen, y)
-            esp.CornerTL.Color = color
-            esp.CornerTL.Visible = true
-            
-            esp.CornerTL2.From = Vector2.new(x, y)
-            esp.CornerTL2.To = Vector2.new(x, y + cornerLen)
-            esp.CornerTL2.Color = color
-            esp.CornerTL2.Visible = true
-            
-            esp.CornerTR.From = Vector2.new(x + width, y)
-            esp.CornerTR.To = Vector2.new(x + width - cornerLen, y)
-            esp.CornerTR.Color = color
-            esp.CornerTR.Visible = true
-            
-            esp.CornerTR2.From = Vector2.new(x + width, y)
-            esp.CornerTR2.To = Vector2.new(x + width, y + cornerLen)
-            esp.CornerTR2.Color = color
-            esp.CornerTR2.Visible = true
-            
-            esp.CornerBL.From = Vector2.new(x, y + height)
-            esp.CornerBL.To = Vector2.new(x + cornerLen, y + height)
-            esp.CornerBL.Color = color
-            esp.CornerBL.Visible = true
-            
-            esp.CornerBL2.From = Vector2.new(x, y + height)
-            esp.CornerBL2.To = Vector2.new(x, y + height - cornerLen)
-            esp.CornerBL2.Color = color
-            esp.CornerBL2.Visible = true
-            
-            esp.CornerBR.From = Vector2.new(x + width, y + height)
-            esp.CornerBR.To = Vector2.new(x + width - cornerLen, y + height)
-            esp.CornerBR.Color = color
-            esp.CornerBR.Visible = true
-            
-            esp.CornerBR2.From = Vector2.new(x + width, y + height)
-            esp.CornerBR2.To = Vector2.new(x + width, y + height - cornerLen)
-            esp.CornerBR2.Color = color
-            esp.CornerBR2.Visible = true
+        if Core.ESPSettings.CornerBox and Core.ESPSettings.CornerBox.On then
+            pcall(function()
+                local cornerLen = height / 4
+                
+                esp.CornerTL.From = Vector2.new(x, y)
+                esp.CornerTL.To = Vector2.new(x + cornerLen, y)
+                esp.CornerTL.Color = color
+                esp.CornerTL.Visible = true
+                
+                esp.CornerTL2.From = Vector2.new(x, y)
+                esp.CornerTL2.To = Vector2.new(x, y + cornerLen)
+                esp.CornerTL2.Color = color
+                esp.CornerTL2.Visible = true
+                
+                esp.CornerTR.From = Vector2.new(x + width, y)
+                esp.CornerTR.To = Vector2.new(x + width - cornerLen, y)
+                esp.CornerTR.Color = color
+                esp.CornerTR.Visible = true
+                
+                esp.CornerTR2.From = Vector2.new(x + width, y)
+                esp.CornerTR2.To = Vector2.new(x + width, y + cornerLen)
+                esp.CornerTR2.Color = color
+                esp.CornerTR2.Visible = true
+                
+                esp.CornerBL.From = Vector2.new(x, y + height)
+                esp.CornerBL.To = Vector2.new(x + cornerLen, y + height)
+                esp.CornerBL.Color = color
+                esp.CornerBL.Visible = true
+                
+                esp.CornerBL2.From = Vector2.new(x, y + height)
+                esp.CornerBL2.To = Vector2.new(x, y + height - cornerLen)
+                esp.CornerBL2.Color = color
+                esp.CornerBL2.Visible = true
+                
+                esp.CornerBR.From = Vector2.new(x + width, y + height)
+                esp.CornerBR.To = Vector2.new(x + width - cornerLen, y + height)
+                esp.CornerBR.Color = color
+                esp.CornerBR.Visible = true
+                
+                esp.CornerBR2.From = Vector2.new(x + width, y + height)
+                esp.CornerBR2.To = Vector2.new(x + width, y + height - cornerLen)
+                esp.CornerBR2.Color = color
+                esp.CornerBR2.Visible = true
+            end)
         else
-            esp.CornerTL.Visible = false
-            esp.CornerTL2.Visible = false
-            esp.CornerTR.Visible = false
-            esp.CornerTR2.Visible = false
-            esp.CornerBL.Visible = false
-            esp.CornerBL2.Visible = false
-            esp.CornerBR.Visible = false
-            esp.CornerBR2.Visible = false
+            pcall(function()
+                esp.CornerTL.Visible = false
+                esp.CornerTL2.Visible = false
+                esp.CornerTR.Visible = false
+                esp.CornerTR2.Visible = false
+                esp.CornerBL.Visible = false
+                esp.CornerBL2.Visible = false
+                esp.CornerBR.Visible = false
+                esp.CornerBR2.Visible = false
+            end)
         end
         
-        if Core.ESPSettings.Name.On then
-            local txt = Core.ESPSettings.Name.DisplayName and plr.DisplayName or plr.Name
-            if Core.GameName == "Murder Mystery 2" and Core.ESPSettings.ShowRole then
-                txt = txt .. " [" .. Core.GetMM2Role(plr) .. "]"
-            end
-            esp.Name.Text = txt
-            esp.Name.Position = Vector2.new(x + width / 2, y - 16)
-            esp.Name.Color = Core.ESPSettings.Name.Color
-            esp.Name.Size = Core.ESPSettings.FontSize
-            esp.Name.Font = Core.ESPSettings.Font
-            esp.Name.Visible = true
+        if Core.ESPSettings.Name and Core.ESPSettings.Name.On then
+            pcall(function()
+                local txt = Core.ESPSettings.Name.DisplayName and plr.DisplayName or plr.Name
+                if Core.GameName == "Murder Mystery 2" and Core.ESPSettings.ShowRole then
+                    txt = txt .. " [" .. Core.GetMM2Role(plr) .. "]"
+                end
+                esp.Name.Text = txt
+                esp.Name.Position = Vector2.new(x + width / 2, y - 16)
+                esp.Name.Color = Core.ESPSettings.Name.Color
+                esp.Name.Size = Core.ESPSettings.FontSize or 13
+                esp.Name.Visible = true
+            end)
         else
-            esp.Name.Visible = false
+            pcall(function() esp.Name.Visible = false end)
         end
         
-        if Core.ESPSettings.Weapon.On then
-            esp.Weapon.Text = "[" .. Core.GetPlayerWeapon(plr) .. "]"
-            esp.Weapon.Position = Vector2.new(x + width / 2, y + height + 2)
-            esp.Weapon.Color = Core.ESPSettings.Weapon.Color
-            esp.Weapon.Size = Core.ESPSettings.FontSize - 2
-            esp.Weapon.Visible = true
+        if Core.ESPSettings.Weapon and Core.ESPSettings.Weapon.On then
+            pcall(function()
+                esp.Weapon.Text = "[" .. Core.GetPlayerWeapon(plr) .. "]"
+                esp.Weapon.Position = Vector2.new(x + width / 2, y + height + 2)
+                esp.Weapon.Color = Core.ESPSettings.Weapon.Color
+                esp.Weapon.Visible = true
+            end)
         else
-            esp.Weapon.Visible = false
+            pcall(function() esp.Weapon.Visible = false end)
         end
         
-        if Core.ESPSettings.Health.On then
-            local hp = hum.Health / hum.MaxHealth
-            local barH = height * hp
-            local barX = Core.ESPSettings.Health.Position == "Left" and x - 6 or x + width + 2
-            
-            esp.HealthOutline.Size = Vector2.new(4, height + 2)
-            esp.HealthOutline.Position = Vector2.new(barX - 1, y - 1)
-            esp.HealthOutline.Visible = true
-            
-            esp.Health.Size = Vector2.new(2, barH)
-            esp.Health.Position = Vector2.new(barX, y + height - barH)
-            esp.Health.Color = Color3.fromRGB(255 - 255 * hp, 255 * hp, 0)
-            esp.Health.Visible = true
-            
-            esp.HealthText.Text = math.floor(hum.Health)
-            esp.HealthText.Position = Vector2.new(barX, y + height - barH - 12)
-            esp.HealthText.Color = Color3.new(1,1,1)
-            esp.HealthText.Visible = hp < 1
+        if Core.ESPSettings.Health and Core.ESPSettings.Health.On then
+            pcall(function()
+                local hp = hum.Health / hum.MaxHealth
+                local barH = height * hp
+                local barX = (Core.ESPSettings.Health.Position == "Left") and (x - 6) or (x + width + 2)
+                
+                esp.HealthOutline.Size = Vector2.new(4, height + 2)
+                esp.HealthOutline.Position = Vector2.new(barX - 1, y - 1)
+                esp.HealthOutline.Visible = true
+                
+                esp.Health.Size = Vector2.new(2, barH)
+                esp.Health.Position = Vector2.new(barX, y + height - barH)
+                esp.Health.Color = Color3.fromRGB(255 - 255 * hp, 255 * hp, 0)
+                esp.Health.Visible = true
+                
+                esp.HealthText.Text = tostring(math.floor(hum.Health))
+                esp.HealthText.Position = Vector2.new(barX, y + height - barH - 12)
+                esp.HealthText.Color = Color3.new(1,1,1)
+                esp.HealthText.Visible = hp < 1
+            end)
         else
-            esp.Health.Visible = false
-            esp.HealthOutline.Visible = false
-            esp.HealthText.Visible = false
+            pcall(function()
+                esp.Health.Visible = false
+                esp.HealthOutline.Visible = false
+                esp.HealthText.Visible = false
+            end)
         end
         
-        if Core.ESPSettings.Distance.On then
-            local distText = math.floor(dist) .. "m"
-            local yOffset = Core.ESPSettings.Weapon.On and 14 or 2
-            esp.Distance.Text = "[" .. distText .. "]"
-            esp.Distance.Position = Vector2.new(x + width / 2, y + height + yOffset)
-            esp.Distance.Color = Core.ESPSettings.Distance.Color
-            esp.Distance.Size = Core.ESPSettings.FontSize - 2
-            esp.Distance.Visible = true
+        if Core.ESPSettings.Distance and Core.ESPSettings.Distance.On then
+            pcall(function()
+                local distText = math.floor(dist) .. "m"
+                local yOffset = (Core.ESPSettings.Weapon and Core.ESPSettings.Weapon.On) and 14 or 2
+                esp.Distance.Text = "[" .. distText .. "]"
+                esp.Distance.Position = Vector2.new(x + width / 2, y + height + yOffset)
+                esp.Distance.Color = Core.ESPSettings.Distance.Color
+                esp.Distance.Visible = true
+            end)
         else
-            esp.Distance.Visible = false
+            pcall(function() esp.Distance.Visible = false end)
         end
         
-        if Core.ESPSettings.HeadDot.On then
-            local hp = Camera:WorldToViewportPoint(head.Position)
-            esp.HeadDot.Position = Vector2.new(hp.X, hp.Y)
-            esp.HeadDot.Color = Core.ESPSettings.HeadDot.Color
-            esp.HeadDot.Filled = Core.ESPSettings.HeadDot.Filled
-            esp.HeadDot.Visible = true
+        if Core.ESPSettings.HeadDot and Core.ESPSettings.HeadDot.On then
+            pcall(function()
+                local hp = Camera:WorldToViewportPoint(head.Position)
+                esp.HeadDot.Position = Vector2.new(hp.X, hp.Y)
+                esp.HeadDot.Color = Core.ESPSettings.HeadDot.Color
+                esp.HeadDot.Filled = Core.ESPSettings.HeadDot.Filled
+                esp.HeadDot.Visible = true
+            end)
         else
-            esp.HeadDot.Visible = false
+            pcall(function() esp.HeadDot.Visible = false end)
         end
         
-        if Core.ESPSettings.Tracers.On then
-            local origin = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-            if Core.ESPSettings.Tracers.Origin == "Center" then origin = Camera.ViewportSize / 2
-            elseif Core.ESPSettings.Tracers.Origin == "Mouse" then origin = UserInputService:GetMouseLocation()
-            elseif Core.ESPSettings.Tracers.Origin == "Top" then origin = Vector2.new(Camera.ViewportSize.X / 2, 0) end
-            esp.Tracer.From = origin
-            esp.Tracer.To = Vector2.new(x + width / 2, y + height)
-            esp.Tracer.Color = color
-            esp.Tracer.Visible = true
+        if Core.ESPSettings.Tracers and Core.ESPSettings.Tracers.On then
+            pcall(function()
+                local origin = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                if Core.ESPSettings.Tracers.Origin == "Center" then 
+                    origin = Camera.ViewportSize / 2
+                elseif Core.ESPSettings.Tracers.Origin == "Mouse" then 
+                    origin = UserInputService:GetMouseLocation()
+                elseif Core.ESPSettings.Tracers.Origin == "Top" then 
+                    origin = Vector2.new(Camera.ViewportSize.X / 2, 0) 
+                end
+                esp.Tracer.From = origin
+                esp.Tracer.To = Vector2.new(x + width / 2, y + height)
+                esp.Tracer.Color = color
+                esp.Tracer.Visible = true
+            end)
         else
-            esp.Tracer.Visible = false
+            pcall(function() esp.Tracer.Visible = false end)
         end
         
-        if Core.ESPSettings.Skeleton.On then
-            local parts = char:FindFirstChild("UpperTorso") and Core.SkeletonParts or Core.SkeletonPartsR6
-            for i, conn in ipairs(parts) do
-                local p1, p2 = char:FindFirstChild(conn[1]), char:FindFirstChild(conn[2])
-                local line = esp.Skeleton[i]
-                if p1 and p2 and line then
-                    local v1, os1 = Camera:WorldToViewportPoint(p1.Position)
-                    local v2, os2 = Camera:WorldToViewportPoint(p2.Position)
-                    if os1 and os2 then
-                        line.From = Vector2.new(v1.X, v1.Y)
-                        line.To = Vector2.new(v2.X, v2.Y)
-                        line.Color = Core.ESPSettings.Skeleton.Color
-                        line.Visible = true
-                    else
+        if Core.ESPSettings.Skeleton and Core.ESPSettings.Skeleton.On then
+            pcall(function()
+                local parts = char:FindFirstChild("UpperTorso") and Core.SkeletonParts or Core.SkeletonPartsR6
+                for i, conn in ipairs(parts) do
+                    local p1, p2 = char:FindFirstChild(conn[1]), char:FindFirstChild(conn[2])
+                    local line = esp.Skeleton[i]
+                    if p1 and p2 and line then
+                        local v1, os1 = Camera:WorldToViewportPoint(p1.Position)
+                        local v2, os2 = Camera:WorldToViewportPoint(p2.Position)
+                        if os1 and os2 then
+                            line.From = Vector2.new(v1.X, v1.Y)
+                            line.To = Vector2.new(v2.X, v2.Y)
+                            line.Color = Core.ESPSettings.Skeleton.Color
+                            line.Visible = true
+                        else
+                            line.Visible = false
+                        end
+                    elseif line then
                         line.Visible = false
                     end
-                elseif line then
-                    line.Visible = false
+                end
+            end)
+        else
+            if esp.Skeleton then
+                for _, line in pairs(esp.Skeleton) do
+                    pcall(function() line.Visible = false end)
                 end
             end
-        else
-            for _, line in pairs(esp.Skeleton) do line.Visible = false end
         end
         
-        if Core.ESPSettings.Chams.On then
-            if not Core.ChamsObjects[plr] then
-                local hl = Instance.new("Highlight")
-                hl.Adornee = char
-                hl.Parent = CoreGui
-                hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                Core.ChamsObjects[plr] = hl
-            end
-            local hl = Core.ChamsObjects[plr]
-            hl.FillColor = color
-            hl.OutlineColor = Core.ESPSettings.Chams.OutlineColor
-            hl.FillTransparency = Core.ESPSettings.Chams.Transparency
-            hl.OutlineTransparency = 0
-            hl.Enabled = true
+        if Core.ESPSettings.Chams and Core.ESPSettings.Chams.On then
+            pcall(function()
+                if not Core.ChamsObjects[plr] then
+                    local hl = Instance.new("Highlight")
+                    hl.Adornee = char
+                    hl.Parent = CoreGui
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    Core.ChamsObjects[plr] = hl
+                end
+                local hl = Core.ChamsObjects[plr]
+                hl.FillColor = color
+                hl.OutlineColor = Core.ESPSettings.Chams.OutlineColor or Color3.new(1,1,1)
+                hl.FillTransparency = Core.ESPSettings.Chams.Transparency or 0.5
+                hl.OutlineTransparency = 0
+                hl.Enabled = true
+            end)
         else
-            if Core.ChamsObjects[plr] then Core.ChamsObjects[plr].Enabled = false end
+            if Core.ChamsObjects[plr] then 
+                pcall(function() Core.ChamsObjects[plr].Enabled = false end)
+            end
         end
     end
 end
