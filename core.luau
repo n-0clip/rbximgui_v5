@@ -1,4 +1,5 @@
--- v3 cb func
+-- v3
+
 local Core = {}
 
 local Players = game:GetService("Players")
@@ -9,6 +10,7 @@ local Lighting = game:GetService("Lighting")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
@@ -38,6 +40,7 @@ Core.ESPSettings = {
     MaxDist = 2000,
     TeamCheck = false,
     ShowRole = true,
+    Rainbow = {On = false, Speed = 1},
     MurdererColor = Color3.fromRGB(255,0,0),
     SheriffColor = Color3.fromRGB(0,100,255),
     InnocentColor = Color3.fromRGB(0,255,0)
@@ -54,11 +57,36 @@ Core.AimbotSettings = {
     StickyAim = false
 }
 
+Core.SilentAimSettings = {
+    Enabled = false,
+    TeamCheck = true,
+    VisibleCheck = true,
+    FOV = 100,
+    AimPart = "Head",
+    Prediction = 0
+}
+
+Core.TriggerSettings = {
+    Enabled = false,
+    TeamCheck = true,
+    Delay = 0,
+    Keybind = false
+}
+
+Core.CBSettings = {
+    NoSpread = false,
+    NoRecoil = false,
+    InfAmmo = false,
+    RapidFire = false
+}
+
 Core.ESPObjects = {}
 Core.ChamsObjects = {}
 Core.Connections = {}
 Core.MM2Roles = {}
 Core.LockedTarget = nil
+Core.RainbowHue = 0
+Core.SilentAimTarget = nil
 
 Core.SkeletonParts = {
     {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
@@ -98,6 +126,11 @@ function Core.IsVisible(part)
     return true
 end
 
+function Core.GetRainbowColor()
+    Core.RainbowHue = (Core.RainbowHue + Core.ESPSettings.Rainbow.Speed / 360) % 1
+    return Color3.fromHSV(Core.RainbowHue, 1, 1)
+end
+
 function Core.GetMM2Role(player)
     if Core.GameName ~= "Murder Mystery 2" then return "Innocent" end
     if Core.MM2Roles[player] then return Core.MM2Roles[player] end
@@ -129,6 +162,9 @@ function Core.GetMM2Role(player)
 end
 
 function Core.GetESPColor(player)
+    if Core.ESPSettings.Rainbow.On then
+        return Core.GetRainbowColor()
+    end
     if Core.GameName == "Murder Mystery 2" and Core.ESPSettings.ShowRole then
         local role = Core.GetMM2Role(player)
         if role == "Murderer" then return Core.ESPSettings.MurdererColor end
@@ -163,6 +199,57 @@ function Core.GetClosestPlayer()
         end
     end
     return closest
+end
+
+function Core.GetSilentAimTarget()
+    local closest, shortestDist = nil, Core.SilentAimSettings.FOV
+    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    
+    for _, player in pairs(Players:GetPlayers()) do
+        if player == LocalPlayer or not Core.IsAlive(player) then continue end
+        if Core.SilentAimSettings.TeamCheck and player.Team == LocalPlayer.Team and player.Team ~= nil then continue end
+        
+        local char = player.Character
+        if not char then continue end
+        
+        local aimPart = char:FindFirstChild(Core.SilentAimSettings.AimPart) or char:FindFirstChild("Head")
+        if not aimPart then continue end
+        
+        local screenPos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
+        if not onScreen then continue end
+        if Core.SilentAimSettings.VisibleCheck and not Core.IsVisible(aimPart) then continue end
+        
+        local dist = (Vector2.new(screenPos.X, screenPos.Y) - center).Magnitude
+        if dist < shortestDist then
+            shortestDist = dist
+            closest = {Player = player, Part = aimPart}
+        end
+    end
+    return closest
+end
+
+function Core.GetTriggerTarget()
+    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    local ray = Camera:ViewportPointToRay(center.X, center.Y)
+    
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    params.FilterDescendantsInstances = {LocalPlayer.Character}
+    
+    local result = Workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
+    if result and result.Instance then
+        local player = Players:GetPlayerFromCharacter(result.Instance.Parent)
+        if not player then
+            player = Players:GetPlayerFromCharacter(result.Instance.Parent.Parent)
+        end
+        if player and player ~= LocalPlayer and Core.IsAlive(player) then
+            if Core.TriggerSettings.TeamCheck and player.Team == LocalPlayer.Team and player.Team ~= nil then
+                return nil
+            end
+            return player
+        end
+    end
+    return nil
 end
 
 function Core.AimAt(player, TargetCircle)
@@ -406,6 +493,114 @@ function Core.UpdateESP()
     end
 end
 
+function Core.CBNoSpread(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.NoSpread = enabled
+    
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not WeaponsFolder then return end
+    
+    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+        local spread = weapon:FindFirstChild("Spread")
+        if spread then
+            for _, v in ipairs(spread:GetDescendants()) do
+                if v:IsA("NumberValue") then
+                    if enabled then
+                        if not v:GetAttribute("OriginalValue") then
+                            v:SetAttribute("OriginalValue", v.Value)
+                        end
+                        v.Value = 0
+                    else
+                        local orig = v:GetAttribute("OriginalValue")
+                        if orig then v.Value = orig end
+                    end
+                end
+            end
+        end
+    end
+end
+
+function Core.CBNoRecoil(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.NoRecoil = enabled
+    
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not WeaponsFolder then return end
+    
+    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+        local recoil = weapon:FindFirstChild("Recoil") or weapon:FindFirstChild("RecoilUp") or weapon:FindFirstChild("RecoilSide")
+        if recoil then
+            for _, v in ipairs(recoil:GetDescendants()) do
+                if v:IsA("NumberValue") then
+                    if enabled then
+                        if not v:GetAttribute("OriginalRecoil") then
+                            v:SetAttribute("OriginalRecoil", v.Value)
+                        end
+                        v.Value = 0
+                    else
+                        local orig = v:GetAttribute("OriginalRecoil")
+                        if orig then v.Value = orig end
+                    end
+                end
+            end
+        end
+        
+        local camRecoil = weapon:FindFirstChild("CamRecoil")
+        if camRecoil and camRecoil:IsA("NumberValue") then
+            if enabled then
+                if not camRecoil:GetAttribute("OriginalCamRecoil") then
+                    camRecoil:SetAttribute("OriginalCamRecoil", camRecoil.Value)
+                end
+                camRecoil.Value = 0
+            else
+                local orig = camRecoil:GetAttribute("OriginalCamRecoil")
+                if orig then camRecoil.Value = orig end
+            end
+        end
+        
+        local recoilVal = weapon:FindFirstChild("Recoil")
+        if recoilVal and recoilVal:IsA("NumberValue") then
+            if enabled then
+                if not recoilVal:GetAttribute("OriginalRecoilVal") then
+                    recoilVal:SetAttribute("OriginalRecoilVal", recoilVal.Value)
+                end
+                recoilVal.Value = 0
+            else
+                local orig = recoilVal:GetAttribute("OriginalRecoilVal")
+                if orig then recoilVal.Value = orig end
+            end
+        end
+    end
+end
+
+function Core.CBRapidFire(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.RapidFire = enabled
+    
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not WeaponsFolder then return end
+    
+    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+        local fireRate = weapon:FindFirstChild("FireRate")
+        if fireRate and fireRate:IsA("NumberValue") then
+            if enabled then
+                if not fireRate:GetAttribute("OriginalFireRate") then
+                    fireRate:SetAttribute("OriginalFireRate", fireRate.Value)
+                end
+                fireRate.Value = 0.01
+            else
+                local orig = fireRate:GetAttribute("OriginalFireRate")
+                if orig then fireRate.Value = orig end
+            end
+        end
+    end
+end
+
+function Core.CBInfAmmo(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.InfAmmo = enabled
+end
+
 function Core.Rejoin()
     TeleportService:TeleportToPlaceInstance(Core.PlaceId, game.JobId, LocalPlayer)
 end
@@ -444,6 +639,14 @@ function Core.SetNoFog(enabled)
     Lighting.FogEnd = enabled and 100000 or 1000
 end
 
+function Core.LoadInfYield()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end
+
+function Core.LoadNamelessAdmin()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))()
+end
+
 function Core.Init()
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then Core.CreateESP(plr) end
@@ -457,6 +660,45 @@ function Core.Init()
             while task.wait(2) do
                 Core.MM2Roles = {}
             end
+        end)
+    end
+    
+    if Core.GameName == "Counter Blox" then
+        local oldNamecall
+        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+            local args = {...}
+            local method = getnamecallmethod()
+            
+            if Core.SilentAimSettings.Enabled and method == "FireServer" then
+                if self.Name == "WeaponEvent" or self.Name == "Shoot" or self.Name == "Fire" then
+                    local target = Core.GetSilentAimTarget()
+                    if target and target.Part then
+                        local targetPos = target.Part.Position
+                        if Core.SilentAimSettings.Prediction > 0 then
+                            local root = target.Player.Character:FindFirstChild("HumanoidRootPart")
+                            if root then
+                                targetPos = targetPos + (root.AssemblyLinearVelocity * (Core.SilentAimSettings.Prediction / 10))
+                            end
+                        end
+                        for i, v in pairs(args) do
+                            if typeof(v) == "Vector3" then
+                                args[i] = targetPos
+                            elseif typeof(v) == "CFrame" then
+                                args[i] = CFrame.new(targetPos)
+                            end
+                        end
+                        return oldNamecall(self, unpack(args))
+                    end
+                end
+            end
+            
+            if Core.CBSettings.InfAmmo and method == "FireServer" then
+                if self.Name == "Reload" or (args[1] and type(args[1]) == "string" and args[1]:lower():find("ammo")) then
+                    return nil
+                end
+            end
+            
+            return oldNamecall(self, ...)
         end)
     end
 end
