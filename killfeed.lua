@@ -41,9 +41,9 @@ local Tabs = {
     Settings = Window:AddTab("Settings", "settings")
 }
 
-local FOVCircle = Core.CreateDrawing("Circle", {Thickness = 1, Filled = false, Transparency = 1, Visible = false, ZIndex = 999})
-local TargetCircle = Core.CreateDrawing("Circle", {Thickness = 2, Filled = false, Radius = 5, Visible = false, ZIndex = 999, Color = Color3.new(1,0,0)})
-local SilentFOVCircle = Core.CreateDrawing("Circle", {Thickness = 1, Filled = false, Transparency = 1, Visible = false, ZIndex = 998, Color = Color3.new(1,0,0)})
+local FOVCircle = Core.CreateDrawing("Circle", {Thickness = 1, Filled = false, Transparency = 1, Visible = false})
+local TargetCircle = Core.CreateDrawing("Circle", {Thickness = 2, Filled = false, Radius = 5, Visible = false, Color = Color3.new(1,0,0)})
+local SilentFOVCircle = Core.CreateDrawing("Circle", {Thickness = 1, Filled = false, Transparency = 1, Visible = false, Color = Color3.new(1,0,0)})
 
 local CombatTabBox = Tabs.Combat:AddLeftTabbox("Combat")
 local AimTab = CombatTabBox:AddTab("Aimbot")
