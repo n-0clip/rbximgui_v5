@@ -1,5 +1,3 @@
--- v3
-
 local Core = {}
 
 local Players = game:GetService("Players")
@@ -11,7 +9,6 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
@@ -78,14 +75,11 @@ Core.CBSettings = {
     NoRecoil = false,
     InfAmmo = false,
     RapidFire = false,
-    Wallbang = false,
     KillAll = false,
     InfCash = false,
-    InfHP = false,
     BHop = false,
     AntiAimbot = false,
     AntiAimbotYaw = "Default",
-    AntiAimbotPitch = "Default",
     AntiAimbotSpeed = 50,
     RemoveHeadHitbox = false,
     NoScope = false,
@@ -96,6 +90,7 @@ Core.CBSettings = {
 }
 
 Core.CBLoops = {}
+Core.CBOriginalValues = {}
 Core.ESPObjects = {}
 Core.ChamsObjects = {}
 Core.Connections = {}
@@ -516,72 +511,40 @@ function Core.GetCurrentGun()
     if not Core.IsAlive(LocalPlayer) then return nil end
     local char = LocalPlayer.Character
     for _, v in pairs(char:GetChildren()) do
-        if v:IsA("Tool") and v:FindFirstChild("Ammo") then
+        if v:IsA("Tool") then
             return v
         end
     end
     return nil
 end
 
-function Core.ModifyWeaponValues(weapon, modifications)
-    if not weapon then return end
-    for valueName, newValue in pairs(modifications) do
-        local value = weapon:FindFirstChild(valueName)
-        if value and value:IsA("NumberValue") then
-            if not value:GetAttribute("Original_" .. valueName) then
-                value:SetAttribute("Original_" .. valueName, value.Value)
-            end
-            value.Value = newValue
-        end
-    end
-end
-
-function Core.RestoreWeaponValues(weapon, valueNames)
-    if not weapon then return end
-    for _, valueName in ipairs(valueNames) do
-        local value = weapon:FindFirstChild(valueName)
-        if value and value:IsA("NumberValue") then
-            local orig = value:GetAttribute("Original_" .. valueName)
-            if orig then value.Value = orig end
-        end
-    end
-end
-
-function Core.ApplyToAllWeapons(modifications, restore)
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if WeaponsFolder then
-        for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-            if restore then
-                Core.RestoreWeaponValues(weapon, modifications)
-            else
-                Core.ModifyWeaponValues(weapon, modifications)
-            end
-        end
-    end
-    
-    local currentGun = Core.GetCurrentGun()
-    if currentGun then
-        if restore then
-            Core.RestoreWeaponValues(currentGun, modifications)
-        else
-            Core.ModifyWeaponValues(currentGun, modifications)
-        end
-    end
-end
-
 function Core.CBNoSpread(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.NoSpread = enabled
     
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not WeaponsFolder then return end
+    
     if enabled then
-        Core.ApplyToAllWeapons({
-            Spread = 0,
-            SpreadReduc = 0,
-            MinSpread = 0,
-            MaxSpread = 0
-        }, false)
+        for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+            local spread = weapon:FindFirstChild("Spread")
+            if spread then
+                for _, v in ipairs(spread:GetDescendants()) do
+                    if v:IsA("NumberValue") then
+                        if not Core.CBOriginalValues[v] then
+                            Core.CBOriginalValues[v] = v.Value
+                        end
+                        v.Value = 0
+                    end
+                end
+            end
+        end
     else
-        Core.ApplyToAllWeapons({"Spread", "SpreadReduc", "MinSpread", "MaxSpread"}, true)
+        for v, originalValue in pairs(Core.CBOriginalValues) do
+            if v and v.Parent and v:IsA("NumberValue") then
+                v.Value = originalValue
+            end
+        end
     end
 end
 
@@ -589,17 +552,40 @@ function Core.CBNoRecoil(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.NoRecoil = enabled
     
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not WeaponsFolder then return end
+    
+    local recoilNames = {"Recoil", "CamRecoil", "KickBack", "RecoilUp", "RecoilSide"}
+    
     if enabled then
-        Core.ApplyToAllWeapons({
-            Recoil = 0,
-            RecoilReduc = 0,
-            MinRecoil = 0,
-            MaxRecoil = 0,
-            CamRecoil = 0,
-            KickBack = 0
-        }, false)
+        for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+            for _, name in ipairs(recoilNames) do
+                local recoil = weapon:FindFirstChild(name)
+                if recoil then
+                    if recoil:IsA("NumberValue") then
+                        if not Core.CBOriginalValues[recoil] then
+                            Core.CBOriginalValues[recoil] = recoil.Value
+                        end
+                        recoil.Value = 0
+                    elseif recoil:IsA("Folder") or recoil:IsA("Configuration") then
+                        for _, v in ipairs(recoil:GetDescendants()) do
+                            if v:IsA("NumberValue") then
+                                if not Core.CBOriginalValues[v] then
+                                    Core.CBOriginalValues[v] = v.Value
+                                end
+                                v.Value = 0
+                            end
+                        end
+                    end
+                end
+            end
+        end
     else
-        Core.ApplyToAllWeapons({"Recoil", "RecoilReduc", "MinRecoil", "MaxRecoil", "CamRecoil", "KickBack"}, true)
+        for v, originalValue in pairs(Core.CBOriginalValues) do
+            if v and v.Parent and v:IsA("NumberValue") then
+                v.Value = originalValue
+            end
+        end
     end
 end
 
@@ -607,10 +593,25 @@ function Core.CBRapidFire(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.RapidFire = enabled
     
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not WeaponsFolder then return end
+    
     if enabled then
-        Core.ApplyToAllWeapons({FireRate = 0.01}, false)
+        for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+            local fireRate = weapon:FindFirstChild("FireRate")
+            if fireRate and fireRate:IsA("NumberValue") then
+                if not Core.CBOriginalValues[fireRate] then
+                    Core.CBOriginalValues[fireRate] = fireRate.Value
+                end
+                fireRate.Value = 0.01
+            end
+        end
     else
-        Core.ApplyToAllWeapons({"FireRate"}, true)
+        for v, originalValue in pairs(Core.CBOriginalValues) do
+            if v and v.Parent and v:IsA("NumberValue") then
+                v.Value = originalValue
+            end
+        end
     end
 end
 
@@ -619,19 +620,17 @@ function Core.CBInfAmmo(enabled)
     Core.CBSettings.InfAmmo = enabled
     
     if enabled then
-        Core.ApplyToAllWeapons({
-            Ammo = 999,
-            StoredAmmo = 999,
-            MaxAmmo = 999
-        }, false)
-        
         if Core.CBLoops.InfAmmo then Core.CBLoops.InfAmmo:Disconnect() end
         Core.CBLoops.InfAmmo = RunService.RenderStepped:Connect(function()
             local gun = Core.GetCurrentGun()
             if gun then
                 local ammo = gun:FindFirstChild("Ammo")
-                if ammo and ammo.Value < 999 then
+                local storedAmmo = gun:FindFirstChild("StoredAmmo")
+                if ammo and ammo:IsA("NumberValue") then
                     ammo.Value = 999
+                end
+                if storedAmmo and storedAmmo:IsA("NumberValue") then
+                    storedAmmo.Value = 999
                 end
             end
         end)
@@ -640,21 +639,6 @@ function Core.CBInfAmmo(enabled)
             Core.CBLoops.InfAmmo:Disconnect()
             Core.CBLoops.InfAmmo = nil
         end
-        Core.ApplyToAllWeapons({"Ammo", "StoredAmmo", "MaxAmmo"}, true)
-    end
-end
-
-function Core.CBWallbang(enabled)
-    if Core.GameName ~= "Counter Blox" then return end
-    Core.CBSettings.Wallbang = enabled
-    
-    if enabled then
-        Core.ApplyToAllWeapons({
-            Penetration = 999,
-            Range = 9999
-        }, false)
-    else
-        Core.ApplyToAllWeapons({"Penetration", "Range"}, true)
     end
 end
 
@@ -667,29 +651,33 @@ function Core.CBKillAll(enabled)
         Core.CBLoops.KillAll = RunService.RenderStepped:Connect(function()
             pcall(function()
                 if not Core.IsAlive(LocalPlayer) then return end
-                local gun = LocalPlayer.Character:FindFirstChild("Gun")
+                local gun = LocalPlayer.Character:FindFirstChildOfClass("Tool")
+                if not gun then return end
                 
                 for _, v in pairs(Players:GetPlayers()) do
                     if v ~= LocalPlayer and Core.IsAlive(v) then
                         if Core.AimbotSettings.TeamCheck and v.Team == LocalPlayer.Team and v.Team ~= nil then continue end
                         
-                        local args = {
-                            [1] = v.Character.Head,
-                            [2] = v.Character.Head.Position,
-                            [3] = "Banana",
-                            [4] = 100,
-                            [5] = gun,
-                            [8] = 100,
-                            [9] = false,
-                            [10] = false,
-                            [11] = Vector3.new(),
-                            [12] = 100,
-                            [13] = Vector3.new()
-                        }
-                        
-                        local hitPartEvent = ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("HitPart")
-                        if hitPartEvent then
-                            hitPartEvent:FireServer(unpack(args))
+                        local head = v.Character:FindFirstChild("Head")
+                        if head then
+                            local args = {
+                                [1] = head,
+                                [2] = head.Position,
+                                [3] = "Banana",
+                                [4] = 100,
+                                [5] = gun,
+                                [8] = 100,
+                                [9] = false,
+                                [10] = false,
+                                [11] = Vector3.new(),
+                                [12] = 100,
+                                [13] = Vector3.new()
+                            }
+                            
+                            local hitEvent = ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("HitPart")
+                            if hitEvent then
+                                hitEvent:FireServer(unpack(args))
+                            end
                         end
                     end
                 end
@@ -723,32 +711,6 @@ function Core.CBInfCash(enabled)
         if Core.CBLoops.InfCash then
             Core.CBLoops.InfCash:Disconnect()
             Core.CBLoops.InfCash = nil
-        end
-    end
-end
-
-function Core.CBInfHP(enabled)
-    if Core.GameName ~= "Counter Blox" then return end
-    Core.CBSettings.InfHP = enabled
-    
-    if enabled then
-        pcall(function()
-            local fallDamage = ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("FallDamage")
-            if fallDamage then
-                fallDamage:FireServer(0/0)
-            end
-            
-            if Core.IsAlive(LocalPlayer) then
-                if Core.CBLoops.InfHP then Core.CBLoops.InfHP:Disconnect() end
-                Core.CBLoops.InfHP = LocalPlayer.Character.Humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-                    LocalPlayer.Character.Humanoid.Health = 100
-                end)
-            end
-        end)
-    else
-        if Core.CBLoops.InfHP then
-            Core.CBLoops.InfHP:Disconnect()
-            Core.CBLoops.InfHP = nil
         end
     end
 end
@@ -899,11 +861,14 @@ function Core.CBNoSmoke(enabled)
         if Core.CBLoops.NoSmoke then Core.CBLoops.NoSmoke:Disconnect() end
         Core.CBLoops.NoSmoke = RunService.RenderStepped:Connect(function()
             pcall(function()
-                local smokes = Workspace:FindFirstChild("Ray_Ignore") and Workspace.Ray_Ignore:FindFirstChild("Smokes")
-                if smokes then
-                    for _, v in pairs(smokes:GetChildren()) do
-                        if v.Name == "Smoke" then
-                            v:Destroy()
+                local rayIgnore = Workspace:FindFirstChild("Ray_Ignore")
+                if rayIgnore then
+                    local smokes = rayIgnore:FindFirstChild("Smokes")
+                    if smokes then
+                        for _, v in pairs(smokes:GetChildren()) do
+                            if v.Name == "Smoke" then
+                                v:Destroy()
+                            end
                         end
                     end
                 end
@@ -954,7 +919,7 @@ function Core.CBNoBlood(enabled)
                 local debris = Workspace:FindFirstChild("Debris")
                 if debris then
                     for _, v in pairs(debris:GetChildren()) do
-                        if v.Name == "SurfaceGui" or v:IsA("SurfaceGui") then
+                        if v:IsA("SurfaceGui") or v.Name == "SurfaceGui" then
                             v:Destroy()
                         end
                     end
@@ -1109,23 +1074,6 @@ function Core.Init()
     
     RunService.RenderStepped:Connect(function()
         Core.SilentAimCameraMethod()
-        
-        if Core.GameName == "Counter Blox" then
-            if Core.CBSettings.NoSpread or Core.CBSettings.NoRecoil or Core.CBSettings.RapidFire then
-                local gun = Core.GetCurrentGun()
-                if gun then
-                    if Core.CBSettings.NoSpread then
-                        Core.ModifyWeaponValues(gun, {Spread = 0, SpreadReduc = 0, MinSpread = 0, MaxSpread = 0})
-                    end
-                    if Core.CBSettings.NoRecoil then
-                        Core.ModifyWeaponValues(gun, {Recoil = 0, RecoilReduc = 0, MinRecoil = 0, MaxRecoil = 0, CamRecoil = 0, KickBack = 0})
-                    end
-                    if Core.CBSettings.RapidFire then
-                        Core.ModifyWeaponValues(gun, {FireRate = 0.01})
-                    end
-                end
-            end
-        end
     end)
 end
 
