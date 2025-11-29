@@ -106,10 +106,6 @@ ESPSettings:AddSlider("ESP_RainbowSpeed", {Text = "Rainbow Speed", Default = 1, 
 ESPSettings:AddToggle("ESP_VisCheck", {Text = "Visible Check Color", Default = false, Callback = function(v) Core.ESPSettings.VisibleCheck = v end}):AddColorPicker("ESP_VisCol", {Default = Color3.new(0,1,0), Callback = function(v) Core.ESPSettings.VisibleColor = v end})
 ESPSettings:AddSlider("ESP_MaxDist", {Text = "Max Distance", Default = 2000, Min = 100, Max = 5000, Rounding = 0, Callback = function(v) Core.ESPSettings.MaxDist = v end})
 ESPSettings:AddSlider("ESP_FontSize", {Text = "Font Size", Default = 13, Min = 8, Max = 20, Rounding = 0, Callback = function(v) Core.ESPSettings.FontSize = v end})
-ESPSettings:AddDropdown("ESP_Font", {Values = {"UI", "System", "Plex", "Monospace"}, Default = 3, Text = "Font", Callback = function(v) 
-    local fonts = {UI = 0, System = 1, Plex = 2, Monospace = 3}
-    Core.ESPSettings.Font = fonts[v] or 2
-end})
 
 local ChamsBox = Tabs.Visuals:AddRightGroupbox("Chams")
 ChamsBox:AddToggle("ESP_Chams", {Text = "Enabled", Default = false, Callback = function(v) Core.ESPSettings.Chams.On = v end})
@@ -127,23 +123,18 @@ WorldMain:AddSlider("World_Time", {Text = "Time", Default = 12, Min = 0, Max = 2
 WorldMain:AddSlider("World_Brightness", {Text = "Brightness", Default = 1, Min = 0, Max = 5, Rounding = 1, Callback = function(v) Core.SetBrightness(v) end})
 WorldMain:AddLabel("Ambient"):AddColorPicker("World_Ambient", {Default = Color3.fromRGB(127,127,127), Callback = function(v) Core.SetAmbient(v) end})
 
-WorldSky:AddDropdown("World_Skybox", {Values = {"Default", "Night", "Sunset", "Galaxy", "Cloudy", "Pink", "Red", "Vaporwave"}, Default = 1, Text = "Skybox", Callback = function(v) Core.SetSkybox(v) end})
+WorldSky:AddDropdown("World_Skybox", {Values = {"Default", "Night", "Sunset", "Galaxy", "Cloudy", "Pink", "Vaporwave"}, Default = 1, Text = "Skybox", Callback = function(v) Core.SetSkybox(v) end})
 
 local MoveBox = Tabs.World:AddRightGroupbox("Movement")
 MoveBox:AddToggle("Move_Speed", {Text = "Speed", Default = false})
 MoveBox:AddSlider("Move_SpeedVal", {Text = "Speed Value", Default = 16, Min = 16, Max = 150})
 MoveBox:AddToggle("Move_Jump", {Text = "Infinite Jump", Default = false})
 MoveBox:AddSlider("Move_JumpVal", {Text = "Jump Power", Default = 50, Min = 50, Max = 200})
-MoveBox:AddToggle("Move_Fly", {Text = "Fly", Default = false}):AddKeyPicker("Move_FlyKey", {Default = "F", Mode = "Toggle", Text = "Fly Key"})
-MoveBox:AddSlider("Move_FlySpeed", {Text = "Fly Speed", Default = 50, Min = 10, Max = 200})
 MoveBox:AddToggle("Move_Noclip", {Text = "Noclip", Default = false}):AddKeyPicker("Move_NoclipKey", {Default = "N", Mode = "Toggle", Text = "Noclip Key"})
 
 local GameUniv = Tabs.Game:AddLeftGroupbox("Universal")
 GameUniv:AddButton({Text = "Rejoin Server", Func = function() Core.Rejoin() end})
-GameUniv:AddButton({Text = "Copy Join Script", Func = function()
-    setclipboard(Core.GetJoinScript())
-    Library:Notify("Copied to clipboard")
-end})
+GameUniv:AddButton({Text = "Copy Join Script", Func = function() setclipboard(Core.GetJoinScript()) Library:Notify("Copied to clipboard") end})
 
 if Core.GameName == "Counter Blox" then
     local CBTabBox = Tabs.Game:AddLeftTabbox("Counter Blox")
@@ -177,29 +168,6 @@ if Core.GameName == "Arsenal" then
     ArsenalBox:AddToggle("Arsenal_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.ArsenalNoSpread(v) end})
 end
 
-if Core.GameName == "Phantom Forces" then
-    local PFTabBox = Tabs.Game:AddLeftTabbox("Phantom Forces")
-    local PFWeapon = PFTabBox:AddTab("Weapon")
-    local PFMisc = PFTabBox:AddTab("Misc")
-    
-    PFWeapon:AddToggle("PF_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.PFNoRecoil(v) end})
-    PFWeapon:AddToggle("PF_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.PFNoSpread(v) end})
-    
-    PFMisc:AddToggle("PF_AutoSpot", {Text = "Auto Spot", Default = false, Callback = function(v) Core.PFAutoSpot(v) end})
-end
-
-if Core.GameName == "Rivals" then
-    local RivalsBox = Tabs.Game:AddLeftGroupbox("Rivals")
-    RivalsBox:AddToggle("Rivals_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.RivalsNoRecoil(v) end})
-    RivalsBox:AddToggle("Rivals_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.RivalsNoSpread(v) end})
-end
-
-if Core.GameName == "Flick" then
-    local FlickBox = Tabs.Game:AddLeftGroupbox("Flick")
-    FlickBox:AddToggle("Flick_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.FlickNoRecoil(v) end})
-    FlickBox:AddToggle("Flick_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.FlickNoSpread(v) end})
-end
-
 if Core.GameName == "Murder Mystery 2" then
     local MM2Box = Tabs.Game:AddLeftGroupbox("Murder Mystery 2")
     MM2Box:AddToggle("MM2_Role", {Text = "Show Roles", Default = true, Callback = function(v) Core.ESPSettings.ShowRole = v end})
@@ -208,170 +176,50 @@ if Core.GameName == "Murder Mystery 2" then
     MM2Box:AddLabel("Innocent"):AddColorPicker("MM2_Inno", {Default = Color3.fromRGB(0,255,0), Callback = function(v) Core.ESPSettings.InnocentColor = v end})
 end
 
-local ScriptsTabBox = Tabs.Scripts:AddLeftTabbox("Scripts")
-local ScriptsAdmin = ScriptsTabBox:AddTab("Admin")
-local ScriptsUtil = ScriptsTabBox:AddTab("Utilities")
-local ScriptsMisc = ScriptsTabBox:AddTab("Misc")
+local ScriptsBox = Tabs.Scripts:AddLeftGroupbox("Admin Scripts")
+ScriptsBox:AddButton({Text = "Infinite Yield", Func = function() Library:Notify("Loading...") Core.LoadScript("Infinite Yield") end})
+ScriptsBox:AddButton({Text = "Nameless Admin", Func = function() Library:Notify("Loading...") Core.LoadScript("Nameless Admin") end})
 
-ScriptsAdmin:AddButton({Text = "Infinite Yield", Func = function()
-    Library:Notify("Loading Infinite Yield...")
-    Core.LoadScript("Infinite Yield")
-end})
-ScriptsAdmin:AddButton({Text = "Nameless Admin", Func = function()
-    Library:Notify("Loading Nameless Admin...")
-    Core.LoadScript("Nameless Admin")
-end})
-
-ScriptsUtil:AddButton({Text = "Dex Explorer", Func = function()
-    Library:Notify("Loading Dex Explorer...")
-    Core.LoadScript("Dex Explorer")
-end})
-ScriptsUtil:AddButton({Text = "Dark Dex", Func = function()
-    Library:Notify("Loading Dark Dex...")
-    Core.LoadScript("Dark Dex")
-end})
-ScriptsUtil:AddButton({Text = "Remote Spy", Func = function()
-    Library:Notify("Loading Remote Spy...")
-    Core.LoadScript("Remote Spy")
-end})
-ScriptsUtil:AddButton({Text = "Hydroxide", Func = function()
-    Library:Notify("Loading Hydroxide...")
-    Core.LoadScript("Hydroxide")
-end})
-
-ScriptsMisc:AddButton({Text = "Script Dumper", Func = function()
-    Library:Notify("Loading Script Dumper...")
-    Core.LoadScript("Script Dumper")
-end})
-ScriptsMisc:AddButton({Text = "Chat Spy", Func = function()
-    Library:Notify("Loading Chat Spy...")
-    Core.LoadScript("Chat Spy")
-end})
-ScriptsMisc:AddButton({Text = "Anti AFK", Func = function()
-    Library:Notify("Loading Anti AFK...")
-    Core.LoadScript("Anti AFK")
-end})
-
-local ScriptsCustom = Tabs.Scripts:AddRightGroupbox("Custom Script")
-ScriptsCustom:AddInput("Script_URL", {Default = "", Placeholder = "Script URL...", Text = "URL"})
-ScriptsCustom:AddButton({Text = "Execute URL", Func = function()
-    local url = Options.Script_URL.Value
-    if url and url ~= "" then
-        Library:Notify("Executing script...")
-        pcall(function()
-            loadstring(game:HttpGet(url))()
-        end)
-    else
-        Library:Notify("Please enter a URL")
-    end
-end})
-ScriptsCustom:AddInput("Script_Code", {Default = "", Placeholder = "Lua code...", Text = "Code"})
-ScriptsCustom:AddButton({Text = "Execute Code", Func = function()
-    local code = Options.Script_Code.Value
-    if code and code ~= "" then
-        Library:Notify("Executing code...")
-        pcall(function()
-            loadstring(code)()
-        end)
-    else
-        Library:Notify("Please enter code")
-    end
-end})
-
-local FlySpeed = 50
-local Flying = false
-local NoclipEnabled = false
+local ScriptsUtil = Tabs.Scripts:AddRightGroupbox("Utilities")
+ScriptsUtil:AddButton({Text = "Dex Explorer", Func = function() Library:Notify("Loading...") Core.LoadScript("Dex Explorer") end})
+ScriptsUtil:AddButton({Text = "Dark Dex", Func = function() Library:Notify("Loading...") Core.LoadScript("Dark Dex") end})
+ScriptsUtil:AddButton({Text = "Remote Spy", Func = function() Library:Notify("Loading...") Core.LoadScript("Remote Spy") end})
+ScriptsUtil:AddButton({Text = "Chat Spy", Func = function() Library:Notify("Loading...") Core.LoadScript("Chat Spy") end})
+ScriptsUtil:AddButton({Text = "Anti AFK", Func = function() Library:Notify("Loading...") Core.LoadScript("Anti AFK") end})
 
 RunService.RenderStepped:Connect(function()
-    FOVCircle.Visible = Toggles.Aim_DrawFOV.Value and Core.AimbotSettings.Enabled
-    FOVCircle.Radius = Core.AimbotSettings.FOV
-    FOVCircle.Color = Options.Aim_FOVCol.Value
-    FOVCircle.Position = UserInputService:GetMouseLocation()
+    pcall(function() FOVCircle.Visible = Toggles.Aim_DrawFOV.Value and Core.AimbotSettings.Enabled end)
+    pcall(function() FOVCircle.Radius = Core.AimbotSettings.FOV end)
+    pcall(function() FOVCircle.Color = Options.Aim_FOVCol.Value end)
+    pcall(function() FOVCircle.Position = UserInputService:GetMouseLocation() end)
     
-    SilentFOVCircle.Visible = Toggles.Silent_DrawFOV.Value and Core.SilentAimSettings.Enabled
-    SilentFOVCircle.Radius = Core.SilentAimSettings.FOV
-    SilentFOVCircle.Position = Vector2.new(Workspace.CurrentCamera.ViewportSize.X / 2, Workspace.CurrentCamera.ViewportSize.Y / 2)
-    SilentFOVCircle.Color = Options.Silent_FOVCol.Value
+    pcall(function() SilentFOVCircle.Visible = Toggles.Silent_DrawFOV.Value and Core.SilentAimSettings.Enabled end)
+    pcall(function() SilentFOVCircle.Radius = Core.SilentAimSettings.FOV end)
+    pcall(function() SilentFOVCircle.Position = Vector2.new(Workspace.CurrentCamera.ViewportSize.X / 2, Workspace.CurrentCamera.ViewportSize.Y / 2) end)
+    pcall(function() SilentFOVCircle.Color = Options.Silent_FOVCol.Value end)
     
     if Core.AimbotSettings.Enabled and Options.Aim_Key:GetState() then
         if Core.AimbotSettings.StickyAim and Core.LockedTarget and Core.IsAlive(Core.LockedTarget) then
             Core.AimAt(Core.LockedTarget, TargetCircle)
         else
             local target = Core.GetClosestPlayer()
-            if target then
-                Core.LockedTarget = target
-                Core.AimAt(target, TargetCircle)
-            else
-                TargetCircle.Visible = false
-            end
+            if target then Core.LockedTarget = target Core.AimAt(target, TargetCircle)
+            else pcall(function() TargetCircle.Visible = false end) end
         end
-    else
-        Core.LockedTarget = nil
-        TargetCircle.Visible = false
-    end
+    else Core.LockedTarget = nil pcall(function() TargetCircle.Visible = false end) end
     
     if Core.TriggerSettings.Enabled and Options.Trigger_Key:GetState() then
         local target = Core.GetTriggerTarget()
-        if target then
-            if Core.TriggerSettings.Delay > 0 then
-                task.wait(Core.TriggerSettings.Delay / 1000)
-            end
-            if mouse1click then mouse1click() end
-        end
+        if target then if Core.TriggerSettings.Delay > 0 then task.wait(Core.TriggerSettings.Delay / 1000) end if mouse1click then mouse1click() end end
     end
     
-    TargetCircle.Color = Options.Aim_TargetCol.Value
+    pcall(function() TargetCircle.Color = Options.Aim_TargetCol.Value end)
     
     Core.UpdateESP()
     
     if Core.IsAlive(LocalPlayer) then
-        if Toggles.Move_Speed.Value then
-            LocalPlayer.Character.Humanoid.WalkSpeed = Options.Move_SpeedVal.Value
-        end
-        
-        if Toggles.Move_Noclip.Value then
-            for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = false
-                end
-            end
-        end
-        
-        if Toggles.Move_Fly.Value then
-            local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local velocity = Vector3.new(0,0,0)
-                local camera = Workspace.CurrentCamera
-                
-                if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-                    velocity = velocity + camera.CFrame.LookVector
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.S) then
-                    velocity = velocity - camera.CFrame.LookVector
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.A) then
-                    velocity = velocity - camera.CFrame.RightVector
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.D) then
-                    velocity = velocity + camera.CFrame.RightVector
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                    velocity = velocity + Vector3.new(0,1,0)
-                end
-                if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-                    velocity = velocity - Vector3.new(0,1,0)
-                end
-                
-                if velocity.Magnitude > 0 then
-                    hrp.Velocity = velocity.Unit * Options.Move_FlySpeed.Value
-                else
-                    hrp.Velocity = Vector3.new(0,0,0)
-                end
-                
-                hrp.CFrame = hrp.CFrame + hrp.Velocity * 0.016
-                LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Flying)
-            end
-        end
+        if Toggles.Move_Speed.Value then LocalPlayer.Character.Humanoid.WalkSpeed = Options.Move_SpeedVal.Value end
+        if Toggles.Move_Noclip.Value then for _, v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end
     end
 end)
 
