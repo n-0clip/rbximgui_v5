@@ -176,14 +176,39 @@ Core.SkeletonPartsR6 = {
 }
 
 function Core.CreateDrawing(t, props)
-    local d = Drawing.new(t)
-    for k, v in pairs(props) do
-        if k ~= "ZIndex" then
-            pcall(function()
-                d[k] = v
-            end)
-        end
+    local success, d = pcall(function()
+        return Drawing.new(t)
+    end)
+    
+    if not success or not d or type(d) == "number" then
+        return {
+            Visible = false,
+            Remove = function() end,
+            Color = Color3.new(1,1,1),
+            Thickness = 1,
+            Filled = false,
+            Transparency = 1,
+            Size = 13,
+            Position = Vector2.new(0,0),
+            From = Vector2.new(0,0),
+            To = Vector2.new(0,0),
+            Center = true,
+            Outline = true,
+            Text = "",
+            Radius = 5,
+            PointA = Vector2.new(0,0),
+            PointB = Vector2.new(0,0),
+            PointC = Vector2.new(0,0),
+            Font = 2
+        }
     end
+    
+    for k, v in pairs(props or {}) do
+        pcall(function()
+            d[k] = v
+        end)
+    end
+    
     return d
 end
 
@@ -421,16 +446,22 @@ function Core.RemoveESP(plr)
     if esp then
         for _, v in pairs(esp) do
             if type(v) == "table" then
-                for _, line in pairs(v) do pcall(function() line:Remove() end) end
-            else
-                pcall(function() v:Remove() end)
+                if v.Remove then
+                    pcall(function() v:Remove() end)
+                else
+                    for _, line in pairs(v) do 
+                        pcall(function() 
+                            if line.Remove then line:Remove() end 
+                        end) 
+                    end
+                end
             end
         end
         Core.ESPObjects[plr] = nil
     end
     
     if Core.ChamsObjects[plr] then
-        Core.ChamsObjects[plr]:Destroy()
+        pcall(function() Core.ChamsObjects[plr]:Destroy() end)
         Core.ChamsObjects[plr] = nil
     end
     
@@ -440,9 +471,13 @@ end
 function Core.HideESP(esp)
     for k, v in pairs(esp) do
         if type(v) == "table" then
-            for _, line in pairs(v) do line.Visible = false end
-        else
-            v.Visible = false
+            if v.Visible ~= nil then
+                pcall(function() v.Visible = false end)
+            else
+                for _, line in pairs(v) do 
+                    pcall(function() line.Visible = false end) 
+                end
+            end
         end
     end
 end
