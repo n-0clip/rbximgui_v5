@@ -112,7 +112,11 @@ Core.CBSettings = {
 
 Core.ArsenalSettings = {
     NoRecoil = false,
-    NoSpread = false
+    NoSpread = false,
+    InfAmmo = false,
+    InfRange = false,
+    RapidFire = false,
+    AutoWeapons = false
 }
 
 Core.Loops = {}
@@ -731,8 +735,183 @@ function Core.CBNoScope(enabled) if Core.GameName ~= "Counter Blox" then return 
 function Core.CBNoFlash(enabled) if Core.GameName ~= "Counter Blox" then return end Core.CBSettings.NoFlash = enabled pcall(function() local blnd = LocalPlayer.PlayerGui:FindFirstChild("Blnd") if blnd then blnd.Enabled = not enabled end end) end
 function Core.CBNoSmoke(enabled) if Core.GameName ~= "Counter Blox" then return end Core.CBSettings.NoSmoke = enabled if enabled then if Core.Loops.CBNoSmoke then Core.Loops.CBNoSmoke:Disconnect() end Core.Loops.CBNoSmoke = RunService.RenderStepped:Connect(function() pcall(function() local rayIgnore = Workspace:FindFirstChild("Ray_Ignore") if rayIgnore then local smokes = rayIgnore:FindFirstChild("Smokes") if smokes then for _, v in pairs(smokes:GetChildren()) do if v.Name == "Smoke" then v:Destroy() end end end end end) end) else if Core.Loops.CBNoSmoke then Core.Loops.CBNoSmoke:Disconnect() Core.Loops.CBNoSmoke = nil end end end
 
-function Core.ArsenalNoRecoil(enabled) if Core.GameName ~= "Arsenal" then return end Core.ArsenalSettings.NoRecoil = enabled if enabled then if Core.Loops.ArsenalNoRecoil then Core.Loops.ArsenalNoRecoil:Disconnect() end Core.Loops.ArsenalNoRecoil = RunService.RenderStepped:Connect(function() pcall(function() local gun = Core.GetCurrentGun() if gun then for _, v in pairs(gun:GetDescendants()) do if v.Name:lower():find("recoil") and v:IsA("NumberValue") then v.Value = 0 end end end end) end) else if Core.Loops.ArsenalNoRecoil then Core.Loops.ArsenalNoRecoil:Disconnect() Core.Loops.ArsenalNoRecoil = nil end end end
-function Core.ArsenalNoSpread(enabled) if Core.GameName ~= "Arsenal" then return end Core.ArsenalSettings.NoSpread = enabled if enabled then if Core.Loops.ArsenalNoSpread then Core.Loops.ArsenalNoSpread:Disconnect() end Core.Loops.ArsenalNoSpread = RunService.RenderStepped:Connect(function() pcall(function() local gun = Core.GetCurrentGun() if gun then for _, v in pairs(gun:GetDescendants()) do if v.Name:lower():find("spread") and v:IsA("NumberValue") then v.Value = 0 end end end end) end) else if Core.Loops.ArsenalNoSpread then Core.Loops.ArsenalNoSpread:Disconnect() Core.Loops.ArsenalNoSpread = nil end end end
+function Core.ArsenalNoRecoil(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    Core.ArsenalSettings.NoRecoil = enabled
+    
+    if enabled then
+        if Core.Loops.ArsenalNoRecoil then Core.Loops.ArsenalNoRecoil:Disconnect() end
+        Core.Loops.ArsenalNoRecoil = RunService.RenderStepped:Connect(function()
+            pcall(function()
+                for _, weapon in pairs(ReplicatedStorage.Weapons:GetChildren()) do
+                    for _, child in pairs(weapon:GetChildren()) do
+                        if child:IsA("NumberValue") then
+                            if child.Name == "RecoilControl" or child.Name:lower():find("recoil") then
+                                child.Value = 0
+                            end
+                        end
+                    end
+                end
+            end)
+        end)
+    else
+        if Core.Loops.ArsenalNoRecoil then
+            Core.Loops.ArsenalNoRecoil:Disconnect()
+            Core.Loops.ArsenalNoRecoil = nil
+        end
+    end
+end
+
+function Core.ArsenalNoSpread(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    Core.ArsenalSettings.NoSpread = enabled
+    
+    if enabled then
+        if Core.Loops.ArsenalNoSpread then Core.Loops.ArsenalNoSpread:Disconnect() end
+        Core.Loops.ArsenalNoSpread = RunService.RenderStepped:Connect(function()
+            pcall(function()
+                for _, weapon in pairs(ReplicatedStorage.Weapons:GetChildren()) do
+                    for _, child in pairs(weapon:GetChildren()) do
+                        if child:IsA("NumberValue") then
+                            if child.Name == "Spread" or child.Name == "MaxSpread" then
+                                child.Value = 0
+                            end
+                        end
+                    end
+                end
+            end)
+        end)
+    else
+        if Core.Loops.ArsenalNoSpread then
+            Core.Loops.ArsenalNoSpread:Disconnect()
+            Core.Loops.ArsenalNoSpread = nil
+        end
+    end
+end
+
+function Core.ArsenalInfAmmo(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    Core.ArsenalSettings.InfAmmo = enabled
+    
+    pcall(function()
+        for _, weapon in pairs(ReplicatedStorage.Weapons:GetChildren()) do
+            for _, child in pairs(weapon:GetChildren()) do
+                for _, conn in pairs(getconnections(child.Changed)) do
+                    conn:Disable()
+                end
+                if child.Name == "Ammo" or child.Name == "StoredAmmo" then
+                    child.Value = enabled and 300 or 30
+                end
+            end
+        end
+    end)
+end
+
+function Core.ArsenalInfRange(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    Core.ArsenalSettings.InfRange = enabled
+    
+    pcall(function()
+        for _, weapon in pairs(ReplicatedStorage.Weapons:GetChildren()) do
+            for _, child in pairs(weapon:GetChildren()) do
+                for _, conn in pairs(getconnections(child.Changed)) do
+                    conn:Disable()
+                end
+                if child.Name == "Range" then
+                    child.Value = enabled and 9e9 or 100
+                end
+            end
+        end
+    end)
+end
+
+function Core.ArsenalRapidFire(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    Core.ArsenalSettings.RapidFire = enabled
+    
+    pcall(function()
+        for _, weapon in pairs(ReplicatedStorage.Weapons:GetChildren()) do
+            for _, child in pairs(weapon:GetChildren()) do
+                for _, conn in pairs(getconnections(child.Changed)) do
+                    conn:Disable()
+                end
+                if child.Name == "FireRate" or child.Name == "BFireRate" then
+                    if enabled then
+                        if not Core.OriginalValues[child] then
+                            Core.OriginalValues[child] = child.Value
+                        end
+                        child.Value = 0.02
+                    else
+                        if Core.OriginalValues[child] then
+                            child.Value = Core.OriginalValues[child]
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+function Core.ArsenalAutoWeapons(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    Core.ArsenalSettings.AutoWeapons = enabled
+    
+    pcall(function()
+        for _, weapon in pairs(ReplicatedStorage.Weapons:GetChildren()) do
+            for _, child in pairs(weapon:GetChildren()) do
+                if child:IsA("ModuleScript") then
+                    local success, weaponData = pcall(function()
+                        return require(child)
+                    end)
+                    if success and weaponData then
+                        if enabled then
+                            weaponData.Auto = true
+                        end
+                    end
+                end
+            end
+        end
+    end)
+end
+
+function Core.ArsenalFullAccuracy(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    
+    pcall(function()
+        for _, weapon in pairs(ReplicatedStorage.Weapons:GetChildren()) do
+            for _, child in pairs(weapon:GetChildren()) do
+                for _, conn in pairs(getconnections(child.Changed)) do
+                    conn:Disable()
+                end
+                if child.Name == "AReload" or child.Name == "RecoilControl" or 
+                   child.Name == "EReload" or child.Name == "SReload" or 
+                   child.Name == "ReloadTime" or child.Name == "EquipTime" or 
+                   child.Name == "Spread" or child.Name == "MaxSpread" then
+                    child.Value = 0
+                end
+            end
+        end
+    end)
+end
+
+function Core.ArsenalInstantReload(enabled)
+    if Core.GameName ~= "Arsenal" then return end
+    
+    pcall(function()
+        for _, weapon in pairs(ReplicatedStorage.Weapons:GetChildren()) do
+            for _, child in pairs(weapon:GetChildren()) do
+                for _, conn in pairs(getconnections(child.Changed)) do
+                    conn:Disable()
+                end
+                if child.Name == "ReloadTime" or child.Name == "AReload" or 
+                   child.Name == "EReload" or child.Name == "SReload" or
+                   child.Name == "EquipTime" then
+                    child.Value = enabled and 0 or 1
+                end
+            end
+        end
+    end)
+end
 
 function Core.Rejoin() TeleportService:TeleportToPlaceInstance(Core.PlaceId, game.JobId, LocalPlayer) end
 function Core.GetJoinScript() return 'game:GetService("TeleportService"):TeleportToPlaceInstance(' .. Core.PlaceId .. ', "' .. game.JobId .. '", game.Players.LocalPlayer)' end
