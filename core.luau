@@ -177,7 +177,13 @@ Core.SkeletonPartsR6 = {
 
 function Core.CreateDrawing(t, props)
     local d = Drawing.new(t)
-    for k, v in pairs(props) do d[k] = v end
+    for k, v in pairs(props) do
+        if k ~= "ZIndex" then
+            pcall(function()
+                d[k] = v
+            end)
+        end
+    end
     return d
 end
 
@@ -383,30 +389,30 @@ function Core.CreateESP(plr)
     if Core.ESPObjects[plr] then return end
     
     Core.ESPObjects[plr] = {
-        Box = Core.CreateDrawing("Square", {Thickness = 1, Filled = false, ZIndex = 2}),
-        BoxOutline = Core.CreateDrawing("Square", {Thickness = 3, Filled = false, Color = Color3.new(0,0,0), ZIndex = 1}),
-        CornerTL = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerTR = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerBL = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerBR = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerTL2 = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerTR2 = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerBL2 = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        CornerBR2 = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2}),
-        Name = Core.CreateDrawing("Text", {Size = 13, Center = true, Outline = true, Font = 2, ZIndex = 3}),
-        Weapon = Core.CreateDrawing("Text", {Size = 11, Center = true, Outline = true, Font = 2, ZIndex = 3}),
-        Health = Core.CreateDrawing("Square", {Filled = true, ZIndex = 2}),
-        HealthOutline = Core.CreateDrawing("Square", {Filled = true, Color = Color3.new(0,0,0), ZIndex = 1}),
-        HealthText = Core.CreateDrawing("Text", {Size = 10, Center = true, Outline = true, Font = 2, ZIndex = 3}),
-        Distance = Core.CreateDrawing("Text", {Size = 11, Center = true, Outline = true, Font = 2, ZIndex = 3}),
-        HeadDot = Core.CreateDrawing("Circle", {Filled = true, Radius = 3, ZIndex = 3}),
-        Tracer = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 1}),
-        Arrow = Core.CreateDrawing("Triangle", {Filled = true, ZIndex = 3}),
+        Box = Core.CreateDrawing("Square", {Thickness = 1, Filled = false}),
+        BoxOutline = Core.CreateDrawing("Square", {Thickness = 3, Filled = false, Color = Color3.new(0,0,0)}),
+        CornerTL = Core.CreateDrawing("Line", {Thickness = 1}),
+        CornerTR = Core.CreateDrawing("Line", {Thickness = 1}),
+        CornerBL = Core.CreateDrawing("Line", {Thickness = 1}),
+        CornerBR = Core.CreateDrawing("Line", {Thickness = 1}),
+        CornerTL2 = Core.CreateDrawing("Line", {Thickness = 1}),
+        CornerTR2 = Core.CreateDrawing("Line", {Thickness = 1}),
+        CornerBL2 = Core.CreateDrawing("Line", {Thickness = 1}),
+        CornerBR2 = Core.CreateDrawing("Line", {Thickness = 1}),
+        Name = Core.CreateDrawing("Text", {Size = 13, Center = true, Outline = true, Font = 2}),
+        Weapon = Core.CreateDrawing("Text", {Size = 11, Center = true, Outline = true, Font = 2}),
+        Health = Core.CreateDrawing("Square", {Filled = true}),
+        HealthOutline = Core.CreateDrawing("Square", {Filled = true, Color = Color3.new(0,0,0)}),
+        HealthText = Core.CreateDrawing("Text", {Size = 10, Center = true, Outline = true, Font = 2}),
+        Distance = Core.CreateDrawing("Text", {Size = 11, Center = true, Outline = true, Font = 2}),
+        HeadDot = Core.CreateDrawing("Circle", {Filled = true, Radius = 3}),
+        Tracer = Core.CreateDrawing("Line", {Thickness = 1}),
+        Arrow = Core.CreateDrawing("Triangle", {Filled = true}),
         Skeleton = {}
     }
     
     for i = 1, 14 do
-        Core.ESPObjects[plr].Skeleton[i] = Core.CreateDrawing("Line", {Thickness = 1, ZIndex = 2})
+        Core.ESPObjects[plr].Skeleton[i] = Core.CreateDrawing("Line", {Thickness = 1})
     end
 end
 
