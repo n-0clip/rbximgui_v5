@@ -11,6 +11,7 @@ local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
@@ -63,7 +64,8 @@ Core.SilentAimSettings = {
     VisibleCheck = true,
     FOV = 100,
     AimPart = "Head",
-    Prediction = 0
+    Prediction = 0,
+    Method = "Camera"
 }
 
 Core.TriggerSettings = {
@@ -87,6 +89,8 @@ Core.MM2Roles = {}
 Core.LockedTarget = nil
 Core.RainbowHue = 0
 Core.SilentAimTarget = nil
+Core.OriginalCameraType = nil
+Core.SilentAimActive = false
 
 Core.SkeletonParts = {
     {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
@@ -98,6 +102,15 @@ Core.SkeletonParts = {
 
 Core.SkeletonPartsR6 = {
     {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"}
+}
+
+Core.ExecutorSupport = {
+    HasHookMetamethod = pcall(function() return hookmetamethod end) and hookmetamethod ~= nil,
+    HasGetRawMetatable = pcall(function() return getrawmetatable end) and getrawmetatable ~= nil,
+    HasMouseMoveRel = pcall(function() return mousemoverel end) and mousemoverel ~= nil,
+    HasVirtualInput = pcall(function() return VirtualInputManager end) and VirtualInputManager ~= nil,
+    HasGetConnections = pcall(function() return getconnections end) and getconnections ~= nil,
+    HasFireSignal = pcall(function() return firesignal end) and firesignal ~= nil
 }
 
 function Core.CreateDrawing(t, props)
@@ -228,6 +241,17 @@ function Core.GetSilentAimTarget()
     return closest
 end
 
+function Core.GetPredictedPosition(player, part)
+    local targetPos = part.Position
+    if Core.SilentAimSettings.Prediction > 0 then
+        local root = player.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            targetPos = targetPos + (root.AssemblyLinearVelocity * (Core.SilentAimSettings.Prediction / 10))
+        end
+    end
+    return targetPos
+end
+
 function Core.GetTriggerTarget()
     local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     local ray = Camera:ViewportPointToRay(center.X, center.Y)
@@ -276,11 +300,40 @@ function Core.AimAt(player, TargetCircle)
     local mousePos = UserInputService:GetMouseLocation()
     local delta = (Vector2.new(screenPos.X, screenPos.Y) - mousePos) / math.max(Core.AimbotSettings.Smoothness, 1)
     
-    mousemoverel(delta.X, delta.Y)
+    if Core.ExecutorSupport.HasMouseMoveRel then
+        mousemoverel(delta.X, delta.Y)
+    end
+    
     if TargetCircle then
         TargetCircle.Position = Vector2.new(screenPos.X, screenPos.Y)
         TargetCircle.Visible = true
     end
+end
+
+function Core.SilentAimCameraMethod()
+    if not Core.SilentAimSettings.Enabled then return end
+    
+    local target = Core.GetSilentAimTarget()
+    if not target then 
+        Core.SilentAimTarget = nil
+        return 
+    end
+    
+    Core.SilentAimTarget = target
+end
+
+function Core.GetSilentAimPosition()
+    if not Core.SilentAimSettings.Enabled or not Core.SilentAimTarget then
+        return nil
+    end
+    
+    local target = Core.SilentAimTarget
+    if not target.Player or not Core.IsAlive(target.Player) or not target.Part then
+        Core.SilentAimTarget = nil
+        return nil
+    end
+    
+    return Core.GetPredictedPosition(target.Player, target.Part)
 end
 
 function Core.CreateESP(plr)
@@ -493,6 +546,37 @@ function Core.UpdateESP()
     end
 end
 
+function Core.ModifyWeaponValue(weapon, valueName, newValue, attributeName)
+    local value = weapon:FindFirstChild(valueName)
+    if value then
+        if value:IsA("NumberValue") then
+            if newValue ~= nil then
+                if not value:GetAttribute(attributeName) then
+                    value:SetAttribute(attributeName, value.Value)
+                end
+                value.Value = newValue
+            else
+                local orig = value:GetAttribute(attributeName)
+                if orig then value.Value = orig end
+            end
+        elseif value:IsA("Folder") or value:IsA("Configuration") then
+            for _, v in ipairs(value:GetDescendants()) do
+                if v:IsA("NumberValue") then
+                    if newValue ~= nil then
+                        if not v:GetAttribute(attributeName) then
+                            v:SetAttribute(attributeName, v.Value)
+                        end
+                        v.Value = newValue
+                    else
+                        local orig = v:GetAttribute(attributeName)
+                        if orig then v.Value = orig end
+                    end
+                end
+            end
+        end
+    end
+end
+
 function Core.CBNoSpread(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.NoSpread = enabled
@@ -501,22 +585,7 @@ function Core.CBNoSpread(enabled)
     if not WeaponsFolder then return end
     
     for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        local spread = weapon:FindFirstChild("Spread")
-        if spread then
-            for _, v in ipairs(spread:GetDescendants()) do
-                if v:IsA("NumberValue") then
-                    if enabled then
-                        if not v:GetAttribute("OriginalValue") then
-                            v:SetAttribute("OriginalValue", v.Value)
-                        end
-                        v.Value = 0
-                    else
-                        local orig = v:GetAttribute("OriginalValue")
-                        if orig then v.Value = orig end
-                    end
-                end
-            end
-        end
+        Core.ModifyWeaponValue(weapon, "Spread", enabled and 0 or nil, "OrigSpread")
     end
 end
 
@@ -528,48 +597,11 @@ function Core.CBNoRecoil(enabled)
     if not WeaponsFolder then return end
     
     for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        local recoil = weapon:FindFirstChild("Recoil") or weapon:FindFirstChild("RecoilUp") or weapon:FindFirstChild("RecoilSide")
-        if recoil then
-            for _, v in ipairs(recoil:GetDescendants()) do
-                if v:IsA("NumberValue") then
-                    if enabled then
-                        if not v:GetAttribute("OriginalRecoil") then
-                            v:SetAttribute("OriginalRecoil", v.Value)
-                        end
-                        v.Value = 0
-                    else
-                        local orig = v:GetAttribute("OriginalRecoil")
-                        if orig then v.Value = orig end
-                    end
-                end
-            end
-        end
-        
-        local camRecoil = weapon:FindFirstChild("CamRecoil")
-        if camRecoil and camRecoil:IsA("NumberValue") then
-            if enabled then
-                if not camRecoil:GetAttribute("OriginalCamRecoil") then
-                    camRecoil:SetAttribute("OriginalCamRecoil", camRecoil.Value)
-                end
-                camRecoil.Value = 0
-            else
-                local orig = camRecoil:GetAttribute("OriginalCamRecoil")
-                if orig then camRecoil.Value = orig end
-            end
-        end
-        
-        local recoilVal = weapon:FindFirstChild("Recoil")
-        if recoilVal and recoilVal:IsA("NumberValue") then
-            if enabled then
-                if not recoilVal:GetAttribute("OriginalRecoilVal") then
-                    recoilVal:SetAttribute("OriginalRecoilVal", recoilVal.Value)
-                end
-                recoilVal.Value = 0
-            else
-                local orig = recoilVal:GetAttribute("OriginalRecoilVal")
-                if orig then recoilVal.Value = orig end
-            end
-        end
+        Core.ModifyWeaponValue(weapon, "Recoil", enabled and 0 or nil, "OrigRecoil")
+        Core.ModifyWeaponValue(weapon, "RecoilUp", enabled and 0 or nil, "OrigRecoilUp")
+        Core.ModifyWeaponValue(weapon, "RecoilSide", enabled and 0 or nil, "OrigRecoilSide")
+        Core.ModifyWeaponValue(weapon, "CamRecoil", enabled and 0 or nil, "OrigCamRecoil")
+        Core.ModifyWeaponValue(weapon, "KickBack", enabled and 0 or nil, "OrigKickBack")
     end
 end
 
@@ -581,24 +613,22 @@ function Core.CBRapidFire(enabled)
     if not WeaponsFolder then return end
     
     for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        local fireRate = weapon:FindFirstChild("FireRate")
-        if fireRate and fireRate:IsA("NumberValue") then
-            if enabled then
-                if not fireRate:GetAttribute("OriginalFireRate") then
-                    fireRate:SetAttribute("OriginalFireRate", fireRate.Value)
-                end
-                fireRate.Value = 0.01
-            else
-                local orig = fireRate:GetAttribute("OriginalFireRate")
-                if orig then fireRate.Value = orig end
-            end
-        end
+        Core.ModifyWeaponValue(weapon, "FireRate", enabled and 0.01 or nil, "OrigFireRate")
     end
 end
 
 function Core.CBInfAmmo(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.InfAmmo = enabled
+    
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not WeaponsFolder then return end
+    
+    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+        Core.ModifyWeaponValue(weapon, "Ammo", enabled and 999 or nil, "OrigAmmo")
+        Core.ModifyWeaponValue(weapon, "MaxAmmo", enabled and 999 or nil, "OrigMaxAmmo")
+        Core.ModifyWeaponValue(weapon, "StoredAmmo", enabled and 999 or nil, "OrigStoredAmmo")
+    end
 end
 
 function Core.Rejoin()
@@ -647,6 +677,149 @@ function Core.LoadNamelessAdmin()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/FilteringEnabled/NamelessAdmin/main/Source"))()
 end
 
+function Core.SetupSilentAim()
+    if Core.GameName == "Counter Blox" then
+        local mouse = LocalPlayer:GetMouse()
+        local oldHit = mouse.Hit
+        
+        local mt = getrawmetatable(mouse)
+        if mt and setreadonly then
+            setreadonly(mt, false)
+            
+            local oldIndex = mt.__index
+            mt.__index = function(self, key)
+                if Core.SilentAimSettings.Enabled and (key == "Hit" or key == "Target") then
+                    local targetPos = Core.GetSilentAimPosition()
+                    if targetPos then
+                        if key == "Hit" then
+                            return CFrame.new(targetPos)
+                        elseif key == "Target" then
+                            local target = Core.SilentAimTarget
+                            if target and target.Part then
+                                return target.Part
+                            end
+                        end
+                    end
+                end
+                return oldIndex(self, key)
+            end
+            
+            setreadonly(mt, true)
+        end
+    end
+end
+
+function Core.SetupSilentAimRaw()
+    if not getrawmetatable then return false end
+    
+    local mouse = LocalPlayer:GetMouse()
+    local mt = getrawmetatable(mouse)
+    
+    if not mt then return false end
+    
+    local oldIndex = mt.__index
+    local oldNewindex = mt.__newindex
+    
+    if setreadonly then
+        setreadonly(mt, false)
+    end
+    
+    mt.__index = newcclosure and newcclosure(function(self, key)
+        if Core.SilentAimSettings.Enabled then
+            local targetPos = Core.GetSilentAimPosition()
+            if targetPos then
+                if key == "Hit" then
+                    return CFrame.new(targetPos)
+                elseif key == "Target" then
+                    local target = Core.SilentAimTarget
+                    if target and target.Part then
+                        return target.Part
+                    end
+                elseif key == "X" then
+                    local screen = Camera:WorldToViewportPoint(targetPos)
+                    return screen.X
+                elseif key == "Y" then
+                    local screen = Camera:WorldToViewportPoint(targetPos)
+                    return screen.Y
+                elseif key == "UnitRay" then
+                    local origin = Camera.CFrame.Position
+                    local direction = (targetPos - origin).Unit
+                    return Ray.new(origin, direction)
+                end
+            end
+        end
+        return oldIndex(self, key)
+    end) or function(self, key)
+        if Core.SilentAimSettings.Enabled then
+            local targetPos = Core.GetSilentAimPosition()
+            if targetPos then
+                if key == "Hit" then
+                    return CFrame.new(targetPos)
+                elseif key == "Target" then
+                    local target = Core.SilentAimTarget
+                    if target and target.Part then
+                        return target.Part
+                    end
+                elseif key == "X" then
+                    local screen = Camera:WorldToViewportPoint(targetPos)
+                    return screen.X
+                elseif key == "Y" then
+                    local screen = Camera:WorldToViewportPoint(targetPos)
+                    return screen.Y
+                elseif key == "UnitRay" then
+                    local origin = Camera.CFrame.Position
+                    local direction = (targetPos - origin).Unit
+                    return Ray.new(origin, direction)
+                end
+            end
+        end
+        return oldIndex(self, key)
+    end
+    
+    if setreadonly then
+        setreadonly(mt, true)
+    end
+    
+    return true
+end
+
+function Core.SetupCameraHook()
+    local mt = getrawmetatable(Camera)
+    if not mt then return false end
+    
+    local oldIndex = mt.__index
+    
+    if setreadonly then
+        setreadonly(mt, false)
+    end
+    
+    mt.__index = newcclosure and newcclosure(function(self, key)
+        if Core.SilentAimSettings.Enabled and key == "CFrame" then
+            local targetPos = Core.GetSilentAimPosition()
+            if targetPos and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                local currentCFrame = oldIndex(self, key)
+                return CFrame.new(currentCFrame.Position, targetPos)
+            end
+        end
+        return oldIndex(self, key)
+    end) or function(self, key)
+        if Core.SilentAimSettings.Enabled and key == "CFrame" then
+            local targetPos = Core.GetSilentAimPosition()
+            if targetPos and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                local currentCFrame = oldIndex(self, key)
+                return CFrame.new(currentCFrame.Position, targetPos)
+            end
+        end
+        return oldIndex(self, key)
+    end
+    
+    if setreadonly then
+        setreadonly(mt, true)
+    end
+    
+    return true
+end
+
 function Core.Init()
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then Core.CreateESP(plr) end
@@ -663,44 +836,13 @@ function Core.Init()
         end)
     end
     
-    if Core.GameName == "Counter Blox" then
-        local oldNamecall
-        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-            local args = {...}
-            local method = getnamecallmethod()
-            
-            if Core.SilentAimSettings.Enabled and method == "FireServer" then
-                if self.Name == "WeaponEvent" or self.Name == "Shoot" or self.Name == "Fire" then
-                    local target = Core.GetSilentAimTarget()
-                    if target and target.Part then
-                        local targetPos = target.Part.Position
-                        if Core.SilentAimSettings.Prediction > 0 then
-                            local root = target.Player.Character:FindFirstChild("HumanoidRootPart")
-                            if root then
-                                targetPos = targetPos + (root.AssemblyLinearVelocity * (Core.SilentAimSettings.Prediction / 10))
-                            end
-                        end
-                        for i, v in pairs(args) do
-                            if typeof(v) == "Vector3" then
-                                args[i] = targetPos
-                            elseif typeof(v) == "CFrame" then
-                                args[i] = CFrame.new(targetPos)
-                            end
-                        end
-                        return oldNamecall(self, unpack(args))
-                    end
-                end
-            end
-            
-            if Core.CBSettings.InfAmmo and method == "FireServer" then
-                if self.Name == "Reload" or (args[1] and type(args[1]) == "string" and args[1]:lower():find("ammo")) then
-                    return nil
-                end
-            end
-            
-            return oldNamecall(self, ...)
-        end)
+    if Core.ExecutorSupport.HasGetRawMetatable then
+        Core.SetupSilentAimRaw()
     end
+    
+    RunService.RenderStepped:Connect(function()
+        Core.SilentAimCameraMethod()
+    end)
 end
 
 return Core
