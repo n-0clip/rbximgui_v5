@@ -112,16 +112,32 @@ GameUniv:AddButton({Text = "Copy Join Script", Func = function()
     Library:Notify("Copied to clipboard")
 end})
 
-local ExecInfo = Tabs.Game:AddLeftGroupbox("Executor Info")
-ExecInfo:AddLabel("Mouse Hook: " .. (Core.ExecutorSupport.HasGetRawMetatable and "Supported" or "Not Supported"))
-ExecInfo:AddLabel("MouseMoveRel: " .. (Core.ExecutorSupport.HasMouseMoveRel and "Supported" or "Not Supported"))
-
 if Core.GameName == "Counter Blox" then
-    local CBBox = Tabs.Game:AddRightGroupbox("Counter Blox")
-    CBBox:AddToggle("CB_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.CBNoSpread(v) end})
-    CBBox:AddToggle("CB_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.CBNoRecoil(v) end})
-    CBBox:AddToggle("CB_RapidFire", {Text = "Rapid Fire", Default = false, Callback = function(v) Core.CBRapidFire(v) end})
-    CBBox:AddToggle("CB_InfAmmo", {Text = "Inf Ammo", Default = false, Callback = function(v) Core.CBInfAmmo(v) end})
+    local CBWeapon = Tabs.Game:AddLeftGroupbox("Weapon Mods")
+    CBWeapon:AddToggle("CB_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.CBNoSpread(v) end})
+    CBWeapon:AddToggle("CB_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.CBNoRecoil(v) end})
+    CBWeapon:AddToggle("CB_RapidFire", {Text = "Rapid Fire", Default = false, Callback = function(v) Core.CBRapidFire(v) end})
+    CBWeapon:AddToggle("CB_InfAmmo", {Text = "Infinite Ammo", Default = false, Callback = function(v) Core.CBInfAmmo(v) end})
+    CBWeapon:AddToggle("CB_Wallbang", {Text = "Wallbang", Default = false, Callback = function(v) Core.CBWallbang(v) end})
+    
+    local CBExploit = Tabs.Game:AddRightGroupbox("Exploits")
+    CBExploit:AddToggle("CB_KillAll", {Text = "Kill All", Default = false, Callback = function(v) Core.CBKillAll(v) end})
+    CBExploit:AddToggle("CB_InfCash", {Text = "Infinite Cash", Default = false, Callback = function(v) Core.CBInfCash(v) end})
+    CBExploit:AddToggle("CB_InfHP", {Text = "Infinite HP", Default = false, Callback = function(v) Core.CBInfHP(v) end})
+    CBExploit:AddToggle("CB_BHop", {Text = "Bunny Hop", Default = false, Callback = function(v) Core.CBBHop(v) end})
+    
+    local CBAntiAim = Tabs.Game:AddRightGroupbox("Anti-Aimbot")
+    CBAntiAim:AddToggle("CB_AntiAim", {Text = "Enabled", Default = false, Callback = function(v) Core.CBAntiAimbot(v) end})
+    CBAntiAim:AddDropdown("CB_AAYaw", {Values = {"Default", "Backward", "Left", "Right", "Spin", "Random"}, Default = 1, Text = "Yaw", Callback = function(v) Core.CBSettings.AntiAimbotYaw = v end})
+    CBAntiAim:AddSlider("CB_AASpeed", {Text = "Spin Speed", Default = 50, Min = 1, Max = 100, Rounding = 0, Callback = function(v) Core.CBSettings.AntiAimbotSpeed = v end})
+    CBAntiAim:AddToggle("CB_RemoveHead", {Text = "Remove Head Hitbox", Default = false, Callback = function(v) Core.CBSettings.RemoveHeadHitbox = v end})
+    
+    local CBEffects = Tabs.Visuals:AddRightGroupbox("Remove Effects")
+    CBEffects:AddToggle("CB_NoScope", {Text = "No Scope Overlay", Default = false, Callback = function(v) Core.CBNoScope(v) end})
+    CBEffects:AddToggle("CB_NoFlash", {Text = "No Flash", Default = false, Callback = function(v) Core.CBNoFlash(v) end})
+    CBEffects:AddToggle("CB_NoSmoke", {Text = "No Smoke", Default = false, Callback = function(v) Core.CBNoSmoke(v) end})
+    CBEffects:AddToggle("CB_NoBullets", {Text = "No Bullet Holes", Default = false, Callback = function(v) Core.CBNoBulletHoles(v) end})
+    CBEffects:AddToggle("CB_NoBlood", {Text = "No Blood", Default = false, Callback = function(v) Core.CBNoBlood(v) end})
 end
 
 if Core.GameName == "Murder Mystery 2" then
@@ -186,7 +202,7 @@ RunService.RenderStepped:Connect(function()
             if Core.TriggerSettings.Delay > 0 then
                 task.wait(Core.TriggerSettings.Delay / 1000)
             end
-            mouse1click()
+            if mouse1click then mouse1click() end
         end
     end
     
