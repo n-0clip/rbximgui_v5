@@ -1,5 +1,3 @@
--- v3
-
 local repo = "https://raw.githubusercontent.com/n-0clip/killfeed-lib/main/"
 local coreRepo = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/"
 
@@ -118,12 +116,10 @@ if Core.GameName == "Counter Blox" then
     CBWeapon:AddToggle("CB_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.CBNoRecoil(v) end})
     CBWeapon:AddToggle("CB_RapidFire", {Text = "Rapid Fire", Default = false, Callback = function(v) Core.CBRapidFire(v) end})
     CBWeapon:AddToggle("CB_InfAmmo", {Text = "Infinite Ammo", Default = false, Callback = function(v) Core.CBInfAmmo(v) end})
-    CBWeapon:AddToggle("CB_Wallbang", {Text = "Wallbang", Default = false, Callback = function(v) Core.CBWallbang(v) end})
     
     local CBExploit = Tabs.Game:AddRightGroupbox("Exploits")
     CBExploit:AddToggle("CB_KillAll", {Text = "Kill All", Default = false, Callback = function(v) Core.CBKillAll(v) end})
     CBExploit:AddToggle("CB_InfCash", {Text = "Infinite Cash", Default = false, Callback = function(v) Core.CBInfCash(v) end})
-    CBExploit:AddToggle("CB_InfHP", {Text = "Infinite HP", Default = false, Callback = function(v) Core.CBInfHP(v) end})
     CBExploit:AddToggle("CB_BHop", {Text = "Bunny Hop", Default = false, Callback = function(v) Core.CBBHop(v) end})
     
     local CBAntiAim = Tabs.Game:AddRightGroupbox("Anti-Aimbot")
