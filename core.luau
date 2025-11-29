@@ -64,24 +64,38 @@ Core.SilentAimSettings = {
     VisibleCheck = true,
     FOV = 100,
     AimPart = "Head",
-    Prediction = 0,
-    Method = "Camera"
+    Prediction = 0
 }
 
 Core.TriggerSettings = {
     Enabled = false,
     TeamCheck = true,
-    Delay = 0,
-    Keybind = false
+    Delay = 0
 }
 
 Core.CBSettings = {
     NoSpread = false,
     NoRecoil = false,
     InfAmmo = false,
-    RapidFire = false
+    RapidFire = false,
+    Wallbang = false,
+    KillAll = false,
+    InfCash = false,
+    InfHP = false,
+    BHop = false,
+    AntiAimbot = false,
+    AntiAimbotYaw = "Default",
+    AntiAimbotPitch = "Default",
+    AntiAimbotSpeed = 50,
+    RemoveHeadHitbox = false,
+    NoScope = false,
+    NoFlash = false,
+    NoSmoke = false,
+    NoBulletHoles = false,
+    NoBlood = false
 }
 
+Core.CBLoops = {}
 Core.ESPObjects = {}
 Core.ChamsObjects = {}
 Core.Connections = {}
@@ -89,8 +103,6 @@ Core.MM2Roles = {}
 Core.LockedTarget = nil
 Core.RainbowHue = 0
 Core.SilentAimTarget = nil
-Core.OriginalCameraType = nil
-Core.SilentAimActive = false
 
 Core.SkeletonParts = {
     {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
@@ -102,15 +114,6 @@ Core.SkeletonParts = {
 
 Core.SkeletonPartsR6 = {
     {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"}
-}
-
-Core.ExecutorSupport = {
-    HasHookMetamethod = pcall(function() return hookmetamethod end) and hookmetamethod ~= nil,
-    HasGetRawMetatable = pcall(function() return getrawmetatable end) and getrawmetatable ~= nil,
-    HasMouseMoveRel = pcall(function() return mousemoverel end) and mousemoverel ~= nil,
-    HasVirtualInput = pcall(function() return VirtualInputManager end) and VirtualInputManager ~= nil,
-    HasGetConnections = pcall(function() return getconnections end) and getconnections ~= nil,
-    HasFireSignal = pcall(function() return firesignal end) and firesignal ~= nil
 }
 
 function Core.CreateDrawing(t, props)
@@ -241,17 +244,6 @@ function Core.GetSilentAimTarget()
     return closest
 end
 
-function Core.GetPredictedPosition(player, part)
-    local targetPos = part.Position
-    if Core.SilentAimSettings.Prediction > 0 then
-        local root = player.Character:FindFirstChild("HumanoidRootPart")
-        if root then
-            targetPos = targetPos + (root.AssemblyLinearVelocity * (Core.SilentAimSettings.Prediction / 10))
-        end
-    end
-    return targetPos
-end
-
 function Core.GetTriggerTarget()
     local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     local ray = Camera:ViewportPointToRay(center.X, center.Y)
@@ -300,7 +292,7 @@ function Core.AimAt(player, TargetCircle)
     local mousePos = UserInputService:GetMouseLocation()
     local delta = (Vector2.new(screenPos.X, screenPos.Y) - mousePos) / math.max(Core.AimbotSettings.Smoothness, 1)
     
-    if Core.ExecutorSupport.HasMouseMoveRel then
+    if mousemoverel then
         mousemoverel(delta.X, delta.Y)
     end
     
@@ -308,32 +300,6 @@ function Core.AimAt(player, TargetCircle)
         TargetCircle.Position = Vector2.new(screenPos.X, screenPos.Y)
         TargetCircle.Visible = true
     end
-end
-
-function Core.SilentAimCameraMethod()
-    if not Core.SilentAimSettings.Enabled then return end
-    
-    local target = Core.GetSilentAimTarget()
-    if not target then 
-        Core.SilentAimTarget = nil
-        return 
-    end
-    
-    Core.SilentAimTarget = target
-end
-
-function Core.GetSilentAimPosition()
-    if not Core.SilentAimSettings.Enabled or not Core.SilentAimTarget then
-        return nil
-    end
-    
-    local target = Core.SilentAimTarget
-    if not target.Player or not Core.IsAlive(target.Player) or not target.Part then
-        Core.SilentAimTarget = nil
-        return nil
-    end
-    
-    return Core.GetPredictedPosition(target.Player, target.Part)
 end
 
 function Core.CreateESP(plr)
@@ -546,33 +512,59 @@ function Core.UpdateESP()
     end
 end
 
-function Core.ModifyWeaponValue(weapon, valueName, newValue, attributeName)
-    local value = weapon:FindFirstChild(valueName)
-    if value then
-        if value:IsA("NumberValue") then
-            if newValue ~= nil then
-                if not value:GetAttribute(attributeName) then
-                    value:SetAttribute(attributeName, value.Value)
-                end
-                value.Value = newValue
+function Core.GetCurrentGun()
+    if not Core.IsAlive(LocalPlayer) then return nil end
+    local char = LocalPlayer.Character
+    for _, v in pairs(char:GetChildren()) do
+        if v:IsA("Tool") and v:FindFirstChild("Ammo") then
+            return v
+        end
+    end
+    return nil
+end
+
+function Core.ModifyWeaponValues(weapon, modifications)
+    if not weapon then return end
+    for valueName, newValue in pairs(modifications) do
+        local value = weapon:FindFirstChild(valueName)
+        if value and value:IsA("NumberValue") then
+            if not value:GetAttribute("Original_" .. valueName) then
+                value:SetAttribute("Original_" .. valueName, value.Value)
+            end
+            value.Value = newValue
+        end
+    end
+end
+
+function Core.RestoreWeaponValues(weapon, valueNames)
+    if not weapon then return end
+    for _, valueName in ipairs(valueNames) do
+        local value = weapon:FindFirstChild(valueName)
+        if value and value:IsA("NumberValue") then
+            local orig = value:GetAttribute("Original_" .. valueName)
+            if orig then value.Value = orig end
+        end
+    end
+end
+
+function Core.ApplyToAllWeapons(modifications, restore)
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if WeaponsFolder then
+        for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+            if restore then
+                Core.RestoreWeaponValues(weapon, modifications)
             else
-                local orig = value:GetAttribute(attributeName)
-                if orig then value.Value = orig end
+                Core.ModifyWeaponValues(weapon, modifications)
             end
-        elseif value:IsA("Folder") or value:IsA("Configuration") then
-            for _, v in ipairs(value:GetDescendants()) do
-                if v:IsA("NumberValue") then
-                    if newValue ~= nil then
-                        if not v:GetAttribute(attributeName) then
-                            v:SetAttribute(attributeName, v.Value)
-                        end
-                        v.Value = newValue
-                    else
-                        local orig = v:GetAttribute(attributeName)
-                        if orig then v.Value = orig end
-                    end
-                end
-            end
+        end
+    end
+    
+    local currentGun = Core.GetCurrentGun()
+    if currentGun then
+        if restore then
+            Core.RestoreWeaponValues(currentGun, modifications)
+        else
+            Core.ModifyWeaponValues(currentGun, modifications)
         end
     end
 end
@@ -581,11 +573,15 @@ function Core.CBNoSpread(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.NoSpread = enabled
     
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
-    
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        Core.ModifyWeaponValue(weapon, "Spread", enabled and 0 or nil, "OrigSpread")
+    if enabled then
+        Core.ApplyToAllWeapons({
+            Spread = 0,
+            SpreadReduc = 0,
+            MinSpread = 0,
+            MaxSpread = 0
+        }, false)
+    else
+        Core.ApplyToAllWeapons({"Spread", "SpreadReduc", "MinSpread", "MaxSpread"}, true)
     end
 end
 
@@ -593,15 +589,17 @@ function Core.CBNoRecoil(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.NoRecoil = enabled
     
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
-    
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        Core.ModifyWeaponValue(weapon, "Recoil", enabled and 0 or nil, "OrigRecoil")
-        Core.ModifyWeaponValue(weapon, "RecoilUp", enabled and 0 or nil, "OrigRecoilUp")
-        Core.ModifyWeaponValue(weapon, "RecoilSide", enabled and 0 or nil, "OrigRecoilSide")
-        Core.ModifyWeaponValue(weapon, "CamRecoil", enabled and 0 or nil, "OrigCamRecoil")
-        Core.ModifyWeaponValue(weapon, "KickBack", enabled and 0 or nil, "OrigKickBack")
+    if enabled then
+        Core.ApplyToAllWeapons({
+            Recoil = 0,
+            RecoilReduc = 0,
+            MinRecoil = 0,
+            MaxRecoil = 0,
+            CamRecoil = 0,
+            KickBack = 0
+        }, false)
+    else
+        Core.ApplyToAllWeapons({"Recoil", "RecoilReduc", "MinRecoil", "MaxRecoil", "CamRecoil", "KickBack"}, true)
     end
 end
 
@@ -609,11 +607,10 @@ function Core.CBRapidFire(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.RapidFire = enabled
     
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
-    
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        Core.ModifyWeaponValue(weapon, "FireRate", enabled and 0.01 or nil, "OrigFireRate")
+    if enabled then
+        Core.ApplyToAllWeapons({FireRate = 0.01}, false)
+    else
+        Core.ApplyToAllWeapons({"FireRate"}, true)
     end
 end
 
@@ -621,14 +618,382 @@ function Core.CBInfAmmo(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.InfAmmo = enabled
     
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
-    
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        Core.ModifyWeaponValue(weapon, "Ammo", enabled and 999 or nil, "OrigAmmo")
-        Core.ModifyWeaponValue(weapon, "MaxAmmo", enabled and 999 or nil, "OrigMaxAmmo")
-        Core.ModifyWeaponValue(weapon, "StoredAmmo", enabled and 999 or nil, "OrigStoredAmmo")
+    if enabled then
+        Core.ApplyToAllWeapons({
+            Ammo = 999,
+            StoredAmmo = 999,
+            MaxAmmo = 999
+        }, false)
+        
+        if Core.CBLoops.InfAmmo then Core.CBLoops.InfAmmo:Disconnect() end
+        Core.CBLoops.InfAmmo = RunService.RenderStepped:Connect(function()
+            local gun = Core.GetCurrentGun()
+            if gun then
+                local ammo = gun:FindFirstChild("Ammo")
+                if ammo and ammo.Value < 999 then
+                    ammo.Value = 999
+                end
+            end
+        end)
+    else
+        if Core.CBLoops.InfAmmo then
+            Core.CBLoops.InfAmmo:Disconnect()
+            Core.CBLoops.InfAmmo = nil
+        end
+        Core.ApplyToAllWeapons({"Ammo", "StoredAmmo", "MaxAmmo"}, true)
     end
+end
+
+function Core.CBWallbang(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.Wallbang = enabled
+    
+    if enabled then
+        Core.ApplyToAllWeapons({
+            Penetration = 999,
+            Range = 9999
+        }, false)
+    else
+        Core.ApplyToAllWeapons({"Penetration", "Range"}, true)
+    end
+end
+
+function Core.CBKillAll(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.KillAll = enabled
+    
+    if enabled then
+        if Core.CBLoops.KillAll then Core.CBLoops.KillAll:Disconnect() end
+        Core.CBLoops.KillAll = RunService.RenderStepped:Connect(function()
+            pcall(function()
+                if not Core.IsAlive(LocalPlayer) then return end
+                local gun = LocalPlayer.Character:FindFirstChild("Gun")
+                
+                for _, v in pairs(Players:GetPlayers()) do
+                    if v ~= LocalPlayer and Core.IsAlive(v) then
+                        if Core.AimbotSettings.TeamCheck and v.Team == LocalPlayer.Team and v.Team ~= nil then continue end
+                        
+                        local args = {
+                            [1] = v.Character.Head,
+                            [2] = v.Character.Head.Position,
+                            [3] = "Banana",
+                            [4] = 100,
+                            [5] = gun,
+                            [8] = 100,
+                            [9] = false,
+                            [10] = false,
+                            [11] = Vector3.new(),
+                            [12] = 100,
+                            [13] = Vector3.new()
+                        }
+                        
+                        local hitPartEvent = ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("HitPart")
+                        if hitPartEvent then
+                            hitPartEvent:FireServer(unpack(args))
+                        end
+                    end
+                end
+            end)
+            task.wait(0.1)
+        end)
+    else
+        if Core.CBLoops.KillAll then
+            Core.CBLoops.KillAll:Disconnect()
+            Core.CBLoops.KillAll = nil
+        end
+    end
+end
+
+function Core.CBInfCash(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.InfCash = enabled
+    
+    if enabled then
+        pcall(function()
+            local cash = LocalPlayer:FindFirstChild("Cash")
+            if cash then
+                cash.Value = 16000
+                if Core.CBLoops.InfCash then Core.CBLoops.InfCash:Disconnect() end
+                Core.CBLoops.InfCash = cash:GetPropertyChangedSignal("Value"):Connect(function()
+                    cash.Value = 16000
+                end)
+            end
+        end)
+    else
+        if Core.CBLoops.InfCash then
+            Core.CBLoops.InfCash:Disconnect()
+            Core.CBLoops.InfCash = nil
+        end
+    end
+end
+
+function Core.CBInfHP(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.InfHP = enabled
+    
+    if enabled then
+        pcall(function()
+            local fallDamage = ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("FallDamage")
+            if fallDamage then
+                fallDamage:FireServer(0/0)
+            end
+            
+            if Core.IsAlive(LocalPlayer) then
+                if Core.CBLoops.InfHP then Core.CBLoops.InfHP:Disconnect() end
+                Core.CBLoops.InfHP = LocalPlayer.Character.Humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+                    LocalPlayer.Character.Humanoid.Health = 100
+                end)
+            end
+        end)
+    else
+        if Core.CBLoops.InfHP then
+            Core.CBLoops.InfHP:Disconnect()
+            Core.CBLoops.InfHP = nil
+        end
+    end
+end
+
+function Core.CBBHop(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.BHop = enabled
+    
+    if enabled then
+        if Core.CBLoops.BHop then Core.CBLoops.BHop:Disconnect() end
+        Core.CBLoops.BHop = RunService.RenderStepped:Connect(function()
+            if Core.IsAlive(LocalPlayer) then
+                local hum = LocalPlayer.Character.Humanoid
+                if hum.FloorMaterial ~= Enum.Material.Air then
+                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end
+        end)
+    else
+        if Core.CBLoops.BHop then
+            Core.CBLoops.BHop:Disconnect()
+            Core.CBLoops.BHop = nil
+        end
+    end
+end
+
+function Core.CBAntiAimbot(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.AntiAimbot = enabled
+    
+    if enabled then
+        if Core.CBLoops.AntiAimbot then Core.CBLoops.AntiAimbot:Disconnect() end
+        Core.CBLoops.AntiAimbot = RunService.RenderStepped:Connect(function()
+            if not Core.IsAlive(LocalPlayer) then return end
+            
+            local char = LocalPlayer.Character
+            local hum = char.Humanoid
+            local hrp = char.HumanoidRootPart
+            
+            if Core.CBSettings.RemoveHeadHitbox then
+                local headHB = char:FindFirstChild("HeadHB")
+                if headHB then headHB:Destroy() end
+                local fakeHead = char:FindFirstChild("FakeHead")
+                if fakeHead then fakeHead:Destroy() end
+                local head = char:FindFirstChild("Head")
+                if head and head.Transparency ~= 0 then
+                    head.Transparency = 0
+                end
+            end
+            
+            local yaw = Core.CBSettings.AntiAimbotYaw
+            if yaw ~= "Default" then
+                hum.AutoRotate = false
+                
+                if yaw == "Backward" then
+                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position - Camera.CFrame.LookVector)
+                elseif yaw == "Left" then
+                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position - Camera.CFrame.RightVector)
+                elseif yaw == "Right" then
+                    hrp.CFrame = CFrame.new(hrp.Position, hrp.Position + Camera.CFrame.RightVector)
+                elseif yaw == "Spin" then
+                    hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(Core.CBSettings.AntiAimbotSpeed), 0)
+                elseif yaw == "Random" then
+                    hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(math.random(-180, 180)), 0)
+                end
+            else
+                hum.AutoRotate = true
+            end
+        end)
+    else
+        if Core.CBLoops.AntiAimbot then
+            Core.CBLoops.AntiAimbot:Disconnect()
+            Core.CBLoops.AntiAimbot = nil
+        end
+        if Core.IsAlive(LocalPlayer) then
+            LocalPlayer.Character.Humanoid.AutoRotate = true
+        end
+    end
+end
+
+function Core.CBNoScope(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.NoScope = enabled
+    
+    pcall(function()
+        local gui = LocalPlayer.PlayerGui:FindFirstChild("GUI")
+        if not gui then return end
+        local crosshairs = gui:FindFirstChild("Crosshairs")
+        if not crosshairs then return end
+        local scope = crosshairs:FindFirstChild("Scope")
+        if not scope then return end
+        
+        if enabled then
+            scope.ImageTransparency = 1
+            if scope:FindFirstChild("Scope") then
+                scope.Scope.ImageTransparency = 1
+                scope.Scope.Size = UDim2.new(2,0,2,0)
+                scope.Scope.Position = UDim2.new(-0.5,0,-0.5,0)
+                if scope.Scope:FindFirstChild("Blur") then
+                    scope.Scope.Blur.ImageTransparency = 1
+                    if scope.Scope.Blur:FindFirstChild("Blur") then
+                        scope.Scope.Blur.Blur.ImageTransparency = 1
+                    end
+                end
+            end
+            for i = 1, 4 do
+                local frame = crosshairs:FindFirstChild("Frame" .. i)
+                if frame then frame.Transparency = 1 end
+            end
+        else
+            scope.ImageTransparency = 0
+            if scope:FindFirstChild("Scope") then
+                scope.Scope.ImageTransparency = 0
+                scope.Scope.Size = UDim2.new(1,0,1,0)
+                scope.Scope.Position = UDim2.new(0,0,0,0)
+                if scope.Scope:FindFirstChild("Blur") then
+                    scope.Scope.Blur.ImageTransparency = 0
+                    if scope.Scope.Blur:FindFirstChild("Blur") then
+                        scope.Scope.Blur.Blur.ImageTransparency = 0
+                    end
+                end
+            end
+            for i = 1, 4 do
+                local frame = crosshairs:FindFirstChild("Frame" .. i)
+                if frame then frame.Transparency = 0 end
+            end
+        end
+    end)
+end
+
+function Core.CBNoFlash(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.NoFlash = enabled
+    
+    pcall(function()
+        local blnd = LocalPlayer.PlayerGui:FindFirstChild("Blnd")
+        if blnd then
+            blnd.Enabled = not enabled
+        end
+    end)
+end
+
+function Core.CBNoSmoke(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.NoSmoke = enabled
+    
+    if enabled then
+        if Core.CBLoops.NoSmoke then Core.CBLoops.NoSmoke:Disconnect() end
+        Core.CBLoops.NoSmoke = RunService.RenderStepped:Connect(function()
+            pcall(function()
+                local smokes = Workspace:FindFirstChild("Ray_Ignore") and Workspace.Ray_Ignore:FindFirstChild("Smokes")
+                if smokes then
+                    for _, v in pairs(smokes:GetChildren()) do
+                        if v.Name == "Smoke" then
+                            v:Destroy()
+                        end
+                    end
+                end
+            end)
+        end)
+    else
+        if Core.CBLoops.NoSmoke then
+            Core.CBLoops.NoSmoke:Disconnect()
+            Core.CBLoops.NoSmoke = nil
+        end
+    end
+end
+
+function Core.CBNoBulletHoles(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.NoBulletHoles = enabled
+    
+    if enabled then
+        if Core.CBLoops.NoBulletHoles then Core.CBLoops.NoBulletHoles:Disconnect() end
+        Core.CBLoops.NoBulletHoles = RunService.RenderStepped:Connect(function()
+            pcall(function()
+                local debris = Workspace:FindFirstChild("Debris")
+                if debris then
+                    for _, v in pairs(debris:GetChildren()) do
+                        if v.Name == "Bullet" then
+                            v:Destroy()
+                        end
+                    end
+                end
+            end)
+        end)
+    else
+        if Core.CBLoops.NoBulletHoles then
+            Core.CBLoops.NoBulletHoles:Disconnect()
+            Core.CBLoops.NoBulletHoles = nil
+        end
+    end
+end
+
+function Core.CBNoBlood(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.NoBlood = enabled
+    
+    if enabled then
+        if Core.CBLoops.NoBlood then Core.CBLoops.NoBlood:Disconnect() end
+        Core.CBLoops.NoBlood = RunService.RenderStepped:Connect(function()
+            pcall(function()
+                local debris = Workspace:FindFirstChild("Debris")
+                if debris then
+                    for _, v in pairs(debris:GetChildren()) do
+                        if v.Name == "SurfaceGui" or v:IsA("SurfaceGui") then
+                            v:Destroy()
+                        end
+                    end
+                end
+            end)
+        end)
+    else
+        if Core.CBLoops.NoBlood then
+            Core.CBLoops.NoBlood:Disconnect()
+            Core.CBLoops.NoBlood = nil
+        end
+    end
+end
+
+function Core.SilentAimCameraMethod()
+    if not Core.SilentAimSettings.Enabled then return end
+    Core.SilentAimTarget = Core.GetSilentAimTarget()
+end
+
+function Core.GetSilentAimPosition()
+    if not Core.SilentAimSettings.Enabled or not Core.SilentAimTarget then
+        return nil
+    end
+    
+    local target = Core.SilentAimTarget
+    if not target.Player or not Core.IsAlive(target.Player) or not target.Part then
+        Core.SilentAimTarget = nil
+        return nil
+    end
+    
+    local targetPos = target.Part.Position
+    if Core.SilentAimSettings.Prediction > 0 then
+        local root = target.Player.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            targetPos = targetPos + (root.AssemblyLinearVelocity * (Core.SilentAimSettings.Prediction / 10))
+        end
+    end
+    
+    return targetPos
 end
 
 function Core.Rejoin()
@@ -678,144 +1043,46 @@ function Core.LoadNamelessAdmin()
 end
 
 function Core.SetupSilentAim()
-    if Core.GameName == "Counter Blox" then
-        local mouse = LocalPlayer:GetMouse()
-        local oldHit = mouse.Hit
-        
-        local mt = getrawmetatable(mouse)
-        if mt and setreadonly then
-            setreadonly(mt, false)
-            
-            local oldIndex = mt.__index
-            mt.__index = function(self, key)
-                if Core.SilentAimSettings.Enabled and (key == "Hit" or key == "Target") then
-                    local targetPos = Core.GetSilentAimPosition()
-                    if targetPos then
-                        if key == "Hit" then
-                            return CFrame.new(targetPos)
-                        elseif key == "Target" then
-                            local target = Core.SilentAimTarget
-                            if target and target.Part then
-                                return target.Part
-                            end
-                        end
-                    end
-                end
-                return oldIndex(self, key)
-            end
-            
-            setreadonly(mt, true)
-        end
-    end
-end
-
-function Core.SetupSilentAimRaw()
     if not getrawmetatable then return false end
     
     local mouse = LocalPlayer:GetMouse()
     local mt = getrawmetatable(mouse)
-    
     if not mt then return false end
     
     local oldIndex = mt.__index
-    local oldNewindex = mt.__newindex
     
-    if setreadonly then
-        setreadonly(mt, false)
-    end
+    if setreadonly then setreadonly(mt, false) end
     
-    mt.__index = newcclosure and newcclosure(function(self, key)
+    local newIndex = function(self, key)
         if Core.SilentAimSettings.Enabled then
             local targetPos = Core.GetSilentAimPosition()
             if targetPos then
                 if key == "Hit" then
                     return CFrame.new(targetPos)
                 elseif key == "Target" then
-                    local target = Core.SilentAimTarget
-                    if target and target.Part then
-                        return target.Part
+                    if Core.SilentAimTarget and Core.SilentAimTarget.Part then
+                        return Core.SilentAimTarget.Part
                     end
                 elseif key == "X" then
-                    local screen = Camera:WorldToViewportPoint(targetPos)
-                    return screen.X
+                    return Camera:WorldToViewportPoint(targetPos).X
                 elseif key == "Y" then
-                    local screen = Camera:WorldToViewportPoint(targetPos)
-                    return screen.Y
+                    return Camera:WorldToViewportPoint(targetPos).Y
                 elseif key == "UnitRay" then
                     local origin = Camera.CFrame.Position
-                    local direction = (targetPos - origin).Unit
-                    return Ray.new(origin, direction)
-                end
-            end
-        end
-        return oldIndex(self, key)
-    end) or function(self, key)
-        if Core.SilentAimSettings.Enabled then
-            local targetPos = Core.GetSilentAimPosition()
-            if targetPos then
-                if key == "Hit" then
-                    return CFrame.new(targetPos)
-                elseif key == "Target" then
-                    local target = Core.SilentAimTarget
-                    if target and target.Part then
-                        return target.Part
-                    end
-                elseif key == "X" then
-                    local screen = Camera:WorldToViewportPoint(targetPos)
-                    return screen.X
-                elseif key == "Y" then
-                    local screen = Camera:WorldToViewportPoint(targetPos)
-                    return screen.Y
-                elseif key == "UnitRay" then
-                    local origin = Camera.CFrame.Position
-                    local direction = (targetPos - origin).Unit
-                    return Ray.new(origin, direction)
+                    return Ray.new(origin, (targetPos - origin).Unit)
                 end
             end
         end
         return oldIndex(self, key)
     end
     
-    if setreadonly then
-        setreadonly(mt, true)
+    if newcclosure then
+        mt.__index = newcclosure(newIndex)
+    else
+        mt.__index = newIndex
     end
     
-    return true
-end
-
-function Core.SetupCameraHook()
-    local mt = getrawmetatable(Camera)
-    if not mt then return false end
-    
-    local oldIndex = mt.__index
-    
-    if setreadonly then
-        setreadonly(mt, false)
-    end
-    
-    mt.__index = newcclosure and newcclosure(function(self, key)
-        if Core.SilentAimSettings.Enabled and key == "CFrame" then
-            local targetPos = Core.GetSilentAimPosition()
-            if targetPos and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-                local currentCFrame = oldIndex(self, key)
-                return CFrame.new(currentCFrame.Position, targetPos)
-            end
-        end
-        return oldIndex(self, key)
-    end) or function(self, key)
-        if Core.SilentAimSettings.Enabled and key == "CFrame" then
-            local targetPos = Core.GetSilentAimPosition()
-            if targetPos and UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
-                local currentCFrame = oldIndex(self, key)
-                return CFrame.new(currentCFrame.Position, targetPos)
-            end
-        end
-        return oldIndex(self, key)
-    end
-    
-    if setreadonly then
-        setreadonly(mt, true)
-    end
+    if setreadonly then setreadonly(mt, true) end
     
     return true
 end
@@ -836,12 +1103,29 @@ function Core.Init()
         end)
     end
     
-    if Core.ExecutorSupport.HasGetRawMetatable then
-        Core.SetupSilentAimRaw()
+    if getrawmetatable then
+        Core.SetupSilentAim()
     end
     
     RunService.RenderStepped:Connect(function()
         Core.SilentAimCameraMethod()
+        
+        if Core.GameName == "Counter Blox" then
+            if Core.CBSettings.NoSpread or Core.CBSettings.NoRecoil or Core.CBSettings.RapidFire then
+                local gun = Core.GetCurrentGun()
+                if gun then
+                    if Core.CBSettings.NoSpread then
+                        Core.ModifyWeaponValues(gun, {Spread = 0, SpreadReduc = 0, MinSpread = 0, MaxSpread = 0})
+                    end
+                    if Core.CBSettings.NoRecoil then
+                        Core.ModifyWeaponValues(gun, {Recoil = 0, RecoilReduc = 0, MinRecoil = 0, MaxRecoil = 0, CamRecoil = 0, KickBack = 0})
+                    end
+                    if Core.CBSettings.RapidFire then
+                        Core.ModifyWeaponValues(gun, {FireRate = 0.01})
+                    end
+                end
+            end
+        end
     end)
 end
 
