@@ -15,7 +15,10 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
+
+local IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 Library.ForceCheckbox = false 
 Library.ShowToggleFrameInKeybinds = true
@@ -25,9 +28,9 @@ local Window = Library:CreateWindow({
     Footer = Core.GameName,
     Icon = 95816097006870,
     NotifySide = "Right",
-    ShowCustomCursor = true,
+    ShowCustomCursor = not IsMobile,
     Resizable = true,
-    Size = UDim2.fromOffset(600, 480)
+    Size = UDim2.fromOffset(IsMobile and 500 or 600, IsMobile and 400 or 480)
 })
 
 Window:SetSidebarWidth(50)
@@ -45,12 +48,185 @@ local FOVCircle = Core.CreateDrawing("Circle", {Thickness = 1, Filled = false, T
 local TargetCircle = Core.CreateDrawing("Circle", {Thickness = 2, Filled = false, Radius = 5, Visible = false, Color = Color3.new(1,0,0)})
 local SilentFOVCircle = Core.CreateDrawing("Circle", {Thickness = 1, Filled = false, Transparency = 1, Visible = false, Color = Color3.new(1,0,0)})
 
+-- MM2 Auto-Pickup & Notifications
+local MM2Features = {
+    AutoPickupGun = false,
+    AutoPickupKnife = false,
+    NotifyPickup = true,
+    TrackedDrops = {},
+    Connections = {}
+}
+
+local function SafeClick()
+    if IsMobile then
+        pcall(function()
+            VirtualInputManager:SendMouseButtonEvent(0, 0, 0, true, game, 1)
+            task.defer(function()
+                VirtualInputManager:SendMouseButtonEvent(0, 0, 0, false, game, 1)
+            end)
+        end)
+    else
+        pcall(function()
+            if mouse1click then mouse1click() end
+        end)
+    end
+end
+
+local function GetDrops()
+    local drops = {}
+    for _, obj in pairs(Workspace:GetChildren()) do
+        if obj:IsA("Tool") or (obj:IsA("Model") and obj:FindFirstChildOfClass("Tool")) then
+            local name = obj.Name:lower()
+            if name:find("gun") or name:find("revolver") then
+                table.insert(drops, {Object = obj, Type = "Gun"})
+            elseif name:find("knife") then
+                table.insert(drops, {Object = obj, Type = "Knife"})
+            end
+        end
+    end
+    
+    local droppedItems = Workspace:FindFirstChild("DroppedItems") or Workspace:FindFirstChild("Drops")
+    if droppedItems then
+        for _, obj in pairs(droppedItems:GetChildren()) do
+            local name = obj.Name:lower()
+            if name:find("gun") or name:find("revolver") then
+                table.insert(drops, {Object = obj, Type = "Gun"})
+            elseif name:find("knife") then
+                table.insert(drops, {Object = obj, Type = "Knife"})
+            end
+        end
+    end
+    
+    return drops
+end
+
+local function GetDropPosition(drop)
+    if drop:IsA("Tool") then
+        local handle = drop:FindFirstChild("Handle")
+        if handle then return handle.Position end
+    elseif drop:IsA("Model") then
+        local primary = drop.PrimaryPart or drop:FindFirstChildOfClass("BasePart")
+        if primary then return primary.Position end
+    elseif drop:IsA("BasePart") then
+        return drop.Position
+    end
+    return nil
+end
+
+local function TryPickupDrop(drop)
+    if not Core.IsAlive(LocalPlayer) then return false end
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    
+    local dropPos = GetDropPosition(drop)
+    if not dropPos then return false end
+    
+    local distance = (hrp.Position - dropPos).Magnitude
+    if distance > 15 then return false end
+    
+    pcall(function()
+        if drop:IsA("Tool") then
+            local clickDetector = drop:FindFirstChildOfClass("ClickDetector")
+            if clickDetector then
+                fireclickdetector(clickDetector)
+            else
+                firetouchinterest(hrp, drop.Handle or drop:FindFirstChildOfClass("BasePart"), 0)
+                task.defer(function()
+                    firetouchinterest(hrp, drop.Handle or drop:FindFirstChildOfClass("BasePart"), 1)
+                end)
+            end
+        elseif drop:IsA("Model") then
+            local clickDetector = drop:FindFirstChildOfClass("ClickDetector") or drop:FindFirstDescendantOfClass("ClickDetector")
+            if clickDetector then
+                fireclickdetector(clickDetector)
+            else
+                local part = drop:FindFirstChildOfClass("BasePart")
+                if part then
+                    firetouchinterest(hrp, part, 0)
+                    task.defer(function()
+                        firetouchinterest(hrp, part, 1)
+                    end)
+                end
+            end
+        end
+    end)
+    
+    return true
+end
+
+local function NotifyPickup(playerName, weaponType)
+    if not MM2Features.NotifyPickup then return end
+    local color = weaponType == "Gun" and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(255, 50, 50)
+    local icon = weaponType == "Gun" and "shield" or "sword"
+    Library:Notify(playerName .. " picked up " .. weaponType, 3)
+end
+
+local function MonitorDrops()
+    local lastDrops = {}
+    
+    for _, drop in pairs(GetDrops()) do
+        lastDrops[drop.Object] = drop.Type
+    end
+    
+    if MM2Features.Connections.DropMonitor then
+        MM2Features.Connections.DropMonitor:Disconnect()
+    end
+    
+    MM2Features.Connections.DropMonitor = RunService.Heartbeat:Connect(function()
+        if Core.GameName ~= "Murder Mystery 2" then return end
+        
+        local currentDrops = {}
+        for _, drop in pairs(GetDrops()) do
+            currentDrops[drop.Object] = drop.Type
+            
+            if MM2Features.AutoPickupGun and drop.Type == "Gun" then
+                TryPickupDrop(drop.Object)
+            elseif MM2Features.AutoPickupKnife and drop.Type == "Knife" then
+                TryPickupDrop(drop.Object)
+            end
+        end
+        
+        for obj, weaponType in pairs(lastDrops) do
+            if not currentDrops[obj] then
+                for _, plr in pairs(Players:GetPlayers()) do
+                    if plr ~= LocalPlayer and Core.IsAlive(plr) then
+                        local char = plr.Character
+                        local backpack = plr:FindFirstChild("Backpack")
+                        
+                        local hasWeapon = false
+                        if char then
+                            for _, tool in pairs(char:GetChildren()) do
+                                if tool:IsA("Tool") then
+                                    local name = tool.Name:lower()
+                                    if (weaponType == "Gun" and (name:find("gun") or name:find("revolver"))) or
+                                       (weaponType == "Knife" and name:find("knife")) then
+                                        hasWeapon = true
+                                        break
+                                    end
+                                end
+                            end
+                        end
+                        
+                        if hasWeapon then
+                            NotifyPickup(plr.Name, weaponType)
+                            break
+                        end
+                    end
+                end
+            end
+        end
+        
+        lastDrops = currentDrops
+    end)
+end
+
 local CombatTabBox = Tabs.Combat:AddLeftTabbox("Combat")
 local AimTab = CombatTabBox:AddTab("Aimbot")
 local SilentTab = CombatTabBox:AddTab("Silent")
 local TriggerTab = CombatTabBox:AddTab("Trigger")
 
-AimTab:AddToggle("Aim_On", {Text = "Enabled", Default = false, Callback = function(v) Core.AimbotSettings.Enabled = v end}):AddKeyPicker("Aim_Key", {Default = "MB2", Mode = "Hold", Text = "Aim Key"})
+AimTab:AddToggle("Aim_On", {Text = "Enabled", Default = false, Callback = function(v) Core.AimbotSettings.Enabled = v end}):AddKeyPicker("Aim_Key", {Default = IsMobile and "Q" or "MB2", Mode = "Hold", Text = "Aim Key"})
 AimTab:AddToggle("Aim_Sticky", {Text = "Sticky Aim", Default = false, Callback = function(v) Core.AimbotSettings.StickyAim = v end})
 AimTab:AddToggle("Aim_AutoShoot", {Text = "Auto Shoot", Default = false, Callback = function(v) Core.AimbotSettings.AutoShoot = v end})
 AimTab:AddToggle("Aim_AutoWall", {Text = "Auto Wall", Default = false, Callback = function(v) Core.AimbotSettings.AutoWall = v end})
@@ -68,12 +244,12 @@ SilentTab:AddDropdown("Silent_Part", {Values = {"Head", "HumanoidRootPart", "Upp
 SilentTab:AddSlider("Silent_FOV", {Text = "FOV", Default = 100, Min = 10, Max = 500, Rounding = 0, Callback = function(v) Core.SilentAimSettings.FOV = v end})
 SilentTab:AddSlider("Silent_Pred", {Text = "Prediction", Default = 0, Min = 0, Max = 20, Rounding = 1, Callback = function(v) Core.SilentAimSettings.Prediction = v end})
 
-TriggerTab:AddToggle("Trigger_On", {Text = "Enabled", Default = false, Callback = function(v) Core.TriggerSettings.Enabled = v end}):AddKeyPicker("Trigger_Key", {Default = "MB2", Mode = "Hold", Text = "Trigger Key"})
+TriggerTab:AddToggle("Trigger_On", {Text = "Enabled", Default = false, Callback = function(v) Core.TriggerSettings.Enabled = v end}):AddKeyPicker("Trigger_Key", {Default = IsMobile and "E" or "MB2", Mode = "Hold", Text = "Trigger Key"})
 TriggerTab:AddToggle("Trigger_Team", {Text = "Team Check", Default = true, Callback = function(v) Core.TriggerSettings.TeamCheck = v end})
 TriggerTab:AddSlider("Trigger_Delay", {Text = "Delay (ms)", Default = 0, Min = 0, Max = 500, Rounding = 0, Callback = function(v) Core.TriggerSettings.Delay = v end})
 
 local AimVis = Tabs.Combat:AddRightGroupbox("Visuals")
-AimVis:AddToggle("Aim_DrawFOV", {Text = "Draw FOV", Default = true}):AddColorPicker("Aim_FOVCol", {Default = Color3.new(1,1,1)})
+AimVis:AddToggle("Aim_DrawFOV", {Text = "Draw FOV", Default = not IsMobile}):AddColorPicker("Aim_FOVCol", {Default = Color3.new(1,1,1)})
 AimVis:AddToggle("Silent_DrawFOV", {Text = "Draw Silent FOV", Default = false}):AddColorPicker("Silent_FOVCol", {Default = Color3.new(1,0,0)})
 AimVis:AddLabel("Target Color"):AddColorPicker("Aim_TargetCol", {Default = Color3.new(1,0,0)})
 
@@ -136,7 +312,10 @@ MoveBox:AddToggle("Move_Noclip", {Text = "Noclip", Default = false}):AddKeyPicke
 
 local GameUniv = Tabs.Game:AddLeftGroupbox("Universal")
 GameUniv:AddButton({Text = "Rejoin Server", Func = function() Core.Rejoin() end})
-GameUniv:AddButton({Text = "Copy Join Script", Func = function() setclipboard(Core.GetJoinScript()) Library:Notify("Copied to clipboard") end})
+GameUniv:AddButton({Text = "Copy Join Script", Func = function() 
+    pcall(function() setclipboard(Core.GetJoinScript()) end)
+    Library:Notify("Copied to clipboard") 
+end})
 
 if Core.GameName == "Counter Blox" then
     local CBTabBox = Tabs.Game:AddLeftTabbox("Counter Blox")
@@ -188,6 +367,20 @@ if Core.GameName == "Murder Mystery 2" then
     MM2Box:AddLabel("Murderer"):AddColorPicker("MM2_Murd", {Default = Color3.fromRGB(255,0,0), Callback = function(v) Core.ESPSettings.MurdererColor = v end})
     MM2Box:AddLabel("Sheriff"):AddColorPicker("MM2_Sher", {Default = Color3.fromRGB(0,100,255), Callback = function(v) Core.ESPSettings.SheriffColor = v end})
     MM2Box:AddLabel("Innocent"):AddColorPicker("MM2_Inno", {Default = Color3.fromRGB(0,255,0), Callback = function(v) Core.ESPSettings.InnocentColor = v end})
+    
+    MM2Box:AddDivider()
+    
+    MM2Box:AddToggle("MM2_AutoGun", {Text = "Auto-Pickup Gun", Default = false, Callback = function(v) 
+        MM2Features.AutoPickupGun = v 
+    end})
+    MM2Box:AddToggle("MM2_AutoKnife", {Text = "Auto-Pickup Knife", Default = false, Callback = function(v) 
+        MM2Features.AutoPickupKnife = v 
+    end})
+    MM2Box:AddToggle("MM2_NotifyPickup", {Text = "Notify Weapon Pickup", Default = true, Callback = function(v) 
+        MM2Features.NotifyPickup = v 
+    end})
+    
+    MonitorDrops()
 end
 
 local ScriptsBox = Tabs.Scripts:AddLeftGroupbox("Admin Scripts")
@@ -198,48 +391,99 @@ local ScriptsUtil = Tabs.Scripts:AddRightGroupbox("Utilities")
 ScriptsUtil:AddButton({Text = "Dex Explorer", Func = function() Library:Notify("Loading...") Core.LoadScript("Dex Explorer") end})
 ScriptsUtil:AddButton({Text = "Remote Spy", Func = function() Library:Notify("Loading...") Core.LoadScript("Remote Spy") end})
 
+-- Main Render Loop (RenderStepped for visual updates)
 RunService.RenderStepped:Connect(function()
-    pcall(function() FOVCircle.Visible = Toggles.Aim_DrawFOV.Value and Core.AimbotSettings.Enabled end)
+    pcall(function() FOVCircle.Visible = Toggles.Aim_DrawFOV and Toggles.Aim_DrawFOV.Value and Core.AimbotSettings.Enabled end)
     pcall(function() FOVCircle.Radius = Core.AimbotSettings.FOV end)
-    pcall(function() FOVCircle.Color = Options.Aim_FOVCol.Value end)
+    pcall(function() FOVCircle.Color = Options.Aim_FOVCol and Options.Aim_FOVCol.Value or Color3.new(1,1,1) end)
     pcall(function() FOVCircle.Position = UserInputService:GetMouseLocation() end)
     
-    pcall(function() SilentFOVCircle.Visible = Toggles.Silent_DrawFOV.Value and Core.SilentAimSettings.Enabled end)
+    pcall(function() SilentFOVCircle.Visible = Toggles.Silent_DrawFOV and Toggles.Silent_DrawFOV.Value and Core.SilentAimSettings.Enabled end)
     pcall(function() SilentFOVCircle.Radius = Core.SilentAimSettings.FOV end)
     pcall(function() SilentFOVCircle.Position = Vector2.new(Workspace.CurrentCamera.ViewportSize.X / 2, Workspace.CurrentCamera.ViewportSize.Y / 2) end)
-    pcall(function() SilentFOVCircle.Color = Options.Silent_FOVCol.Value end)
+    pcall(function() SilentFOVCircle.Color = Options.Silent_FOVCol and Options.Silent_FOVCol.Value or Color3.new(1,0,0) end)
     
-    if Core.AimbotSettings.Enabled and Options.Aim_Key:GetState() then
+    pcall(function() TargetCircle.Color = Options.Aim_TargetCol and Options.Aim_TargetCol.Value or Color3.new(1,0,0) end)
+    
+    Core.UpdateESP()
+end)
+
+-- Heartbeat for gameplay logic (more consistent timing)
+RunService.Heartbeat:Connect(function()
+    -- Aimbot logic
+    if Core.AimbotSettings.Enabled and Options.Aim_Key and Options.Aim_Key:GetState() then
         if Core.AimbotSettings.StickyAim and Core.LockedTarget and Core.IsAlive(Core.LockedTarget) then
             Core.AimAt(Core.LockedTarget, TargetCircle)
         else
             local target = Core.GetClosestPlayer()
-            if target then Core.LockedTarget = target Core.AimAt(target, TargetCircle)
-            else pcall(function() TargetCircle.Visible = false end) end
+            if target then 
+                Core.LockedTarget = target 
+                Core.AimAt(target, TargetCircle)
+            else 
+                pcall(function() TargetCircle.Visible = false end) 
+            end
         end
-    else Core.LockedTarget = nil pcall(function() TargetCircle.Visible = false end) end
-    
-    if Core.TriggerSettings.Enabled and Options.Trigger_Key:GetState() then
-        local target = Core.GetTriggerTarget()
-        if target then if Core.TriggerSettings.Delay > 0 then task.wait(Core.TriggerSettings.Delay / 1000) end if mouse1click then mouse1click() end end
+    else 
+        Core.LockedTarget = nil 
+        pcall(function() TargetCircle.Visible = false end) 
     end
     
-    pcall(function() TargetCircle.Color = Options.Aim_TargetCol.Value end)
+    -- Triggerbot logic
+    if Core.TriggerSettings.Enabled and Options.Trigger_Key and Options.Trigger_Key:GetState() then
+        local target = Core.GetTriggerTarget()
+        if target then 
+            if Core.TriggerSettings.Delay > 0 then 
+                task.delay(Core.TriggerSettings.Delay / 1000, SafeClick)
+            else
+                SafeClick()
+            end
+        end
+    end
     
-    Core.UpdateESP()
-    
+    -- Movement features
     if Core.IsAlive(LocalPlayer) then
-        if Toggles.Move_Speed.Value then LocalPlayer.Character.Humanoid.WalkSpeed = Options.Move_SpeedVal.Value end
-        if Toggles.Move_Noclip.Value then for _, v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end
+        if Toggles.Move_Speed and Toggles.Move_Speed.Value then 
+            pcall(function()
+                LocalPlayer.Character.Humanoid.WalkSpeed = Options.Move_SpeedVal.Value 
+            end)
+        end
+        if Toggles.Move_Noclip and Toggles.Move_Noclip.Value then 
+            pcall(function()
+                for _, v in pairs(LocalPlayer.Character:GetDescendants()) do 
+                    if v:IsA("BasePart") then 
+                        v.CanCollide = false 
+                    end 
+                end 
+            end)
+        end
     end
 end)
 
+-- Infinite Jump
 UserInputService.JumpRequest:Connect(function()
-    if Toggles.Move_Jump.Value and Core.IsAlive(LocalPlayer) then
-        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        LocalPlayer.Character.Humanoid.JumpPower = Options.Move_JumpVal.Value
+    if Toggles.Move_Jump and Toggles.Move_Jump.Value and Core.IsAlive(LocalPlayer) then
+        pcall(function()
+            LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            LocalPlayer.Character.Humanoid.JumpPower = Options.Move_JumpVal.Value
+        end)
     end
 end)
+
+-- Mobile Touch Support for Aimbot
+if IsMobile then
+    local mobileAimEnabled = false
+    
+    UserInputService.TouchStarted:Connect(function(touch, gameProcessed)
+        if gameProcessed then return end
+        if Core.AimbotSettings.Enabled then
+            mobileAimEnabled = true
+        end
+    end)
+    
+    UserInputService.TouchEnded:Connect(function()
+        mobileAimEnabled = false
+    end)
+end
 
 ThemeManager:SetLibrary(Library)
 SaveManager:SetLibrary(Library)
@@ -252,4 +496,5 @@ ThemeManager:ApplyToTab(Tabs.Settings)
 Library.Theme.Accent = Color3.fromRGB(212,133,240)
 Library:UpdateColorsUsingTheme()
 
-Library:Notify("killfeed.cc | " .. Core.GameName, 5)
+local platform = IsMobile and "Mobile" or "PC"
+Library:Notify("killfeed.cc | " .. Core.GameName .. " | " .. platform, 5)
