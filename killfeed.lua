@@ -52,6 +52,8 @@ local TriggerTab = CombatTabBox:AddTab("Trigger")
 
 AimTab:AddToggle("Aim_On", {Text = "Enabled", Default = false, Callback = function(v) Core.AimbotSettings.Enabled = v end}):AddKeyPicker("Aim_Key", {Default = "MB2", Mode = "Hold", Text = "Aim Key"})
 AimTab:AddToggle("Aim_Sticky", {Text = "Sticky Aim", Default = false, Callback = function(v) Core.AimbotSettings.StickyAim = v end})
+AimTab:AddToggle("Aim_AutoShoot", {Text = "Auto Shoot", Default = false, Callback = function(v) Core.AimbotSettings.AutoShoot = v end})
+AimTab:AddToggle("Aim_AutoWall", {Text = "Auto Wall", Default = false, Callback = function(v) Core.AimbotSettings.AutoWall = v end})
 AimTab:AddToggle("Aim_Vis", {Text = "Visibility Check", Default = true, Callback = function(v) Core.AimbotSettings.VisibleCheck = v end})
 AimTab:AddToggle("Aim_Team", {Text = "Team Check", Default = true, Callback = function(v) Core.AimbotSettings.TeamCheck = v end})
 AimTab:AddDropdown("Aim_Part", {Values = {"Head", "HumanoidRootPart", "UpperTorso", "LowerTorso"}, Default = 1, Text = "Aim Part", Callback = function(v) Core.AimbotSettings.AimPart = v end})
@@ -141,6 +143,7 @@ if Core.GameName == "Counter Blox" then
     local CBWeapon = CBTabBox:AddTab("Weapon")
     local CBExploit = CBTabBox:AddTab("Exploits")
     local CBAntiAim = CBTabBox:AddTab("Anti-Aim")
+    local CBCamera = CBTabBox:AddTab("Camera")
     
     CBWeapon:AddToggle("CB_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.CBNoSpread(v) end})
     CBWeapon:AddToggle("CB_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.CBNoRecoil(v) end})
@@ -149,40 +152,34 @@ if Core.GameName == "Counter Blox" then
     
     CBExploit:AddToggle("CB_KillAll", {Text = "Kill All", Default = false, Callback = function(v) Core.CBKillAll(v) end})
     CBExploit:AddToggle("CB_InfCash", {Text = "Infinite Cash", Default = false, Callback = function(v) Core.CBInfCash(v) end})
-    CBExploit:AddToggle("CB_BHop", {Text = "Bunny Hop", Default = false, Callback = function(v) Core.CBBHop(v) end})
+    CBExploit:AddToggle("CB_BHop", {Text = "Bunny Hop (Hold Space)", Default = false, Callback = function(v) Core.CBBHop(v) end})
     
     CBAntiAim:AddToggle("CB_AntiAim", {Text = "Enabled", Default = false, Callback = function(v) Core.CBAntiAimbot(v) end})
     CBAntiAim:AddDropdown("CB_AAYaw", {Values = {"Default", "Backward", "Left", "Right", "Spin", "Random"}, Default = 1, Text = "Yaw", Callback = function(v) Core.CBSettings.AntiAimbotYaw = v end})
     CBAntiAim:AddSlider("CB_AASpeed", {Text = "Spin Speed", Default = 50, Min = 1, Max = 100, Rounding = 0, Callback = function(v) Core.CBSettings.AntiAimbotSpeed = v end})
     CBAntiAim:AddToggle("CB_RemoveHead", {Text = "Remove Head Hitbox", Default = false, Callback = function(v) Core.CBSettings.RemoveHeadHitbox = v end})
     
-    local CBEffects = Tabs.Game:AddRightGroupbox("Effects")
-    CBEffects:AddToggle("CB_NoScope", {Text = "No Scope", Default = false, Callback = function(v) Core.CBNoScope(v) end})
-    CBEffects:AddToggle("CB_NoFlash", {Text = "No Flash", Default = false, Callback = function(v) Core.CBNoFlash(v) end})
-    CBEffects:AddToggle("CB_NoSmoke", {Text = "No Smoke", Default = false, Callback = function(v) Core.CBNoSmoke(v) end})
-end
-
-if Core.GameName == "Brookhaven" then
-    local BHTabBox = Tabs.Game:AddLeftTabbox("Trolling")
-    local BHSpam = BHTabBox:AddTab("Spam")
-    local BHDestroy = BHTabBox:AddTab("Destroy")
-    local BHFun = BHTabBox:AddTab("Fun")
+    CBCamera:AddToggle("CB_ThirdPerson", {Text = "Third Person", Default = false, Callback = function(v) Core.CBThirdPerson(v) end})
+    CBCamera:AddSlider("CB_TPDistance", {Text = "Distance", Default = 10, Min = 5, Max = 30, Rounding = 0, Callback = function(v) Core.CBSetThirdPersonDistance(v) end})
+    CBCamera:AddToggle("CB_NoScope", {Text = "No Scope Overlay", Default = false, Callback = function(v) Core.CBNoScope(v) end})
     
-    BHSpam:AddToggle("BH_SpamChat", {Text = "Spam Chat", Default = false, Callback = function(v) Core.BrookhavenSpamChat(v) end})
-    BHSpam:AddInput("BH_SpamMsg", {Default = "killfeed.cc on top", Text = "Message", Callback = function(v) Core.BrookhavenSettings.SpamMessage = v end})
-    BHSpam:AddSlider("BH_SpamDelay", {Text = "Delay", Default = 1, Min = 0.1, Max = 5, Rounding = 1, Callback = function(v) Core.BrookhavenSettings.SpamDelay = v end})
-    BHSpam:AddButton({Text = "Sound Spam (Annoying)", Func = function() Core.BrookhavenSoundSpam() Library:Notify("Playing loud sound...") end})
-    BHSpam:AddToggle("BH_SpamEmotes", {Text = "Spam Emotes", Default = false, Callback = function(v) Core.BrookhavenSpamEmotes(v) end})
-    BHSpam:AddToggle("BH_SpamVehicles", {Text = "Spam Vehicles", Default = false, Callback = function(v) Core.BrookhavenSpamVehicles(v) end})
-    
-    BHDestroy:AddButton({Text = "Remove All Houses", Func = function() Core.BrookhavenRemoveHouses() Library:Notify("Houses Removed") end})
-    BHDestroy:AddButton({Text = "Flood Server", Func = function() Core.BrookhavenFloodServer() Library:Notify("Server Flooded") end})
-    BHDestroy:AddButton({Text = "Explode Everyone", Func = function() Core.BrookhavenExplodeAll() Library:Notify("Exploded Everyone") end})
-    BHDestroy:AddButton({Text = "Kick All", Func = function() Core.BrookhavenKickAll() Library:Notify("Attempting to kick everyone...") end})
-    
-    BHFun:AddToggle("BH_Fling", {Text = "Fling Aura", Default = false, Callback = function(v) Core.BrookhavenFling(v) end})
-    BHFun:AddButton({Text = "TP All to Me", Func = function() Core.BrookhavenTPAll() Library:Notify("Teleported Players") end})
-    BHFun:AddToggle("BH_Freeze", {Text = "Freeze Everyone", Default = false, Callback = function(v) Core.BrookhavenFreezePlayers(v) end})
+    local CBEffects = Tabs.Game:AddRightGroupbox("Remove Effects")
+    CBEffects:AddDropdown("CB_RemoveEffects", {
+        Values = {"Flash", "Smoke", "Blood", "Tracers", "MuzzleFlash"},
+        Default = {},
+        Multi = true,
+        Text = "Effects to Remove",
+        Callback = function(v)
+            local effects = {
+                Flash = v["Flash"] or false,
+                Smoke = v["Smoke"] or false,
+                Blood = v["Blood"] or false,
+                Tracers = v["Tracers"] or false,
+                MuzzleFlash = v["MuzzleFlash"] or false
+            }
+            Core.CBRemoveEffects(effects)
+        end
+    })
 end
 
 if Core.GameName == "Murder Mystery 2" then
@@ -191,7 +188,6 @@ if Core.GameName == "Murder Mystery 2" then
     MM2Box:AddLabel("Murderer"):AddColorPicker("MM2_Murd", {Default = Color3.fromRGB(255,0,0), Callback = function(v) Core.ESPSettings.MurdererColor = v end})
     MM2Box:AddLabel("Sheriff"):AddColorPicker("MM2_Sher", {Default = Color3.fromRGB(0,100,255), Callback = function(v) Core.ESPSettings.SheriffColor = v end})
     MM2Box:AddLabel("Innocent"):AddColorPicker("MM2_Inno", {Default = Color3.fromRGB(0,255,0), Callback = function(v) Core.ESPSettings.InnocentColor = v end})
-    MM2Box:AddButton({Text = "Coin Farm", Func = function() Core.MM2CoinFarm() end})
 end
 
 local ScriptsBox = Tabs.Scripts:AddLeftGroupbox("Admin Scripts")
