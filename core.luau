@@ -14,6 +14,9 @@ local StarterGui = game:GetService("StarterGui")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
+-- Mobile detection
+Core.IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
 Core.SupportedGames = {
     [301549746] = "Counter Blox",
     [142823291] = "Murder Mystery 2",
@@ -118,7 +121,11 @@ Core.CBSettings = {
 }
 
 Core.MM2Settings = {
-    ShowRole = true
+    ShowRole = true,
+    AutoPickupGun = false,
+    AutoPickupKnife = false,
+    NotifyOnPickup = true,
+    PickupMethod = "Teleport" -- "Teleport" or "CFrame"
 }
 
 Core.Loops = {}
@@ -126,12 +133,14 @@ Core.OriginalValues = {}
 Core.ESPObjects = {}
 Core.ChamsObjects = {}
 Core.MM2Roles = {}
+Core.MM2TrackedDrops = {}
 Core.LockedTarget = nil
 Core.RainbowHue = 0
 Core.SilentAimTarget = nil
 Core.OriginalSky = nil
 Core.BHopHolding = false
 Core.AutoShootConnection = nil
+Core.NotifyCallback = nil
 
 Core.SkeletonParts = {
     {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
@@ -144,6 +153,55 @@ Core.SkeletonParts = {
 Core.SkeletonPartsR6 = {
     {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"}
 }
+
+-- Safe mouse position getter (mobile compatible)
+function Core.GetMousePosition()
+    if Core.IsMobile then
+        return Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    end
+    local success, pos = pcall(function()
+        return UserInputService:GetMouseLocation()
+    end)
+    if success then
+        return pos
+    end
+    return Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+end
+
+-- Safe mouse click (mobile compatible)
+function Core.SafeClick()
+    if Core.IsMobile then return end
+    pcall(function()
+        if mouse1click then
+            mouse1click()
+        end
+    end)
+end
+
+-- Safe mouse move (mobile compatible)
+function Core.SafeMouseMove(deltaX, deltaY)
+    if Core.IsMobile then return end
+    pcall(function()
+        if mousemoverel then
+            mousemoverel(deltaX, deltaY)
+        end
+    end)
+end
+
+-- Safe fire proximity prompt (mobile compatible)
+function Core.SafeFireProximityPrompt(prompt)
+    pcall(function()
+        if fireproximityprompt then
+            fireproximityprompt(prompt)
+        elseif prompt and prompt.Enabled then
+            -- Fallback method
+            prompt:InputHoldBegin()
+            task.delay(prompt.HoldDuration or 0.5, function()
+                pcall(function() prompt:InputHoldEnd() end)
+            end)
+        end
+    end)
+end
 
 function Core.CreateDrawing(t, props)
     local success, d = pcall(function() return Drawing.new(t) end)
@@ -236,7 +294,7 @@ end
 
 function Core.GetClosestPlayer()
     local closest, shortestDist = nil, Core.AimbotSettings.FOV
-    local mousePos = UserInputService:GetMouseLocation()
+    local mousePos = Core.GetMousePosition()
     for _, player in pairs(Players:GetPlayers()) do
         if player == LocalPlayer or not Core.IsAlive(player) then continue end
         if Core.AimbotSettings.TeamCheck and player.Team == LocalPlayer.Team and player.Team ~= nil then continue end
@@ -297,6 +355,7 @@ end
 function Core.AutoShoot()
     if not Core.AimbotSettings.AutoShoot then return end
     if not Core.IsAlive(LocalPlayer) then return end
+    if Core.IsMobile then return end
     local gun = Core.GetCurrentGun()
     if not gun then return end
     local target = Core.GetClosestPlayer()
@@ -306,12 +365,10 @@ function Core.AutoShoot()
         if aimPart then
             local screenPos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
             if onScreen then
-                local mousePos = UserInputService:GetMouseLocation()
+                local mousePos = Core.GetMousePosition()
                 local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
                 if dist < Core.AimbotSettings.FOV then
-                    pcall(function()
-                        mouse1click()
-                    end)
+                    Core.SafeClick()
                 end
             end
         end
@@ -320,6 +377,7 @@ end
 
 function Core.AimAt(player, TargetCircle)
     if not player or not Core.IsAlive(player) then Core.LockedTarget = nil return end
+    if Core.IsMobile then return end
     local char = player.Character if not char then return end
     local aimPart = char:FindFirstChild(Core.AimbotSettings.AimPart) or char:FindFirstChild("Head")
     if not aimPart then return end
@@ -329,9 +387,9 @@ function Core.AimAt(player, TargetCircle)
         if root then targetPos = targetPos + (root.AssemblyLinearVelocity * (Core.AimbotSettings.Prediction / 10)) end
     end
     local screenPos = Camera:WorldToViewportPoint(targetPos)
-    local mousePos = UserInputService:GetMouseLocation()
+    local mousePos = Core.GetMousePosition()
     local delta = (Vector2.new(screenPos.X, screenPos.Y) - mousePos) / math.max(Core.AimbotSettings.Smoothness, 1)
-    if mousemoverel then mousemoverel(delta.X, delta.Y) end
+    Core.SafeMouseMove(delta.X, delta.Y)
     if TargetCircle then pcall(function() TargetCircle.Position = Vector2.new(screenPos.X, screenPos.Y) TargetCircle.Visible = true end) end
     if Core.AimbotSettings.AutoShoot then
         Core.AutoShoot()
@@ -400,6 +458,225 @@ function Core.SetFullbright(enabled) if enabled then Lighting.Brightness = 2 Lig
 function Core.SetNoFog(enabled) Lighting.FogEnd = enabled and 100000 or 1000 end
 function Core.GetCurrentGun() if not Core.IsAlive(LocalPlayer) then return nil end for _, v in pairs(LocalPlayer.Character:GetChildren()) do if v:IsA("Tool") then return v end end return nil end
 
+-- MM2 Weapon Drop Functions
+function Core.MM2GetClosestDrop(dropType)
+    if Core.GameName ~= "Murder Mystery 2" then return nil, math.huge end
+    if not Core.IsAlive(LocalPlayer) then return nil, math.huge end
+    
+    local char = LocalPlayer.Character
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil, math.huge end
+    
+    local closest, closestDist = nil, math.huge
+    
+    for _, v in pairs(Workspace:GetChildren()) do
+        local isValidDrop = false
+        if dropType == "Gun" and v.Name == "GunDrop" then
+            isValidDrop = true
+        elseif dropType == "Knife" and v.Name == "KnifeDrop" then
+            isValidDrop = true
+        elseif dropType == "Any" and (v.Name == "GunDrop" or v.Name == "KnifeDrop") then
+            isValidDrop = true
+        end
+        
+        if isValidDrop then
+            local handle = v:FindFirstChild("Handle") or v:FindFirstChildOfClass("BasePart")
+            if handle then
+                local dist = (handle.Position - hrp.Position).Magnitude
+                if dist < closestDist then
+                    closestDist = dist
+                    closest = v
+                end
+            end
+        end
+    end
+    
+    return closest, closestDist
+end
+
+function Core.MM2PickupDrop(drop)
+    if not drop then return false end
+    if not Core.IsAlive(LocalPlayer) then return false end
+    
+    local char = LocalPlayer.Character
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    
+    local handle = drop:FindFirstChild("Handle") or drop:FindFirstChildOfClass("BasePart")
+    if not handle then return false end
+    
+    -- Store original position
+    local originalCFrame = hrp.CFrame
+    
+    -- Teleport to pickup
+    pcall(function()
+        hrp.CFrame = handle.CFrame * CFrame.new(0, 3, 0)
+    end)
+    
+    -- Try proximity prompt if exists
+    local prompt = drop:FindFirstChildOfClass("ProximityPrompt")
+    if prompt then
+        Core.SafeFireProximityPrompt(prompt)
+    end
+    
+    -- Also try click detector
+    local clickDetector = drop:FindFirstChildOfClass("ClickDetector")
+    if clickDetector then
+        pcall(function()
+            fireclickdetector(clickDetector)
+        end)
+    end
+    
+    return true
+end
+
+function Core.MM2AutoPickup(enabled, dropType)
+    if Core.GameName ~= "Murder Mystery 2" then return end
+    
+    if dropType == "Gun" then
+        Core.MM2Settings.AutoPickupGun = enabled
+    elseif dropType == "Knife" then
+        Core.MM2Settings.AutoPickupKnife = enabled
+    end
+    
+    -- Disconnect existing if any
+    if Core.Loops.MM2AutoPickup then
+        Core.Loops.MM2AutoPickup:Disconnect()
+        Core.Loops.MM2AutoPickup = nil
+    end
+    
+    if Core.MM2Settings.AutoPickupGun or Core.MM2Settings.AutoPickupKnife then
+        local lastPickupTime = 0
+        Core.Loops.MM2AutoPickup = RunService.Heartbeat:Connect(function()
+            -- Rate limit pickups
+            if tick() - lastPickupTime < 0.5 then return end
+            if not Core.IsAlive(LocalPlayer) then return end
+            
+            local myRole = Core.GetMM2Role(LocalPlayer)
+            
+            -- Only pickup gun if we're not murderer, and we don't already have one
+            if Core.MM2Settings.AutoPickupGun and myRole ~= "Murderer" then
+                local hasGun = false
+                for _, tool in pairs(LocalPlayer.Character:GetChildren()) do
+                    if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name:lower():find("revolver")) then
+                        hasGun = true
+                        break
+                    end
+                end
+                for _, tool in pairs(LocalPlayer.Backpack:GetChildren()) do
+                    if tool:IsA("Tool") and (tool.Name:lower():find("gun") or tool.Name:lower():find("revolver")) then
+                        hasGun = true
+                        break
+                    end
+                end
+                
+                if not hasGun then
+                    local gunDrop, dist = Core.MM2GetClosestDrop("Gun")
+                    if gunDrop and dist < 500 then
+                        Core.MM2PickupDrop(gunDrop)
+                        lastPickupTime = tick()
+                        return
+                    end
+                end
+            end
+            
+            -- Only pickup knife if enabled (usually for murderer)
+            if Core.MM2Settings.AutoPickupKnife then
+                local knifeDrop, dist = Core.MM2GetClosestDrop("Knife")
+                if knifeDrop and dist < 500 then
+                    Core.MM2PickupDrop(knifeDrop)
+                    lastPickupTime = tick()
+                end
+            end
+        end)
+    end
+end
+
+function Core.MM2SetupPickupNotifications()
+    if Core.GameName ~= "Murder Mystery 2" then return end
+    
+    -- Disconnect existing connections
+    if Core.Loops.MM2DropAdded then
+        Core.Loops.MM2DropAdded:Disconnect()
+        Core.Loops.MM2DropAdded = nil
+    end
+    if Core.Loops.MM2DropRemoved then
+        Core.Loops.MM2DropRemoved:Disconnect()
+        Core.Loops.MM2DropRemoved = nil
+    end
+    
+    -- Clear tracked drops
+    Core.MM2TrackedDrops = {}
+    
+    -- Track existing drops
+    for _, v in pairs(Workspace:GetChildren()) do
+        if v.Name == "GunDrop" or v.Name == "KnifeDrop" then
+            Core.MM2TrackedDrops[v] = {
+                Name = v.Name,
+                Position = v:FindFirstChild("Handle") and v.Handle.Position or v:GetPivot().Position,
+                Time = tick()
+            }
+        end
+    end
+    
+    -- Watch for new drops
+    Core.Loops.MM2DropAdded = Workspace.ChildAdded:Connect(function(child)
+        task.defer(function()
+            if child.Name == "GunDrop" or child.Name == "KnifeDrop" then
+                local handle = child:WaitForChild("Handle", 1) or child:FindFirstChildOfClass("BasePart")
+                Core.MM2TrackedDrops[child] = {
+                    Name = child.Name,
+                    Position = handle and handle.Position or Vector3.new(0, 0, 0),
+                    Time = tick()
+                }
+                
+                -- Notify about drop spawning
+                if Core.MM2Settings.NotifyOnPickup and Core.NotifyCallback then
+                    local weaponType = child.Name == "GunDrop" and "Gun" or "Knife"
+                    Core.NotifyCallback("A " .. weaponType .. " has been dropped!", "info")
+                end
+            end
+        end)
+    end)
+    
+    -- Watch for drops being picked up
+    Core.Loops.MM2DropRemoved = Workspace.ChildRemoved:Connect(function(child)
+        if Core.MM2TrackedDrops[child] then
+            local dropData = Core.MM2TrackedDrops[child]
+            Core.MM2TrackedDrops[child] = nil
+            
+            if not Core.MM2Settings.NotifyOnPickup then return end
+            
+            -- Find who picked it up (closest player to where drop was)
+            local closestPlayer, closestDist = nil, 25 -- 25 stud radius
+            local dropPos = dropData.Position
+            
+            for _, plr in pairs(Players:GetPlayers()) do
+                if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    local dist = (plr.Character.HumanoidRootPart.Position - dropPos).Magnitude
+                    if dist < closestDist then
+                        closestDist = dist
+                        closestPlayer = plr
+                    end
+                end
+            end
+            
+            if closestPlayer and Core.NotifyCallback then
+                local weaponType = dropData.Name == "GunDrop" and "Gun" or "Knife"
+                local role = ""
+                
+                -- Update role after pickup
+                Core.MM2Roles[closestPlayer] = nil -- Clear cached role
+                task.defer(function()
+                    role = Core.GetMM2Role(closestPlayer)
+                    local roleColor = role == "Murderer" and "🔴" or (role == "Sheriff" and "🔵" or "🟢")
+                    Core.NotifyCallback(roleColor .. " " .. closestPlayer.Name .. " picked up the " .. weaponType .. "!", "warning")
+                end)
+            end
+        end
+    end)
+end
+
 function Core.CBNoSpread(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.NoSpread = enabled
@@ -453,7 +730,7 @@ function Core.CBInfAmmo(enabled)
     Core.CBSettings.InfAmmo = enabled
     if enabled then
         if Core.Loops.CBInfAmmo then Core.Loops.CBInfAmmo:Disconnect() end
-        Core.Loops.CBInfAmmo = RunService.RenderStepped:Connect(function()
+        Core.Loops.CBInfAmmo = RunService.Heartbeat:Connect(function()
             local gun = Core.GetCurrentGun()
             if gun then
                 local ammo = gun:FindFirstChild("Ammo")
@@ -472,7 +749,9 @@ function Core.CBKillAll(enabled)
     Core.CBSettings.KillAll = enabled
     if enabled then
         if Core.Loops.CBKillAll then Core.Loops.CBKillAll:Disconnect() end
-        Core.Loops.CBKillAll = RunService.RenderStepped:Connect(function()
+        local lastKill = 0
+        Core.Loops.CBKillAll = RunService.Heartbeat:Connect(function()
+            if tick() - lastKill < 0.1 then return end
             pcall(function()
                 if not Core.IsAlive(LocalPlayer) then return end
                 local gun = LocalPlayer.Character:FindFirstChildOfClass("Tool")
@@ -487,8 +766,8 @@ function Core.CBKillAll(enabled)
                         end
                     end
                 end
+                lastKill = tick()
             end)
-            task.wait(0.1)
         end)
     else
         if Core.Loops.CBKillAll then Core.Loops.CBKillAll:Disconnect() Core.Loops.CBKillAll = nil end
@@ -519,18 +798,19 @@ function Core.CBBHop(enabled)
         if Core.Loops.CBBHopInput then Core.Loops.CBBHopInput:Disconnect() end
         if Core.Loops.CBBHopInputEnd then Core.Loops.CBBHopInputEnd:Disconnect() end
         if Core.Loops.CBBHop then Core.Loops.CBBHop:Disconnect() end
+        
         Core.Loops.CBBHopInput = UserInputService.InputBegan:Connect(function(input, gameProcessed)
             if gameProcessed then return end
-            if input.KeyCode == Core.CBSettings.BHopKey then
+            if input.KeyCode == Core.CBSettings.BHopKey or input.UserInputType == Enum.UserInputType.Touch then
                 Core.BHopHolding = true
             end
         end)
         Core.Loops.CBBHopInputEnd = UserInputService.InputEnded:Connect(function(input)
-            if input.KeyCode == Core.CBSettings.BHopKey then
+            if input.KeyCode == Core.CBSettings.BHopKey or input.UserInputType == Enum.UserInputType.Touch then
                 Core.BHopHolding = false
             end
         end)
-        Core.Loops.CBBHop = RunService.RenderStepped:Connect(function()
+        Core.Loops.CBBHop = RunService.Heartbeat:Connect(function()
             if Core.BHopHolding and Core.IsAlive(LocalPlayer) then
                 local hum = LocalPlayer.Character.Humanoid
                 if hum.FloorMaterial ~= Enum.Material.Air then
@@ -551,7 +831,7 @@ function Core.CBThirdPerson(enabled)
     Core.CBSettings.ThirdPerson = enabled
     if enabled then
         if Core.Loops.CBThirdPerson then Core.Loops.CBThirdPerson:Disconnect() end
-        Core.Loops.CBThirdPerson = RunService.RenderStepped:Connect(function()
+        Core.Loops.CBThirdPerson = RunService.Heartbeat:Connect(function()
             if Core.IsAlive(LocalPlayer) then
                 LocalPlayer.CameraMinZoomDistance = Core.CBSettings.ThirdPersonDistance
                 LocalPlayer.CameraMaxZoomDistance = Core.CBSettings.ThirdPersonDistance
@@ -577,7 +857,7 @@ function Core.CBAntiAimbot(enabled)
     Core.CBSettings.AntiAimbot = enabled
     if enabled then
         if Core.Loops.CBAntiAimbot then Core.Loops.CBAntiAimbot:Disconnect() end
-        Core.Loops.CBAntiAimbot = RunService.RenderStepped:Connect(function()
+        Core.Loops.CBAntiAimbot = RunService.Heartbeat:Connect(function()
             if not Core.IsAlive(LocalPlayer) then return end
             local char = LocalPlayer.Character
             local hum = char.Humanoid
@@ -644,7 +924,7 @@ function Core.CBRemoveEffects(effects)
         if v then anyEnabled = true break end
     end
     if anyEnabled then
-        Core.Loops.CBRemoveEffects = RunService.RenderStepped:Connect(function()
+        Core.Loops.CBRemoveEffects = RunService.Heartbeat:Connect(function()
             pcall(function()
                 if Core.CBSettings.RemoveEffects.Flash then
                     local blnd = LocalPlayer.PlayerGui:FindFirstChild("Blnd")
@@ -724,8 +1004,23 @@ function Core.Init()
     for _, plr in pairs(Players:GetPlayers()) do if plr ~= LocalPlayer then Core.CreateESP(plr) end end
     Players.PlayerAdded:Connect(function(plr) Core.CreateESP(plr) end)
     Players.PlayerRemoving:Connect(function(plr) Core.RemoveESP(plr) end)
-    if Core.GameName == "Murder Mystery 2" then task.spawn(function() while task.wait(2) do Core.MM2Roles = {} end end) end
-    RunService.RenderStepped:Connect(function() Core.SilentAimCameraMethod() end)
+    
+    -- MM2 specific initialization
+    if Core.GameName == "Murder Mystery 2" then
+        -- Role refresh using Heartbeat with timing
+        local lastRoleRefresh = 0
+        RunService.Heartbeat:Connect(function()
+            if tick() - lastRoleRefresh >= 2 then
+                Core.MM2Roles = {}
+                lastRoleRefresh = tick()
+            end
+        end)
+        
+        -- Setup pickup notifications
+        Core.MM2SetupPickupNotifications()
+    end
+    
+    RunService.Heartbeat:Connect(function() Core.SilentAimCameraMethod() end)
 end
 
 return Core
