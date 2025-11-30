@@ -16,7 +16,6 @@ local LocalPlayer = Players.LocalPlayer
 
 Core.SupportedGames = {
     [301549746] = "Counter Blox",
-    [4924922222] = "Brookhaven",
     [142823291] = "Murder Mystery 2"
 }
 
@@ -56,7 +55,9 @@ Core.AimbotSettings = {
     Smoothness = 5,
     AimPart = "Head",
     Prediction = 0,
-    StickyAim = false
+    StickyAim = false,
+    AutoShoot = false,
+    AutoWall = false
 }
 
 Core.SilentAimSettings = {
@@ -99,35 +100,25 @@ Core.CBSettings = {
     KillAll = false,
     InfCash = false,
     BHop = false,
+    BHopKey = Enum.KeyCode.Space,
     AntiAimbot = false,
     AntiAimbotYaw = "Default",
     AntiAimbotSpeed = 50,
     RemoveHeadHitbox = false,
     NoScope = false,
-    NoFlash = false,
-    NoSmoke = false
+    RemoveEffects = {
+        Flash = false,
+        Smoke = false,
+        Blood = false,
+        Tracers = false,
+        MuzzleFlash = false
+    },
+    ThirdPerson = false,
+    ThirdPersonDistance = 10
 }
 
 Core.MM2Settings = {
     ShowRole = true
-}
-
-Core.BrookhavenSettings = {
-    SpamChat = false,
-    SpamMessage = "killfeed.cc on top",
-    SpamDelay = 1,
-    SoundSpam = false,
-    SoundID = 142376088,
-    Fling = false,
-    SpamEmotes = false,
-    SpamTools = false,
-    KickAll = false,
-    TPAll = false,
-    ExplodeAll = false,
-    FreezePlayers = false,
-    RemoveHouses = false,
-    SpamVehicles = false,
-    FloodServer = false
 }
 
 Core.Loops = {}
@@ -139,6 +130,8 @@ Core.LockedTarget = nil
 Core.RainbowHue = 0
 Core.SilentAimTarget = nil
 Core.OriginalSky = nil
+Core.BHopHolding = false
+Core.AutoShootConnection = nil
 
 Core.SkeletonParts = {
     {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
@@ -177,6 +170,26 @@ function Core.IsVisible(part)
     local result = Workspace:Raycast(origin, direction, params)
     if result then return result.Instance:IsDescendantOf(part.Parent) end
     return true
+end
+
+function Core.CanShootThrough(origin, target)
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Blacklist
+    params.FilterDescendantsInstances = {LocalPlayer.Character, Camera}
+    local result = Workspace:Raycast(origin, (target - origin).Unit * (target - origin).Magnitude, params)
+    if not result then return true end
+    local material = result.Instance.Material
+    local penetrableMaterials = {
+        Enum.Material.Glass,
+        Enum.Material.Wood,
+        Enum.Material.WoodPlanks,
+        Enum.Material.Plastic
+    }
+    for _, mat in pairs(penetrableMaterials) do
+        if material == mat then return true end
+    end
+    if result.Instance.Transparency > 0.5 then return true end
+    return false
 end
 
 function Core.GetRainbowColor()
@@ -232,7 +245,13 @@ function Core.GetClosestPlayer()
         if not aimPart then continue end
         local screenPos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
         if not onScreen then continue end
-        if Core.AimbotSettings.VisibleCheck and not Core.IsVisible(aimPart) then continue end
+        if Core.AimbotSettings.VisibleCheck and not Core.IsVisible(aimPart) then
+            if Core.AimbotSettings.AutoWall then
+                if not Core.CanShootThrough(Camera.CFrame.Position, aimPart.Position) then continue end
+            else
+                continue
+            end
+        end
         local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
         if dist < shortestDist then shortestDist = dist closest = player end
     end
@@ -275,6 +294,30 @@ function Core.GetTriggerTarget()
     return nil
 end
 
+function Core.AutoShoot()
+    if not Core.AimbotSettings.AutoShoot then return end
+    if not Core.IsAlive(LocalPlayer) then return end
+    local gun = Core.GetCurrentGun()
+    if not gun then return end
+    local target = Core.GetClosestPlayer()
+    if target and Core.IsAlive(target) then
+        local char = target.Character
+        local aimPart = char:FindFirstChild(Core.AimbotSettings.AimPart) or char:FindFirstChild("Head")
+        if aimPart then
+            local screenPos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
+            if onScreen then
+                local mousePos = UserInputService:GetMouseLocation()
+                local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
+                if dist < Core.AimbotSettings.FOV then
+                    pcall(function()
+                        mouse1click()
+                    end)
+                end
+            end
+        end
+    end
+end
+
 function Core.AimAt(player, TargetCircle)
     if not player or not Core.IsAlive(player) then Core.LockedTarget = nil return end
     local char = player.Character if not char then return end
@@ -290,6 +333,9 @@ function Core.AimAt(player, TargetCircle)
     local delta = (Vector2.new(screenPos.X, screenPos.Y) - mousePos) / math.max(Core.AimbotSettings.Smoothness, 1)
     if mousemoverel then mousemoverel(delta.X, delta.Y) end
     if TargetCircle then pcall(function() TargetCircle.Position = Vector2.new(screenPos.X, screenPos.Y) TargetCircle.Visible = true end) end
+    if Core.AimbotSettings.AutoShoot then
+        Core.AutoShoot()
+    end
 end
 
 function Core.CreateESP(plr)
@@ -470,15 +516,59 @@ function Core.CBBHop(enabled)
     if Core.GameName ~= "Counter Blox" then return end
     Core.CBSettings.BHop = enabled
     if enabled then
+        if Core.Loops.CBBHopInput then Core.Loops.CBBHopInput:Disconnect() end
+        if Core.Loops.CBBHopInputEnd then Core.Loops.CBBHopInputEnd:Disconnect() end
         if Core.Loops.CBBHop then Core.Loops.CBBHop:Disconnect() end
+        Core.Loops.CBBHopInput = UserInputService.InputBegan:Connect(function(input, gameProcessed)
+            if gameProcessed then return end
+            if input.KeyCode == Core.CBSettings.BHopKey then
+                Core.BHopHolding = true
+            end
+        end)
+        Core.Loops.CBBHopInputEnd = UserInputService.InputEnded:Connect(function(input)
+            if input.KeyCode == Core.CBSettings.BHopKey then
+                Core.BHopHolding = false
+            end
+        end)
         Core.Loops.CBBHop = RunService.RenderStepped:Connect(function()
-            if Core.IsAlive(LocalPlayer) then
+            if Core.BHopHolding and Core.IsAlive(LocalPlayer) then
                 local hum = LocalPlayer.Character.Humanoid
-                if hum.FloorMaterial ~= Enum.Material.Air then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+                if hum.FloorMaterial ~= Enum.Material.Air then
+                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
             end
         end)
     else
+        Core.BHopHolding = false
+        if Core.Loops.CBBHopInput then Core.Loops.CBBHopInput:Disconnect() Core.Loops.CBBHopInput = nil end
+        if Core.Loops.CBBHopInputEnd then Core.Loops.CBBHopInputEnd:Disconnect() Core.Loops.CBBHopInputEnd = nil end
         if Core.Loops.CBBHop then Core.Loops.CBBHop:Disconnect() Core.Loops.CBBHop = nil end
+    end
+end
+
+function Core.CBThirdPerson(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.CBSettings.ThirdPerson = enabled
+    if enabled then
+        if Core.Loops.CBThirdPerson then Core.Loops.CBThirdPerson:Disconnect() end
+        Core.Loops.CBThirdPerson = RunService.RenderStepped:Connect(function()
+            if Core.IsAlive(LocalPlayer) then
+                LocalPlayer.CameraMinZoomDistance = Core.CBSettings.ThirdPersonDistance
+                LocalPlayer.CameraMaxZoomDistance = Core.CBSettings.ThirdPersonDistance
+            end
+        end)
+    else
+        if Core.Loops.CBThirdPerson then Core.Loops.CBThirdPerson:Disconnect() Core.Loops.CBThirdPerson = nil end
+        LocalPlayer.CameraMinZoomDistance = 0.5
+        LocalPlayer.CameraMaxZoomDistance = 0.5
+    end
+end
+
+function Core.CBSetThirdPersonDistance(distance)
+    Core.CBSettings.ThirdPersonDistance = distance
+    if Core.CBSettings.ThirdPerson then
+        LocalPlayer.CameraMinZoomDistance = distance
+        LocalPlayer.CameraMaxZoomDistance = distance
     end
 end
 
@@ -543,209 +633,76 @@ function Core.CBNoScope(enabled)
     end)
 end
 
-function Core.CBNoFlash(enabled)
+function Core.CBRemoveEffects(effects)
     if Core.GameName ~= "Counter Blox" then return end
-    Core.CBSettings.NoFlash = enabled
-    pcall(function()
-        local blnd = LocalPlayer.PlayerGui:FindFirstChild("Blnd")
-        if blnd then blnd.Enabled = not enabled end
-    end)
-end
-
-function Core.CBNoSmoke(enabled)
-    if Core.GameName ~= "Counter Blox" then return end
-    Core.CBSettings.NoSmoke = enabled
-    if enabled then
-        if Core.Loops.CBNoSmoke then Core.Loops.CBNoSmoke:Disconnect() end
-        Core.Loops.CBNoSmoke = RunService.RenderStepped:Connect(function()
+    for effectName, enabled in pairs(effects) do
+        Core.CBSettings.RemoveEffects[effectName] = enabled
+    end
+    if Core.Loops.CBRemoveEffects then Core.Loops.CBRemoveEffects:Disconnect() end
+    local anyEnabled = false
+    for _, v in pairs(Core.CBSettings.RemoveEffects) do
+        if v then anyEnabled = true break end
+    end
+    if anyEnabled then
+        Core.Loops.CBRemoveEffects = RunService.RenderStepped:Connect(function()
             pcall(function()
-                local rayIgnore = Workspace:FindFirstChild("Ray_Ignore")
-                if rayIgnore then
-                    local smokes = rayIgnore:FindFirstChild("Smokes")
-                    if smokes then
-                        for _, v in pairs(smokes:GetChildren()) do
-                            if v.Name == "Smoke" then v:Destroy() end
+                if Core.CBSettings.RemoveEffects.Flash then
+                    local blnd = LocalPlayer.PlayerGui:FindFirstChild("Blnd")
+                    if blnd then blnd.Enabled = false end
+                end
+                if Core.CBSettings.RemoveEffects.Smoke then
+                    local rayIgnore = Workspace:FindFirstChild("Ray_Ignore")
+                    if rayIgnore then
+                        local smokes = rayIgnore:FindFirstChild("Smokes")
+                        if smokes then
+                            for _, v in pairs(smokes:GetChildren()) do
+                                if v.Name == "Smoke" then v:Destroy() end
+                            end
+                        end
+                    end
+                end
+                if Core.CBSettings.RemoveEffects.Blood then
+                    local rayIgnore = Workspace:FindFirstChild("Ray_Ignore")
+                    if rayIgnore then
+                        for _, v in pairs(rayIgnore:GetDescendants()) do
+                            if v.Name:lower():find("blood") or v.Name:lower():find("decal") then
+                                v:Destroy()
+                            end
+                        end
+                    end
+                end
+                if Core.CBSettings.RemoveEffects.Tracers then
+                    local rayIgnore = Workspace:FindFirstChild("Ray_Ignore")
+                    if rayIgnore then
+                        local tracers = rayIgnore:FindFirstChild("Tracers")
+                        if tracers then
+                            for _, v in pairs(tracers:GetChildren()) do
+                                v:Destroy()
+                            end
+                        end
+                    end
+                end
+                if Core.CBSettings.RemoveEffects.MuzzleFlash then
+                    for _, plr in pairs(Players:GetPlayers()) do
+                        if plr.Character then
+                            for _, v in pairs(plr.Character:GetDescendants()) do
+                                if v:IsA("ParticleEmitter") or v:IsA("PointLight") then
+                                    if v.Name:lower():find("muzzle") or v.Name:lower():find("flash") then
+                                        v.Enabled = false
+                                    end
+                                end
+                            end
                         end
                     end
                 end
             end)
         end)
-    else
-        if Core.Loops.CBNoSmoke then Core.Loops.CBNoSmoke:Disconnect() Core.Loops.CBNoSmoke = nil end
     end
 end
 
-function Core.BrookhavenSpamChat(enabled)
-    if Core.GameName ~= "Brookhaven" then return end
-    Core.BrookhavenSettings.SpamChat = enabled
-    if enabled then
-        if Core.Loops.BHSpamChat then Core.Loops.BHSpamChat:Disconnect() end
-        Core.Loops.BHSpamChat = task.spawn(function()
-            while Core.BrookhavenSettings.SpamChat do
-                pcall(function()
-                    ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Core.BrookhavenSettings.SpamMessage, "All")
-                end)
-                task.wait(Core.BrookhavenSettings.SpamDelay)
-            end
-        end)
-    else
-        if Core.Loops.BHSpamChat then task.cancel(Core.Loops.BHSpamChat) Core.Loops.BHSpamChat = nil end
-    end
-end
-
-function Core.BrookhavenSoundSpam()
-    if Core.GameName ~= "Brookhaven" then return end
-    pcall(function()
-        local player = LocalPlayer
-        local soundId = Core.BrookhavenSettings.SoundID
-        local duration = 300
-        
-        local sound = Instance.new("Sound")
-        sound.SoundId = "rbxassetid://" .. soundId
-        sound.Volume = 0.5
-        sound.Looped = true
-        sound.Parent = player:WaitForChild("PlayerGui")
-        sound:Play()
-        
-        task.delay(duration, function()
-            sound:Stop()
-            sound:Destroy()
-        end)
-        
-        local remoteFolder = ReplicatedStorage:WaitForChild("RE", 5)
-        if remoteFolder then
-            local remote = remoteFolder:FindFirstChild("1Gu1nSound1s")
-            if remote and remote:IsA("RemoteEvent") then
-                remote:FireServer(soundId, duration)
-            end
-        end
-    end)
-end
-
-function Core.BrookhavenFling(enabled)
-    if Core.GameName ~= "Brookhaven" then return end
-    Core.BrookhavenSettings.Fling = enabled
-    if enabled then
-        pcall(function()
-            local BV = Instance.new("BodyAngularVelocity")
-            BV.MaxTorque = Vector3.new(9e9,9e9,9e9)
-            BV.AngularVelocity = Vector3.new(0,99999,0)
-            BV.Parent = LocalPlayer.Character.HumanoidRootPart
-            Core.BrookhavenSettings.FlingObject = BV
-        end)
-    else
-        if Core.BrookhavenSettings.FlingObject then
-            Core.BrookhavenSettings.FlingObject:Destroy()
-            Core.BrookhavenSettings.FlingObject = nil
-        end
-    end
-end
-
-function Core.BrookhavenSpamEmotes(enabled)
-    if Core.GameName ~= "Brookhaven" then return end
-    Core.BrookhavenSettings.SpamEmotes = enabled
-    if enabled then
-        if Core.Loops.BHSpamEmotes then Core.Loops.BHSpamEmotes:Disconnect() end
-        Core.Loops.BHSpamEmotes = task.spawn(function()
-            local emotes = {"dance1", "dance2", "dance3"}
-            while Core.BrookhavenSettings.SpamEmotes do
-                pcall(function()
-                    local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
-                    if hum then
-                        hum:PlayEmote(emotes[math.random(#emotes)])
-                    end
-                end)
-                task.wait(0.5)
-            end
-        end)
-    else
-        if Core.Loops.BHSpamEmotes then task.cancel(Core.Loops.BHSpamEmotes) Core.Loops.BHSpamEmotes = nil end
-    end
-end
-
-function Core.BrookhavenKickAll()
-    if Core.GameName ~= "Brookhaven" then return end
-    pcall(function()
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer then
-                local event = ReplicatedStorage:FindFirstChild("KickPlayer")
-                if event then event:FireServer(plr) end
-            end
-        end
-    end)
-end
-
-function Core.BrookhavenTPAll()
-    if Core.GameName ~= "Brookhaven" then return end
-    pcall(function()
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                plr.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame
-            end
-        end
-    end)
-end
-
-function Core.BrookhavenExplodeAll()
-    if Core.GameName ~= "Brookhaven" then return end
-    pcall(function()
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local exp = Instance.new("Explosion")
-                exp.Position = plr.Character.HumanoidRootPart.Position
-                exp.BlastRadius = 10
-                exp.BlastPressure = 500000
-                exp.Parent = Workspace
-            end
-        end
-    end)
-end
-
-function Core.BrookhavenFreezePlayers(enabled)
-    if Core.GameName ~= "Brookhaven" then return end
-    Core.BrookhavenSettings.FreezePlayers = enabled
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-            plr.Character.HumanoidRootPart.Anchored = enabled
-        end
-    end
-end
-
-function Core.BrookhavenRemoveHouses()
-    if Core.GameName ~= "Brookhaven" then return end
-    pcall(function()
-        for _, v in pairs(Workspace:GetDescendants()) do
-            if v:IsA("Model") and (v.Name:find("House") or v.Name:find("Building")) then
-                v:Destroy()
-            end
-        end
-    end)
-end
-
-function Core.BrookhavenSpamVehicles(enabled)
-    if Core.GameName ~= "Brookhaven" then return end
-    Core.BrookhavenSettings.SpamVehicles = enabled
-    if enabled then
-        if Core.Loops.BHSpamVehicles then Core.Loops.BHSpamVehicles:Disconnect() end
-        Core.Loops.BHSpamVehicles = task.spawn(function()
-            while Core.BrookhavenSettings.SpamVehicles do
-                pcall(function()
-                    local spawnVeh = ReplicatedStorage:FindFirstChild("SpawnVehicle")
-                    if spawnVeh then spawnVeh:FireServer("Car", LocalPlayer.Character.HumanoidRootPart.Position) end
-                end)
-                task.wait(0.1)
-            end
-        end)
-    else
-        if Core.Loops.BHSpamVehicles then task.cancel(Core.Loops.BHSpamVehicles) Core.Loops.BHSpamVehicles = nil end
-    end
-end
-
-function Core.BrookhavenFloodServer()
-    if Core.GameName ~= "Brookhaven" then return end
-    pcall(function()
-        Workspace.Terrain:FillBlock(CFrame.new(0,0,0), Vector3.new(2048, 2048, 2048), Enum.Material.Water)
-    end)
+function Core.CBAutoWall(enabled)
+    if Core.GameName ~= "Counter Blox" then return end
+    Core.AimbotSettings.AutoWall = enabled
 end
 
 function Core.Rejoin() TeleportService:TeleportToPlaceInstance(Core.PlaceId, game.JobId, LocalPlayer) end
