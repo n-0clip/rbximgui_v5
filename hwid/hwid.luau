@@ -89,6 +89,7 @@ function HWID_System.Verify()
         return true, hwid
     else
         print('not whitelisted')
+        setclipboard(hwid)
         return false, hwid
     end
 end
