@@ -16,7 +16,8 @@ local LocalPlayer = Players.LocalPlayer
 
 Core.SupportedGames = {
     [301549746] = "Counter Blox",
-    [142823291] = "Murder Mystery 2"
+    [142823291] = "Murder Mystery 2",
+    [100273623167931] = "Counter Blox",
 }
 
 Core.PlaceId = game.PlaceId
