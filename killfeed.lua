@@ -6,6 +6,12 @@ local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 local Core = loadstring(game:HttpGet(coreRepo .. "core.luau"))()
 
+local HWID_System = loadstring(game:HttpGet("https://raw.githubusercontent.com/n-0clip/killfeed.cc/refs/heads/main/hwid/hwid.luau"))()
+local hwids = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/refs/heads/main/hwid/hwids"
+
+HWID_System.WhitelistURL = hwids
+HWID_System.Enabled = true
+
 Core.Init()
 
 local Options = Library.Options
@@ -19,6 +25,14 @@ local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 
 local IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+local platform = IsMobile and "Mobile" or "PC"
+
+local verified, hwid = HWID_System.Verify()
+
+if not verified then
+    setclipboard(hwid)
+    return
+end
 
 Library.ForceCheckbox = false 
 Library.ShowToggleFrameInKeybinds = true
@@ -30,9 +44,40 @@ local Window = Library:CreateWindow({
     NotifySide = "Right",
     ShowCustomCursor = not IsMobile,
     Resizable = true,
+	CornerRadius = 8,
     Size = UDim2.fromOffset(IsMobile and 500 or 600, IsMobile and 400 or 480),
     SearchbarSize = UDim2.fromScale(0.5, 1)
 })
+Library:SetWatermarkVisibility(true)
+ 
+Library:Notify("killfeed.cc | " .. Core.GameName .. " | " .. platform, 5)
+if platform == "Mobile" then
+	Library:Notify({
+		Title = "Warning", 
+		Description = "I want to say, that i didnt tested this script on android, if you found bug dm me in ds", 
+		Time = 7
+	})
+end
+
+local FrameTimer = tick()
+local FrameCounter = 0;
+local FPS = 60;
+ 
+local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
+    FrameCounter += 1;
+ 
+    if (tick() - FrameTimer) >= 1 then
+        FPS = FrameCounter;
+        FrameTimer = tick();
+        FrameCounter = 0;
+    end;
+    Library:SetWatermark(('%s (%s) | %s fps | %s ms'):format(
+		LocalPlayer.Name,
+		identifyexecutor(),
+        math.floor(FPS),
+        math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
+    ));
+end);
 
 Window:SetSidebarWidth(50)
 
@@ -496,6 +541,3 @@ ThemeManager:ApplyToTab(Tabs.Settings)
 
 Library.Theme.Accent = Color3.fromRGB(212,133,240)
 Library:UpdateColorsUsingTheme()
-
-local platform = IsMobile and "Mobile" or "PC"
-Library:Notify("killfeed.cc | " .. Core.GameName .. " | " .. platform, 5)
