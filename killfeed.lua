@@ -30,7 +30,8 @@ local Window = Library:CreateWindow({
     NotifySide = "Right",
     ShowCustomCursor = not IsMobile,
     Resizable = true,
-    Size = UDim2.fromOffset(IsMobile and 500 or 600, IsMobile and 400 or 480)
+    Size = UDim2.fromOffset(IsMobile and 500 or 600, IsMobile and 400 or 480),
+    SearchbarSize = UDim2.fromScale(0.5, 1)
 })
 
 Window:SetSidebarWidth(50)
