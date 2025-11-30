@@ -29,7 +29,7 @@ function HWID_System.Generate()
         local part2 = string.format("%08X", hash2)
         local part3 = string.sub(clientId:gsub("-", ""), 1, 8):upper()
         
-        return "KF-" .. part1 .. "-" .. part2 .. "-" .. part3
+        return "qwerty-" .. part1 .. "-" .. part2 .. "-" .. part3
     end)
     
     if success and result then
@@ -50,7 +50,7 @@ function HWID_System.Generate()
             hash = (hash * 31 + string.byte(str, i)) % 2147483647
         end
         
-        hwid = "kfcc-" .. string.format("%08X", hash) .. "-" .. tostring(LocalPlayer.UserId)
+        hwid = "qwerty-" .. string.format("%08X", hash) .. "-" .. tostring(LocalPlayer.UserId)
     end
     
     return hwid
@@ -89,6 +89,9 @@ function HWID_System.Verify()
         return true, hwid
     else
         print('not whitelisted')
+        print(
+            'nigga dont skid'
+        )
         setclipboard(hwid)
         return false, hwid
     end
