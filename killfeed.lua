@@ -54,7 +54,7 @@ Library:Notify("killfeed.cc | " .. Core.GameName .. " | " .. platform, 5)
 if platform == "Mobile" then
 	Library:Notify({
 		Title = "Warning", 
-		Description = "I want to say, that i didnt tested this script on android, if you found bug dm me in ds", 
+		Description = "I want to say, that i didnt tested this script on android, if you found bug dm me in ds (izdcg)", 
 		Time = 7
 	})
 end
