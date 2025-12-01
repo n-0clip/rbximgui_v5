@@ -14,6 +14,15 @@ local StarterGui = game:GetService("StarterGui")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
+local banner = [
+ __   .__.__  .__   _____                 .___
+|  | _|__|  | |  |_/ ____\____   ____   __| _/
+|  |/ /  |  | |  |\   __\/ __ \_/ __ \ / __ | 
+|    <|  |  |_|  |_|  | \  ___/\  ___// /_/ | 
+|__|_ \__|____/____/__|  \___  >\___  >____ | 
+     \/                      \/     \/     \/ 
+]
+
 Core.IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 Core.SupportedGames = {
