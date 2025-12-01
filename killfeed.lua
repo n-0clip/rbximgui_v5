@@ -1,3 +1,5 @@
+local LoadStartTime = tick()
+
 local repo = "https://raw.githubusercontent.com/n-0clip/killfeed-lib/main/"
 local coreRepo = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/"
 
@@ -5,16 +7,7 @@ local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 local Core = loadstring(game:HttpGet(coreRepo .. "core.luau"))()
-
 local HWID_System = loadstring(game:HttpGet(coreRepo .. "hwid/hwid.luau"))()
-
-HWID_System.WhitelistURL = (coreRepo .. "hwid/hwid.luau")
-HWID_System.Enabled = true
-
-Core.Init()
-
-local Options = Library.Options
-local Toggles = Library.Toggles
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -23,8 +16,20 @@ local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 
-local IsMobile = true --UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+local IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local platform = IsMobile and "Mobile" or "PC"
+
+HWID_System.WhitelistURL = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/hwid/hwids"
+HWID_System.Enabled = true
+
+Core.Init()
+
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+local FrameTimer = tick()
+local FrameCounter = 0;
+local FPS = 30;
 
 local verified, hwid = HWID_System.Verify()
 
@@ -41,15 +46,25 @@ local Window = Library:CreateWindow({
     Footer = Core.GameName,
     Icon = 95816097006870,
     NotifySide = "Right",
+    IconSize = UDim2.fromOffset(35, 35),
+    AutoShow = true,
+    Center = true,
     ShowCustomCursor = not IsMobile,
     Resizable = true,
-	CornerRadius = 8,
+	CornerRadius = 9,
+	GlobalSearch = true
     Size = UDim2.fromOffset(IsMobile and 500 or 600, IsMobile and 400 or 480),
-    SearchbarSize = UDim2.fromScale(0.5, 1)
+    SearchbarSize = UDim2.fromScale(1, 1),
+	ToggleKeybind = Enum.KeyCode.RightShift
 })
+
 Library:SetWatermarkVisibility(true)
+
+Window:SetSidebarWidth(50)
  
-Library:Notify("killfeed.cc | " .. Core.GameName .. " | " .. platform, 5)
+local LoadTime = tick() - LoadStartTime
+
+Library:Notify("loaded killfeed.cc /|\ " .. Core.GameName .. " /|\ " .. platform .. " /|\ " .. "loaded in " .. string.format("%.2f", LoadTime) .. "s", 5)
 if platform == "Mobile" then
 	Library:Notify({
 		Title = "Warning", 
@@ -57,10 +72,6 @@ if platform == "Mobile" then
 		Time = 7
 	})
 end
-
-local FrameTimer = tick()
-local FrameCounter = 0;
-local FPS = 60;
  
 local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
     FrameCounter += 1;
@@ -77,8 +88,6 @@ local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(
         math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
     ));
 end);
-
-Window:SetSidebarWidth(50)
 
 local Tabs = {
     Combat = Window:AddTab("Combat", "crosshair"),
@@ -538,5 +547,14 @@ SaveManager:SetFolder("killfeed/cfg")
 SaveManager:BuildConfigSection(Tabs.Settings)
 ThemeManager:ApplyToTab(Tabs.Settings)
 
-Library.Theme.Accent = Color3.fromRGB(212,133,240)
+local MenuBind = Tabs.Settings:AddRightGroupbox("Menu")
+
+MenuBind:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", {
+    Default = "RightShift",
+    NoUI = true,
+    Text = "Menu keybind"
+})
+ 
+Library.ToggleKeybind = Options.MenuKeybind 
+
 Library:UpdateColorsUsingTheme()
