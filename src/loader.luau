@@ -687,8 +687,10 @@ function Loader.Close(callback)
         
         for _, child in pairs(MainFrame:GetDescendants()) do
             if child:IsA("GuiObject") then
-                if child:IsA("TextLabel") or child:IsA("ImageLabel") then
-                    Tween(child, 0.6, {TextTransparency = 1, ImageTransparency = 1})
+                if child:IsA("TextLabel") then
+                    Tween(child, 0.6, {TextTransparency = 1})
+                elseif child:IsA("ImageLabel") then
+                    Tween(child, 0.6, {ImageTransparency = 1})
                 elseif child:IsA("Frame") then
                     Tween(child, 0.6, {BackgroundTransparency = 1})
                 elseif child:IsA("UIStroke") then
@@ -708,44 +710,6 @@ function Loader.Close(callback)
     if callback then
         callback()
     end
-end
-
-function Loader.Error(errorMessage)
-    if not LoaderUI or not LoaderUI.Parent then return end
-    
-    local statusLabel = MainFrame and MainFrame:FindFirstChild("StatusLabel")
-    local progressFill = MainFrame and MainFrame:FindFirstChild("ProgressBackground") and MainFrame.ProgressBackground:FindFirstChild("ProgressFill")
-    local logoStroke = MainFrame and MainFrame:FindFirstChild("LogoContainer") and MainFrame.LogoContainer:FindFirstChild("UIStroke")
-    local borderGlow = MainFrame and MainFrame:FindFirstChild("UIStroke")
-    
-    if statusLabel then
-        statusLabel.Text = "⚠ " .. errorMessage
-        Tween(statusLabel, 0.3, {TextColor3 = COLORS.Error})
-    end
-    
-    if progressFill then
-        Tween(progressFill, 0.3, {BackgroundColor3 = COLORS.Error})
-    end
-    
-    if logoStroke then
-        Tween(logoStroke, 0.3, {Color = COLORS.Error})
-    end
-    
-    if borderGlow then
-        Tween(borderGlow, 0.3, {Color = COLORS.Error})
-    end
-    
-    for i = 1, 3 do
-        if MainFrame then
-            Tween(MainFrame, 0.1, {Size = MainFrame.Size + UDim2.new(0, 10, 0, 10)})
-            task.wait(0.1)
-            Tween(MainFrame, 0.1, {Size = MainFrame.Size - UDim2.new(0, 10, 0, 10)})
-            task.wait(0.1)
-        end
-    end
-    
-    task.wait(2.5)
-    Loader.Close()
 end
 
 function Loader.Success(message, duration)
