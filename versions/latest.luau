@@ -1,12 +1,3 @@
-local banner = [
- __   .__.__  .__   _____                 .___
-|  | _|__|  | |  |_/ ____\____   ____   __| _/
-|  |/ /  |  | |  |\   __\/ __ \_/ __ \ / __ | 
-|    <|  |  |_|  |_|  | \  ___/\  ___// /_/ | 
-|__|_ \__|____/____/__|  \___  >\___  >____ | 
-     \/                      \/     \/     \/ 
-]
-
 local LoadStartTime = tick()
 
 local repo = "https://raw.githubusercontent.com/n-0clip/killfeed-lib/main/"
@@ -34,6 +25,15 @@ local LocalPlayer = Players.LocalPlayer
 
 local IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local platform = IsMobile and "Mobile" or "PC"
+
+local banner = [
+ __   .__.__  .__   _____                 .___
+|  | _|__|  | |  |_/ ____\____   ____   __| _/
+|  |/ /  |  | |  |\   __\/ __ \_/ __ \ / __ | 
+|    <|  |  |_|  |_|  | \  ___/\  ___// /_/ | 
+|__|_ \__|____/____/__|  \___  >\___  >____ | 
+     \/                      \/     \/     \/ 
+]
 
 HWID_System.WhitelistURL = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/src/hwid/hwids"
 HWID_System.Enabled = true
