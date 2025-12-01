@@ -6,7 +6,7 @@ local coreRepo = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/"
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
-local Core = loadstring(game:HttpGet(coreRepo .. "core.luau"))()
+local Core = loadstring(game:HttpGet(coreRepo .. "core/core.luau"))()
 local HWID_System = loadstring(game:HttpGet(coreRepo .. "hwid/hwid.luau"))()
 
 local Players = game:GetService("Players")
@@ -52,9 +52,10 @@ local Window = Library:CreateWindow({
     ShowCustomCursor = not IsMobile,
     Resizable = true,
 	CornerRadius = 9,
-	GlobalSearch = true
+	GlobalSearch = true,
     Size = UDim2.fromOffset(IsMobile and 500 or 600, IsMobile and 400 or 480),
-    SearchbarSize = UDim2.fromScale(1, 1),
+    --SearchbarSize = UDim2.fromScale(1, 1),
+	SearchbarSize = UDim2.new(1, 5, 1, 5),
 	ToggleKeybind = Enum.KeyCode.RightShift
 })
 
@@ -555,6 +556,4 @@ MenuBind:AddLabel("Menu bind"):AddKeyPicker("MenuKeybind", {
     Text = "Menu keybind"
 })
  
-Library.ToggleKeybind = Options.MenuKeybind 
-
-Library:UpdateColorsUsingTheme()
+Library.ToggleKeybind = Options.MenuKeybind
