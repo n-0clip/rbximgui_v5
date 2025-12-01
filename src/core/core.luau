@@ -2112,10 +2112,6 @@ function Core.Init()
     RunService.Heartbeat:Connect(function() 
         Core.SilentAimCameraMethod() 
     end)
-    
-    game:BindToClose(function()
-        Core.Cleanup()
-    end)
 end
 
 return Core
