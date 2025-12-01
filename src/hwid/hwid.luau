@@ -5,6 +5,15 @@ local HttpService = game:GetService("HttpService")
 local RbxAnalyticsService = game:GetService("RbxAnalyticsService")
 local LocalPlayer = Players.LocalPlayer
 
+local banner = [
+ __   .__.__  .__   _____                 .___
+|  | _|__|  | |  |_/ ____\____   ____   __| _/
+|  |/ /  |  | |  |\   __\/ __ \_/ __ \ / __ | 
+|    <|  |  |_|  |_|  | \  ___/\  ___// /_/ | 
+|__|_ \__|____/____/__|  \___  >\___  >____ | 
+     \/                      \/     \/     \/ 
+]
+
 HWID_System.WhitelistURL = ""
 HWID_System.Enabled = true
 
