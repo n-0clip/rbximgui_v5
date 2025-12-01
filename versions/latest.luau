@@ -7,19 +7,13 @@ local Loader = loadstring(game:HttpGet(coreRepo .. "src/loader.luau"))()
 
 Loader.Create()
 
-Loader.UpdateProgress(5, "Loading UI Library")
+Loader.UpdateProgress(5, "Loading main")
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
-
-Loader.UpdateProgress(20, "Loading Theme Manager")
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
-
-Loader.UpdateProgress(35, "Loading Save Manager")
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
-
-Loader.UpdateProgress(50, "Loading Core Module")
 local Core = loadstring(game:HttpGet(coreRepo .. "src/core/core.luau"))()
 
-Loader.UpdateProgress(65, "Loading HWID System")
+Loader.UpdateProgress(65, "Loading HWID")
 local HWID_System = loadstring(game:HttpGet(coreRepo .. "src/hwid/hwid.luau"))()
 
 local Players = game:GetService("Players")
