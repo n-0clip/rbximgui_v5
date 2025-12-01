@@ -6,10 +6,9 @@ local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 local Core = loadstring(game:HttpGet(coreRepo .. "core.luau"))()
 
-local HWID_System = loadstring(game:HttpGet("https://raw.githubusercontent.com/n-0clip/killfeed.cc/refs/heads/main/hwid/hwid.luau"))()
-local hwids = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/refs/heads/main/hwid/hwids"
+local HWID_System = loadstring(game:HttpGet(coreRepo .. "hwid/hwid.luau"))()
 
-HWID_System.WhitelistURL = hwids
+HWID_System.WhitelistURL = (coreRepo .. "hwid/hwid.luau")
 HWID_System.Enabled = true
 
 Core.Init()
@@ -24,7 +23,7 @@ local Workspace = game:GetService("Workspace")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
 
-local IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+local IsMobile = true --UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local platform = IsMobile and "Mobile" or "PC"
 
 local verified, hwid = HWID_System.Verify()
