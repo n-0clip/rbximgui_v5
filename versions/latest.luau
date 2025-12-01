@@ -65,7 +65,7 @@ Window:SetSidebarWidth(50)
  
 local LoadTime = tick() - LoadStartTime
 
-Library:Notify("loaded killfeed.cc /|\ " .. Core.GameName .. " /|\ " .. platform .. " /|\ " .. "loaded in " .. string.format("%.2f", LoadTime) .. "s", 5)
+Library:Notify("loaded killfeed.cc /|\** " .. Core.GameName .. "** /|\ " .. platform .. " /|\ " .. "loaded in " .. string.format("%.2f", LoadTime) .. "s", 5)
 if platform == "Mobile" then
 	Library:Notify({
 		Title = "Warning", 
