@@ -3,10 +3,23 @@ local LoadStartTime = tick()
 local repo = "https://raw.githubusercontent.com/n-0clip/killfeed-lib/main/"
 local coreRepo = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/"
 
+local Loader = loadstring(game:HttpGet(coreRepo .. "src/loader.luau"))()
+
+Loader.Create()
+
+Loader.UpdateProgress(5, "Loading UI Library")
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+
+Loader.UpdateProgress(20, "Loading Theme Manager")
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+
+Loader.UpdateProgress(35, "Loading Save Manager")
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+Loader.UpdateProgress(50, "Loading Core Module")
 local Core = loadstring(game:HttpGet(coreRepo .. "src/core/core.luau"))()
+
+Loader.UpdateProgress(65, "Loading HWID System")
 local HWID_System = loadstring(game:HttpGet(coreRepo .. "src/hwid/hwid.luau"))()
 
 local Players = game:GetService("Players")
@@ -22,24 +35,30 @@ local platform = IsMobile and "Mobile" or "PC"
 HWID_System.WhitelistURL = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/src/hwid/hwids"
 HWID_System.Enabled = true
 
+Loader.UpdateProgress(75, "Verifying HWID")
+
+local verified, hwid = HWID_System.Verify()
+
+if not verified then
+    Loader.Error("HWID not whitelisted")
+    setclipboard(hwid)
+    return
+end
+
+Loader.UpdateProgress(85, "Initializing Core")
 Core.Init()
 
 local Options = Library.Options
 local Toggles = Library.Toggles
 
 local FrameTimer = tick()
-local FrameCounter = 0;
-local FPS = 30;
-
-local verified, hwid = HWID_System.Verify()
-
-if not verified then
-    setclipboard(hwid)
-    return
-end
+local FrameCounter = 0
+local FPS = 30
 
 Library.ForceCheckbox = false 
 Library.ShowToggleFrameInKeybinds = true
+
+Loader.UpdateProgress(95, "Creating UI")
 
 local Window = Library:CreateWindow({
     Title = "killfeed.cc",
@@ -59,12 +78,16 @@ local Window = Library:CreateWindow({
 })
 
 Library:SetWatermarkVisibility(true)
-
 Window:SetSidebarWidth(50)
- 
+
 local LoadTime = tick() - LoadStartTime
 
+Loader.Success("Loaded in " .. string.format("%.2f", LoadTime) .. "s")
+
+task.wait(0.5)
+
 Library:Notify("loaded killfeed.cc /|\** " .. Core.GameName .. "** /|\ " .. platform .. " /|\ " .. "loaded in " .. string.format("%.2f", LoadTime) .. "s", 5)
+
 if platform == "Mobile" then
     Library:Notify({
         Title = "Warning", 
@@ -72,22 +95,23 @@ if platform == "Mobile" then
         Time = 7
     })
 end
- 
-local WatermarkConnection = game:GetService('RunService').RenderStepped:Connect(function()
-    FrameCounter += 1;
+
+local WatermarkConnection = RunService.RenderStepped:Connect(function()
+    FrameCounter = FrameCounter + 1
  
     if (tick() - FrameTimer) >= 1 then
-        FPS = FrameCounter;
-        FrameTimer = tick();
-        FrameCounter = 0;
-    end;
-    Library:SetWatermark(('%s (%s) | %s fps | %s ms'):format(
+        FPS = FrameCounter
+        FrameTimer = tick()
+        FrameCounter = 0
+    end
+    
+    Library:SetWatermark(string.format('%s (%s) | %s fps | %s ms',
         LocalPlayer.Name,
         identifyexecutor(),
         math.floor(FPS),
         math.floor(game:GetService('Stats').Network.ServerStatsItem['Data Ping']:GetValue())
-    ));
-end);
+    ))
+end)
 
 local Tabs = {
     Combat = Window:AddTab("Combat", "crosshair"),
@@ -210,8 +234,6 @@ end
 
 local function NotifyPickup(playerName, weaponType)
     if not MM2Features.NotifyPickup then return end
-    local color = weaponType == "Gun" and Color3.fromRGB(0, 150, 255) or Color3.fromRGB(255, 50, 50)
-    local icon = weaponType == "Gun" and "shield" or "sword"
     Library:Notify(playerName .. " picked up " .. weaponType, 3)
 end
 
@@ -245,7 +267,6 @@ local function MonitorDrops()
                 for _, plr in pairs(Players:GetPlayers()) do
                     if plr ~= LocalPlayer and Core.IsAlive(plr) then
                         local char = plr.Character
-                        local backpack = plr:FindFirstChild("Backpack")
                         
                         local hasWeapon = false
                         if char then
