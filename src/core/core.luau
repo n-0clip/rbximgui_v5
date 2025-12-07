@@ -278,7 +278,7 @@ function Core.CBInfAmmo(enabled)
         local storedAmmo = weapon:FindFirstChild("StoredAmmo")
         
         if ammo then
-            ammo.Value = 999999
+            ammo.Value = 200
         end
         if storedAmmo then
             storedAmmo.Value = 999999
