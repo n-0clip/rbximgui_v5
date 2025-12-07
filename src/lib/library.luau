@@ -358,7 +358,7 @@ local Mouse: Mouse = LocalPlayer:GetMouse();
 local CurrentCamera: Camera? = cloneref(workspace.CurrentCamera);
 
 local Compkiller = {
-	Version = '2.65',
+	Version = '2.6',
 	Logo = "rbxassetid://120245531583106",
 	Windows = {},
 	Scale = {
@@ -2118,7 +2118,7 @@ function Compkiller:_AddLinkValue(Name , Default , GlobalBlock , LinkValues , re
 		Keybind.BorderSizePixel = 0
 		Keybind.Size = UDim2.new(0, 45, 0, 16)
 		Keybind.ZIndex = GlobalBlock.ZIndex + 2
-		Keybind.ClipsDescendants = false
+		Keybind.ClipsDescendants = true
 		Keybind.LayoutOrder = -#LinkValues:GetChildren();
 
 
@@ -2714,7 +2714,7 @@ function Compkiller:_AddColorPickerPanel(Button: ImageButton , Callback: (Color:
 	ColorRedGreenBlue.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	ColorRedGreenBlue.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	ColorRedGreenBlue.BorderSizePixel = 0
-	ColorRedGreenBlue.ClipsDescendants = false
+	ColorRedGreenBlue.ClipsDescendants = true
 	ColorRedGreenBlue.Position = UDim2.new(1, -7, 0, 7)
 	ColorRedGreenBlue.Size = UDim2.new(0, 10, 0, 145)
 	ColorRedGreenBlue.ZIndex = BaseZ_Index + 6
@@ -3320,7 +3320,7 @@ function Compkiller:_DrawKeybinds(Window: ScreenGui)
 	HeaderFrame.BackgroundTransparency = 1.000
 	HeaderFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	HeaderFrame.BorderSizePixel = 0
-	HeaderFrame.ClipsDescendants = false
+	HeaderFrame.ClipsDescendants = true
 	HeaderFrame.Position = UDim2.new(0.5, 0, 0, 0)
 	HeaderFrame.Size = UDim2.new(1, -10, 1, 0)
 	HeaderFrame.ZIndex = 155
@@ -3353,7 +3353,7 @@ function Compkiller:_DrawKeybinds(Window: ScreenGui)
 	MainFrame.Position = UDim2.new(1, 0, 1, 5)
 	MainFrame.Size = UDim2.new(1, 30, 1, 3)
 	MainFrame.ZIndex = 156;
-	MainFrame.ClipsDescendants = false;
+	MainFrame.ClipsDescendants = true;
 
 	UIListLayout.Parent = MainFrame
 	UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -3463,7 +3463,7 @@ function Compkiller:_DrawKeybinds(Window: ScreenGui)
 		Keyholder.BorderSizePixel = 0
 		Keyholder.Size = UDim2.new(1, 0, 0, 28)
 		Keyholder.ZIndex = MainFrame.ZIndex + 3
-		Keyholder.ClipsDescendants = false;
+		Keyholder.ClipsDescendants = true;
 
 		table.insert(Compkiller.Elements.BGDBColor,{
 			Element = Keyholder,
@@ -3626,7 +3626,7 @@ function Compkiller:_KeybindHandler(Parent: Frame , ObjectType: string , Element
 	KeybindHandler.BackgroundColor3 = Compkiller.Colors.BlockBackground
 	KeybindHandler.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	KeybindHandler.BorderSizePixel = 0
-	KeybindHandler.ClipsDescendants = false
+	KeybindHandler.ClipsDescendants = true
 	KeybindHandler.Position = UDim2.new(1,999,1,999)
 	KeybindHandler.Size = UDim2.new(0, 225, 0, 0)
 	KeybindHandler.ZIndex = Zindex + SubIndex
@@ -4253,12 +4253,12 @@ function Compkiller:_LoadOption(Value , TabSignal)
 		ExtractElement.BackgroundColor3 = Compkiller.Colors.BlockBackground
 		ExtractElement.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		ExtractElement.BorderSizePixel = 0
-		ExtractElement.ClipsDescendants = false
+		ExtractElement.ClipsDescendants = true
 		ExtractElement.Position = UDim2.new(123, 0, 123, 0)
 		ExtractElement.Size = UDim2.new(0, 225, 0, 35)
 		ExtractElement.ZIndex = BaseZ_Index
 		ExtractElement.Visible = false
-		ExtractElement.ClipsDescendants = false
+		ExtractElement.ClipsDescendants = true
 
 		table.insert(Compkiller.Elements.BlockBackground,{
 			Element = ExtractElement,
@@ -5159,7 +5159,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 		SliderBar.BackgroundColor3 = Compkiller.Colors.DropColor
 		SliderBar.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		SliderBar.BorderSizePixel = 0
-		SliderBar.ClipsDescendants = false
+		SliderBar.ClipsDescendants = true
 		SliderBar.Position = UDim2.new(0.5, 0, 1, -9)
 		SliderBar.Size = UDim2.new(1, -25, 0, 10)
 		SliderBar.ZIndex = Zindex + 3
@@ -5446,7 +5446,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 		Paragraph.BorderSizePixel = 0
 		Paragraph.Size = UDim2.new(1, -1, 0, 40)
 		Paragraph.ZIndex = Zindex + 2
-		Paragraph.ClipsDescendants = false
+		Paragraph.ClipsDescendants = true
 
 		BlockText.Name = Compkiller:_RandomString()
 		BlockText.Parent = Paragraph
@@ -5655,7 +5655,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 		TextBox_2.BackgroundTransparency = 1.000
 		TextBox_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		TextBox_2.BorderSizePixel = 0
-		TextBox_2.ClipsDescendants = false
+		TextBox_2.ClipsDescendants = true
 		TextBox_2.Position = UDim2.new(0.5, 0, 0.5, 0)
 		TextBox_2.Size = UDim2.new(1, -5, 1, 0)
 		TextBox_2.ZIndex = Zindex + 5
@@ -5937,7 +5937,7 @@ function Compkiller:_LoadElement(Parent: Frame , EnabledLine: boolean , Signal ,
 		ValueItems.BackgroundColor3 = Compkiller.Colors.DropColor
 		ValueItems.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		ValueItems.BorderSizePixel = 0
-		ValueItems.ClipsDescendants = false
+		ValueItems.ClipsDescendants = true
 		ValueItems.Position = UDim2.new(0.5, 0, 1, -7)
 		ValueItems.Size = UDim2.new(1, -25, 0, 18)
 		ValueItems.ZIndex = Zindex + 5
@@ -6426,7 +6426,7 @@ function Compkiller.new(Config : Window)
 	TabFrame.BackgroundTransparency = TabFrameBaseTrans
 	TabFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	TabFrame.BorderSizePixel = 0
-	TabFrame.ClipsDescendants = false
+	TabFrame.ClipsDescendants = true
 	TabFrame.Position = UDim2.new(0, 25, 0, 0)
 	TabFrame.Size = UDim2.new(0, 85, 1, 0)
 
@@ -6629,7 +6629,7 @@ function Compkiller.new(Config : Window)
 	TabMainFrame.BackgroundTransparency = 1.000
 	TabMainFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 	TabMainFrame.BorderSizePixel = 0
-	TabMainFrame.ClipsDescendants = false
+	TabMainFrame.ClipsDescendants = true
 	TabMainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 	TabMainFrame.Size = UDim2.new(1, 0, 1, 0)
 	TabMainFrame.ZIndex = 5
@@ -6958,7 +6958,7 @@ function Compkiller.new(Config : Window)
 		Category.BackgroundTransparency = 1.000
 		Category.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		Category.BorderSizePixel = 0
-		Category.ClipsDescendants = false
+		Category.ClipsDescendants = true
 		Category.Size = UDim2.new(1, -10, 0, 22)
 
 		if Compkiller:_IsMobile() then
@@ -7051,7 +7051,7 @@ function Compkiller.new(Config : Window)
 		TabButton.BackgroundTransparency = 1.000
 		TabButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		TabButton.BorderSizePixel = 0
-		TabButton.ClipsDescendants = false
+		TabButton.ClipsDescendants = true
 		TabButton.Size = UDim2.new(1, -10, 0, 32)
 		TabButton.ZIndex = 3
 
@@ -7137,7 +7137,7 @@ function Compkiller.new(Config : Window)
 		MainFrame.Position = UDim2.new(0.5, 0, 1, -5)
 		MainFrame.Size = UDim2.new(1, 0, 1, -35)
 		MainFrame.ZIndex = 6
-		MainFrame.ClipsDescendants = false
+		MainFrame.ClipsDescendants = true
 
 		Top.Name = Compkiller:_RandomString()
 		Top.Parent = ContainerTab
@@ -7332,7 +7332,7 @@ function Compkiller.new(Config : Window)
 			Frame.BackgroundTransparency = 1.000
 			Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			Frame.BorderSizePixel = 0
-			Frame.ClipsDescendants = false
+			Frame.ClipsDescendants = true
 			Frame.Size = UDim2.new(0, 75, 0, 26)
 			Frame.ZIndex = 10
 
@@ -7549,7 +7549,7 @@ function Compkiller.new(Config : Window)
 		TabButton.BackgroundTransparency = 1.000
 		TabButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
 		TabButton.BorderSizePixel = 0
-		TabButton.ClipsDescendants = false
+		TabButton.ClipsDescendants = true
 		TabButton.Size = UDim2.new(1, -10, 0, 32)
 		TabButton.ZIndex = 3
 
@@ -8864,7 +8864,7 @@ function Compkiller.new(Config : Window)
 			TabButton.BackgroundTransparency = 1.000
 			TabButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
 			TabButton.BorderSizePixel = 0
-			TabButton.ClipsDescendants = false
+			TabButton.ClipsDescendants = true
 			TabButton.Size = UDim2.new(1, -10, 0, 32)
 			TabButton.ZIndex = 3
 
@@ -9275,7 +9275,7 @@ function Compkiller.new(Config : Window)
 			Section.BorderSizePixel = 0
 			Section.Size = UDim2.new(1, 0, 0, 0)
 			Section.ZIndex = 9
-			Section.ClipsDescendants = false;
+			Section.ClipsDescendants = true;
 
 			UICorner.CornerRadius = UDim.new(0, 6)
 			UICorner.Parent = Section
@@ -9544,7 +9544,7 @@ function Compkiller.new(Config : Window)
 		CloseWindow.Position = UDim2.new(1, -10, 0, 10)
 		CloseWindow.Size = UDim2.new(0, 0, 0, 23)
 		CloseWindow.ZIndex = 150
-		CloseWindow.ClipsDescendants = false;
+		CloseWindow.ClipsDescendants = true;
 
 		UICorner.CornerRadius = UDim.new(0, 3)
 		UICorner.Parent = CloseWindow
@@ -9689,7 +9689,7 @@ function Compkiller.new(Config : Window)
 			WaternarkList.Position = UDim2.new(0.5, 0, 0, 0)
 			WaternarkList.Size = UDim2.new(1, -10, 1, 0)
 			WaternarkList.ZIndex = 155
-			WaternarkList.ClipsDescendants = false
+			WaternarkList.ClipsDescendants = true
 
 			UIListLayout.Parent = WaternarkList
 			UIListLayout.FillDirection = Enum.FillDirection.Horizontal
