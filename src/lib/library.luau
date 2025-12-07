@@ -1,12 +1,14 @@
 --[[
-    		Compkiller Interface
 
-    Author: 4lpaca
+    	//		Compkiller Interface				\\
+	    ||		Author: 4lpaca						||
+		\\		Modified by n-0clip					//	
+
     License: MIT
-    Github: https://github.com/4lpaca-pin/CompKiller
+    Original library github: https://github.com/4lpaca-pin/CompKiller
     Original: compkiller.net
 
-        Version: 2.6
+        Version: 2.65
     - Improved Performance Mode
     	Compkiller:OptimizeMode(< boolean >)
   	- Added Auto Color Logo
@@ -356,7 +358,7 @@ local Mouse: Mouse = LocalPlayer:GetMouse();
 local CurrentCamera: Camera? = cloneref(workspace.CurrentCamera);
 
 local Compkiller = {
-	Version = '2.6',
+	Version = '2.65',
 	Logo = "rbxassetid://120245531583106",
 	Windows = {},
 	Scale = {
