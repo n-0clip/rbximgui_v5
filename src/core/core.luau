@@ -120,8 +120,6 @@ function Core.GetJoinScript()
 end
 
 function Core.Init(baseUrl)
-    print(banner)
-    
     local funcsUrl = baseUrl .. "src/core/funcs/"
     local gamesUrl = baseUrl .. "src/games/"
     
