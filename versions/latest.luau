@@ -3,18 +3,10 @@ local LoadStartTime = tick()
 local repo = "https://raw.githubusercontent.com/n-0clip/killfeed-lib/main/"
 local coreRepo = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/"
 
-local Loader = loadstring(game:HttpGet(coreRepo .. "src/loader.luau"))()
-
-Loader.Create()
-
-Loader.UpdateProgress(5, "Loading main")
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 local Core = loadstring(game:HttpGet(coreRepo .. "src/core/core.luau"))()
-
-Loader.UpdateProgress(65, "Loading HWID")
-local HWID_System = loadstring(game:HttpGet(coreRepo .. "src/hwid/hwid.luau"))()
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -26,20 +18,6 @@ local LocalPlayer = Players.LocalPlayer
 local IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 local platform = IsMobile and "Mobile" or "PC"
 
-HWID_System.WhitelistURL = "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/src/hwid/hwids"
-HWID_System.Enabled = true
-
-Loader.UpdateProgress(75, "Verifying HWID")
-
-local verified, hwid = HWID_System.Verify()
-
-if not verified then
-    Loader.Error("HWID not whitelisted")
-    setclipboard(hwid)
-    return
-end
-
-Loader.UpdateProgress(85, "Initializing Core")
 Core.Init()
 
 local Options = Library.Options
@@ -51,8 +29,6 @@ local FPS = 30
 
 Library.ForceCheckbox = false 
 Library.ShowToggleFrameInKeybinds = true
-
-Loader.UpdateProgress(95, "Creating UI")
 
 local Window = Library:CreateWindow({
     Title = "killfeed.cc",
@@ -76,11 +52,9 @@ Window:SetSidebarWidth(50)
 
 local LoadTime = tick() - LoadStartTime
 
-Loader.Success("Loaded in " .. string.format("%.2f", LoadTime) .. "s")
-
 task.wait(0.5)
 
-Library:Notify("loaded killfeed.cc | " .. Core.GameName .. " | " .. platform .. " | " .. string.format("%.2f", LoadTime) .. "s", 5)
+Library:Notify("loaded killfeed.cc | " .. platform .. " | " .. string.format("%.2f", LoadTime) .. "s", 5)
 
 local WatermarkConnection = RunService.RenderStepped:Connect(function()
     FrameCounter = FrameCounter + 1
@@ -153,23 +127,59 @@ local ESPMain = ESPTabBox:AddTab("Main")
 local ESPExtra = ESPTabBox:AddTab("Extra")
 local ESPSettings = ESPTabBox:AddTab("Settings")
 
-ESPMain:AddToggle("ESP_On", {Text = "Enabled", Default = false, Callback = function(v) Core.ESP.Settings.Enabled = v end})
-ESPMain:AddToggle("ESP_Team", {Text = "Team Check", Default = true, Callback = function(v) Core.ESP.Settings.TeamCheck = v end})
-ESPMain:AddToggle("ESP_Box", {Text = "Box", Default = false, Callback = function(v) Core.ESP.Settings.Box.Enabled = v end}):AddColorPicker("ESP_BoxCol", {Default = Color3.new(1,1,1), Callback = function(v) Core.ESP.Settings.Box.Color = v end})
-ESPMain:AddToggle("ESP_Name", {Text = "Name", Default = false, Callback = function(v) Core.ESP.Settings.Name.Enabled = v end}):AddColorPicker("ESP_NameCol", {Default = Color3.new(1,1,1), Callback = function(v) Core.ESP.Settings.Name.Color = v end})
-ESPMain:AddToggle("ESP_Health", {Text = "Health Bar", Default = false, Callback = function(v) Core.ESP.Settings.Health.Enabled = v end})
-ESPMain:AddToggle("ESP_Dist", {Text = "Distance", Default = false, Callback = function(v) Core.ESP.Settings.Distance.Enabled = v end}):AddColorPicker("ESP_DistCol", {Default = Color3.new(1,1,1), Callback = function(v) Core.ESP.Settings.Distance.Color = v end})
+ESPMain:AddToggle("ESP_On", {Text = "Enabled", Default = false, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Enabled = v end 
+end})
+ESPMain:AddToggle("ESP_Team", {Text = "Team Check", Default = true, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.TeamCheck = v end 
+end})
+ESPMain:AddToggle("ESP_Box", {Text = "Box", Default = false, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Box.Enabled = v end 
+end}):AddColorPicker("ESP_BoxCol", {Default = Color3.new(1,1,1), Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Box.Color = v end 
+end})
+ESPMain:AddToggle("ESP_Name", {Text = "Name", Default = false, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Name.Enabled = v end 
+end}):AddColorPicker("ESP_NameCol", {Default = Color3.new(1,1,1), Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Name.Color = v end 
+end})
+ESPMain:AddToggle("ESP_Health", {Text = "Health Bar", Default = false, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Health.Enabled = v end 
+end})
+ESPMain:AddToggle("ESP_Dist", {Text = "Distance", Default = false, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Distance.Enabled = v end 
+end}):AddColorPicker("ESP_DistCol", {Default = Color3.new(1,1,1), Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Distance.Color = v end 
+end})
 
-ESPExtra:AddToggle("ESP_Skel", {Text = "Skeleton", Default = false, Callback = function(v) Core.ESP.Settings.Skeleton.Enabled = v end}):AddColorPicker("ESP_SkelCol", {Default = Color3.new(1,1,1), Callback = function(v) Core.ESP.Settings.Skeleton.Color = v end})
-ESPExtra:AddToggle("ESP_Tracer", {Text = "Tracers", Default = false, Callback = function(v) Core.ESP.Settings.Tracers.Enabled = v end}):AddColorPicker("ESP_TracerCol", {Default = Color3.new(1,1,1), Callback = function(v) Core.ESP.Settings.Tracers.Color = v end})
-ESPExtra:AddDropdown("ESP_TracerOrig", {Values = {"Bottom", "Center", "Top"}, Default = 1, Text = "Tracer Origin", Callback = function(v) Core.ESP.Settings.Tracers.Origin = v end})
+ESPExtra:AddToggle("ESP_Skel", {Text = "Skeleton", Default = false, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Skeleton.Enabled = v end 
+end}):AddColorPicker("ESP_SkelCol", {Default = Color3.new(1,1,1), Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Skeleton.Color = v end 
+end})
+ESPExtra:AddToggle("ESP_Tracer", {Text = "Tracers", Default = false, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Tracers.Enabled = v end 
+end}):AddColorPicker("ESP_TracerCol", {Default = Color3.new(1,1,1), Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Tracers.Color = v end 
+end})
+ESPExtra:AddDropdown("ESP_TracerOrig", {Values = {"Bottom", "Center", "Top"}, Default = 1, Text = "Tracer Origin", Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Tracers.Origin = v end 
+end})
 
-ESPSettings:AddSlider("ESP_MaxDist", {Text = "Max Distance", Default = 2000, Min = 100, Max = 5000, Rounding = 0, Callback = function(v) Core.ESP.Settings.MaxDistance = v end})
+ESPSettings:AddSlider("ESP_MaxDist", {Text = "Max Distance", Default = 2000, Min = 100, Max = 5000, Rounding = 0, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.MaxDistance = v end 
+end})
 
 local ChamsBox = Tabs.Visuals:AddRightGroupbox("Chams")
-ChamsBox:AddToggle("ESP_Chams", {Text = "Enabled", Default = false, Callback = function(v) Core.ESP.Settings.Chams.Enabled = v end})
-ChamsBox:AddLabel("Fill Color"):AddColorPicker("ESP_ChamsCol", {Default = Color3.fromRGB(212,133,240), Callback = function(v) Core.ESP.Settings.Chams.FillColor = v end})
-ChamsBox:AddSlider("ESP_ChamsTrans", {Text = "Transparency", Default = 0.5, Min = 0, Max = 1, Rounding = 2, Callback = function(v) Core.ESP.Settings.Chams.FillTransparency = v end})
+ChamsBox:AddToggle("ESP_Chams", {Text = "Enabled", Default = false, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Chams.Enabled = v end 
+end})
+ChamsBox:AddLabel("Fill Color"):AddColorPicker("ESP_ChamsCol", {Default = Color3.fromRGB(212,133,240), Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Chams.FillColor = v end 
+end})
+ChamsBox:AddSlider("ESP_ChamsTrans", {Text = "Transparency", Default = 0.5, Min = 0, Max = 1, Rounding = 2, Callback = function(v) 
+    if Core.ESP then Core.ESP.Settings.Chams.FillTransparency = v end 
+end})
 
 -- World Tab
 local WorldBox = Tabs.World:AddLeftGroupbox("Lighting")
@@ -184,7 +194,7 @@ MoveBox:AddToggle("Move_Jump", {Text = "Infinite Jump", Default = false})
 MoveBox:AddSlider("Move_JumpVal", {Text = "Jump Power", Default = 50, Min = 50, Max = 200})
 MoveBox:AddToggle("Move_Noclip", {Text = "Noclip", Default = false}):AddKeyPicker("Move_NoclipKey", {Default = "N", Mode = "Toggle", Text = "Noclip Key"})
 
--- Game Tab (Counter Blox)
+-- Game Tab
 local GameUniv = Tabs.Game:AddLeftGroupbox("Universal")
 GameUniv:AddButton({Text = "Rejoin Server", Func = function() Core.Rejoin() end})
 GameUniv:AddButton({Text = "Copy Join Script", Func = function() 
@@ -192,35 +202,51 @@ GameUniv:AddButton({Text = "Copy Join Script", Func = function()
     Library:Notify("Copied to clipboard") 
 end})
 
-if Core.GameName == "Counter Blox" then
-    local CBTabBox = Tabs.Game:AddRightTabbox("Counter Blox")
-    local CBWeapon = CBTabBox:AddTab("Weapon")
-    local CBMove = CBTabBox:AddTab("Movement")
-    local CBCamera = CBTabBox:AddTab("Camera")
-    
-    CBWeapon:AddToggle("CB_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.CBNoSpread(v) end})
-    CBWeapon:AddToggle("CB_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.CBNoRecoil(v) end})
-    CBWeapon:AddToggle("CB_RapidFire", {Text = "Rapid Fire", Default = false, Callback = function(v) Core.CBRapidFire(v) end})
-    CBWeapon:AddToggle("CB_InfAmmo", {Text = "Infinite Ammo", Default = false, Callback = function(v) Core.CBInfAmmo(v) end})
-    
-    CBMove:AddToggle("CB_BHop", {Text = "Bunny Hop", Default = false, Callback = function(v) Core.CBBHop(v) end})
-    CBMove:AddToggle("CB_Spinbot", {Text = "Spinbot", Default = false, Callback = function(v) Core.CBSpinbot(v) end})
-    CBMove:AddSlider("CB_SpinSpeed", {Text = "Spin Speed", Default = 50, Min = 10, Max = 100, Rounding = 0, Callback = function(v) Core.CBSettings.SpinSpeed = v end})
-    
-    CBCamera:AddToggle("CB_ThirdPerson", {Text = "Third Person", Default = false, Callback = function(v) Core.CBThirdPerson(v) end})
-    CBCamera:AddSlider("CB_TPDistance", {Text = "Distance", Default = 10, Min = 5, Max = 30, Rounding = 0, Callback = function(v) Core.CBSetThirdPersonDistance(v) end})
-end
+-- Counter Blox
+local CBTabBox = Tabs.Game:AddRightTabbox("Counter Blox")
+local CBWeapon = CBTabBox:AddTab("Weapon")
+local CBMove = CBTabBox:AddTab("Movement")
+local CBCamera = CBTabBox:AddTab("Camera")
+
+CBWeapon:AddToggle("CB_NoSpread", {Text = "No Spread", Default = false, Callback = function(v) Core.CBNoSpread(v) end})
+CBWeapon:AddToggle("CB_NoRecoil", {Text = "No Recoil", Default = false, Callback = function(v) Core.CBNoRecoil(v) end})
+CBWeapon:AddToggle("CB_RapidFire", {Text = "Rapid Fire", Default = false, Callback = function(v) Core.CBRapidFire(v) end})
+CBWeapon:AddToggle("CB_InfAmmo", {Text = "Infinite Ammo", Default = false, Callback = function(v) Core.CBInfAmmo(v) end})
+
+CBMove:AddToggle("CB_BHop", {Text = "Bunny Hop", Default = false, Callback = function(v) Core.CBBHop(v) end})
+CBMove:AddSlider("CB_BHopSpeed", {Text = "BHop Speed", Default = 20, Min = 0, Max = 100, Rounding = 0, Callback = function(v) Core.CBSettings.BHopSpeed = v end})
+CBMove:AddToggle("CB_Spinbot", {Text = "Spinbot", Default = false, Callback = function(v) Core.CBSpinbot(v) end})
+CBMove:AddSlider("CB_SpinSpeed", {Text = "Spin Speed", Default = 50, Min = 10, Max = 100, Rounding = 0, Callback = function(v) Core.CBSettings.SpinSpeed = v end})
+
+CBCamera:AddToggle("CB_ThirdPerson", {Text = "Third Person", Default = false, Callback = function(v) Core.CBThirdPerson(v) end}):AddKeyPicker("CB_TPKey", {Default = "V", Mode = "Toggle", Text = "Third Person Key"})
+CBCamera:AddSlider("CB_TPDistance", {Text = "Distance", Default = 10, Min = 5, Max = 30, Rounding = 0, Callback = function(v) Core.CBSetThirdPersonDistance(v) end})
 
 -- Main Loops
 RunService.RenderStepped:Connect(function()
-    pcall(function() FOVCircle.Visible = Toggles.Aim_DrawFOV and Toggles.Aim_DrawFOV.Value and Core.AimbotSettings.Enabled end)
-    pcall(function() FOVCircle.Radius = Core.AimbotSettings.FOV end)
-    pcall(function() FOVCircle.Color = Options.Aim_FOVCol and Options.Aim_FOVCol.Value or Color3.new(1,1,1) end)
-    pcall(function() FOVCircle.Position = UserInputService:GetMouseLocation() end)
-    pcall(function() TargetCircle.Color = Options.Aim_TargetCol and Options.Aim_TargetCol.Value or Color3.new(1,0,0) end)
+    pcall(function() 
+        FOVCircle.Visible = Toggles.Aim_DrawFOV and Toggles.Aim_DrawFOV.Value and Core.AimbotSettings.Enabled 
+        FOVCircle.Radius = Core.AimbotSettings.FOV
+        FOVCircle.Color = Options.Aim_FOVCol and Options.Aim_FOVCol.Value or Color3.new(1,1,1)
+        FOVCircle.Position = UserInputService:GetMouseLocation()
+        TargetCircle.Color = Options.Aim_TargetCol and Options.Aim_TargetCol.Value or Color3.new(1,0,0)
+    end)
+    
+    -- Third Person Keybind
+    if Options.CB_TPKey and Options.CB_TPKey:GetState() then
+        if not Core.CBSettings.ThirdPerson then
+            Core.CBThirdPerson(true)
+            if Toggles.CB_ThirdPerson then Toggles.CB_ThirdPerson:SetValue(true) end
+        end
+    else
+        if Core.CBSettings.ThirdPerson and Options.CB_TPKey then
+            Core.CBThirdPerson(false)
+            if Toggles.CB_ThirdPerson then Toggles.CB_ThirdPerson:SetValue(false) end
+        end
+    end
 end)
 
 RunService.Heartbeat:Connect(function()
+    -- Aimbot
     if Core.AimbotSettings.Enabled and Options.Aim_Key and Options.Aim_Key:GetState() then
         if Core.AimbotSettings.StickyAim and Core.LockedTarget and Core.IsAlive(Core.LockedTarget) then
             Core.AimAt(Core.LockedTarget, TargetCircle)
@@ -238,6 +264,7 @@ RunService.Heartbeat:Connect(function()
         pcall(function() TargetCircle.Visible = false end) 
     end
     
+    -- Trigger Bot
     if Core.TriggerSettings.Enabled and Options.Trigger_Key and Options.Trigger_Key:GetState() then
         local target = Core.GetTriggerTarget()
         if target then 
@@ -249,6 +276,7 @@ RunService.Heartbeat:Connect(function()
         end
     end
     
+    -- Movement
     if Core.IsAlive(LocalPlayer) then
         if Toggles.Move_Speed and Toggles.Move_Speed.Value then 
             pcall(function() LocalPlayer.Character.Humanoid.WalkSpeed = Options.Move_SpeedVal.Value end)
