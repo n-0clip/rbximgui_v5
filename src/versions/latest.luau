@@ -164,7 +164,7 @@ GameUniv:AddButton({Text = "Copy Join Script", Func = function()
     Library:Notify("Copied to clipboard")
 end})
 
-if Core.GameId == "counter-blox" then
+
     local CBTabBox = Tabs.Game:AddRightTabbox("Counter Blox")
     local CBWeapon = CBTabBox:AddTab("Weapon")
     local CBMove = CBTabBox:AddTab("Movement")
@@ -182,7 +182,7 @@ if Core.GameId == "counter-blox" then
     
     CBCamera:AddToggle("CB_ThirdPerson", {Text = "Third Person", Default = false, Callback = function(v) Core.Game.ThirdPerson(v) end}):AddKeyPicker("CB_TPKey", {Default = "V", Mode = "Toggle", Text = "Third Person Key"})
     CBCamera:AddSlider("CB_TPDistance", {Text = "Distance", Default = 10, Min = 5, Max = 30, Rounding = 0, Callback = function(v) Core.Game.SetThirdPersonDistance(v) end})
-end
+
 
 RunService.RenderStepped:Connect(function()
     pcall(function()
