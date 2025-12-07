@@ -11,65 +11,43 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
+local banner = [[
+ __   .__.__  .__   _____                 .___
+|  | _|__|  | |  |_/ ____\____   ____   __| _/
+|  |/ /  |  | |  |\   __\/ __ \_/ __ \ / __ | 
+|    <|  |  |_|  |_|  | \  ___/\  ___// /_/ | 
+|__|_ \__|____/____/__|  \___  >\___  >____ | 
+     \/                      \/     \/     \/ 
+]]
+
+Core.Aim = nil
 Core.ESP = nil
+Core.Game = nil
+
 Core.IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 Core.SupportedGames = {
-    [301549746] = "Counter Blox"
+    [301549746] = "counter-blox"
 }
 
 Core.PlaceId = game.PlaceId
-Core.GameName = Core.SupportedGames[Core.PlaceId] or "Universal"
-
-Core.AimbotSettings = {
-    Enabled = false,
-    TeamCheck = true,
-    VisibleCheck = true,
-    FOV = 100,
-    Smoothness = 5,
-    AimPart = "Head",
-    Prediction = 0,
-    StickyAim = false
-}
-
-Core.TriggerSettings = {
-    Enabled = false,
-    TeamCheck = true,
-    Delay = 0
-}
-
-Core.CBSettings = {
-    NoSpread = false,
-    NoRecoil = false,
-    RapidFire = false,
-    InfAmmo = false,
-    BHop = false,
-    BHopSpeed = 20,
-    Spinbot = false,
-    SpinSpeed = 50,
-    ThirdPerson = false,
-    ThirdPersonDistance = 10
-}
+Core.GameId = Core.SupportedGames[Core.PlaceId] or "universal"
+Core.GameName = Core.GameId == "counter-blox" and "Counter Blox" or "Universal"
 
 Core.Loops = {}
-Core.OriginalValues = {}
 Core.LockedTarget = nil
 
--- Load ESP
-function Core.LoadESP(url)
-    local espUrl = url or "https://raw.githubusercontent.com/n-0clip/killfeed.cc/main/src/core/esp.luau"
+function Core.LoadModule(url)
     local success, result = pcall(function()
-        return loadstring(game:HttpGet(espUrl))()
+        return loadstring(game:HttpGet(url))()
     end)
     if success and result then
-        Core.ESP = result
-        return Core.ESP
+        return result
     end
-    warn("[Core] Failed to load ESP")
+    warn("[Core] Failed to load: " .. url)
     return nil
 end
 
--- Drawing Helper
 function Core.CreateDrawing(t, props)
     local success, d = pcall(function() return Drawing.new(t) end)
     if not success or not d then
@@ -79,7 +57,6 @@ function Core.CreateDrawing(t, props)
     return d
 end
 
--- Utility
 function Core.GetMousePosition()
     if Core.IsMobile then
         return Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
@@ -112,83 +89,9 @@ function Core.GetCurrentGun()
     return nil
 end
 
--- Aimbot
-function Core.GetClosestPlayer()
-    local closest, shortestDist = nil, Core.AimbotSettings.FOV
-    local mousePos = Core.GetMousePosition()
-    
-    for _, player in pairs(Players:GetPlayers()) do
-        if player == LocalPlayer or not Core.IsAlive(player) then continue end
-        if Core.AimbotSettings.TeamCheck and player.Team == LocalPlayer.Team and player.Team ~= nil then continue end
-        
-        local char = player.Character
-        if not char then continue end
-        
-        local aimPart = char:FindFirstChild(Core.AimbotSettings.AimPart) or char:FindFirstChild("Head")
-        if not aimPart then continue end
-        
-        local screenPos, onScreen = Camera:WorldToViewportPoint(aimPart.Position)
-        if not onScreen then continue end
-        if Core.AimbotSettings.VisibleCheck and not Core.IsVisible(aimPart) then continue end
-        
-        local dist = (Vector2.new(screenPos.X, screenPos.Y) - mousePos).Magnitude
-        if dist < shortestDist then
-            shortestDist = dist
-            closest = player
-        end
-    end
-    return closest
+function Core.SetTime(time)
+    Lighting.ClockTime = time
 end
-
-function Core.AimAt(player, TargetCircle)
-    if not player or not Core.IsAlive(player) then Core.LockedTarget = nil return end
-    if Core.IsMobile then return end
-    
-    local char = player.Character
-    if not char then return end
-    
-    local aimPart = char:FindFirstChild(Core.AimbotSettings.AimPart) or char:FindFirstChild("Head")
-    if not aimPart then return end
-    
-    local targetPos = aimPart.Position
-    if Core.AimbotSettings.Prediction > 0 then
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if root then targetPos = targetPos + (root.AssemblyLinearVelocity * (Core.AimbotSettings.Prediction / 10)) end
-    end
-    
-    local screenPos = Camera:WorldToViewportPoint(targetPos)
-    local mousePos = Core.GetMousePosition()
-    local delta = (Vector2.new(screenPos.X, screenPos.Y) - mousePos) / math.max(Core.AimbotSettings.Smoothness, 1)
-    
-    if mousemoverel then mousemoverel(delta.X, delta.Y) end
-    if TargetCircle then 
-        pcall(function() 
-            TargetCircle.Position = Vector2.new(screenPos.X, screenPos.Y) 
-            TargetCircle.Visible = true 
-        end) 
-    end
-end
-
--- Trigger Bot
-function Core.GetTriggerTarget()
-    local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    local ray = Camera:ViewportPointToRay(center.X, center.Y)
-    local params = RaycastParams.new()
-    params.FilterType = Enum.RaycastFilterType.Blacklist
-    params.FilterDescendantsInstances = {LocalPlayer.Character}
-    local result = Workspace:Raycast(ray.Origin, ray.Direction * 1000, params)
-    if result and result.Instance then
-        local player = Players:GetPlayerFromCharacter(result.Instance.Parent) or Players:GetPlayerFromCharacter(result.Instance.Parent.Parent)
-        if player and player ~= LocalPlayer and Core.IsAlive(player) then
-            if Core.TriggerSettings.TeamCheck and player.Team == LocalPlayer.Team and player.Team ~= nil then return nil end
-            return player
-        end
-    end
-    return nil
-end
-
--- World
-function Core.SetTime(time) Lighting.ClockTime = time end
 
 function Core.SetFullbright(enabled)
     if enabled then
@@ -196,188 +99,51 @@ function Core.SetFullbright(enabled)
         Lighting.ClockTime = 14
         Lighting.FogEnd = 100000
         Lighting.GlobalShadows = false
-        Lighting.Ambient = Color3.new(1,1,1)
+        Lighting.Ambient = Color3.new(1, 1, 1)
     else
         Lighting.Brightness = 1
         Lighting.GlobalShadows = true
-        Lighting.Ambient = Color3.fromRGB(127,127,127)
+        Lighting.Ambient = Color3.fromRGB(127, 127, 127)
     end
 end
 
-function Core.SetNoFog(enabled) 
-    Lighting.FogEnd = enabled and 100000 or 1000 
+function Core.SetNoFog(enabled)
+    Lighting.FogEnd = enabled and 100000 or 1000
 end
 
--- ============================================
--- COUNTER BLOX FUNCTIONS (ORIGINAL STYLE)
--- ============================================
+function Core.Rejoin()
+    TeleportService:TeleportToPlaceInstance(Core.PlaceId, game.JobId, LocalPlayer)
+end
 
-function Core.CBNoSpread(enabled)
-    Core.CBSettings.NoSpread = enabled
+function Core.GetJoinScript()
+    return 'game:GetService("TeleportService"):TeleportToPlaceInstance(' .. Core.PlaceId .. ', "' .. game.JobId .. '", game.Players.LocalPlayer)'
+end
+
+function Core.Init(baseUrl)
+    print(banner)
     
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
+    local funcsUrl = baseUrl .. "src/core/funcs/"
+    local gamesUrl = baseUrl .. "src/games/"
     
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        local spread = weapon:FindFirstChild("Spread")
-        if spread then
-            if enabled then
-                spread.Value = 0
-            end
-        end
+    Core.Aim = Core.LoadModule(funcsUrl .. "aim.luau")
+    Core.ESP = Core.LoadModule(funcsUrl .. "esp.luau")
+    
+    local gameFile = Core.GameId .. ".luau"
+    Core.Game = Core.LoadModule(gamesUrl .. gameFile)
+    
+    if Core.ESP then
+        Core.ESP.Init()
+    end
+    
+    if Core.Aim then
+        Core.Aim.Init()
+    end
+    
+    if Core.Game then
+        Core.Game.Init(Core)
     end
 end
 
-function Core.CBNoRecoil(enabled)
-    Core.CBSettings.NoRecoil = enabled
-    
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
-    
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        local recoil = weapon:FindFirstChild("Recoil")
-        local camRecoil = weapon:FindFirstChild("CamRecoil")
-        local kickBack = weapon:FindFirstChild("KickBack")
-        
-        if recoil then
-            if enabled then recoil.Value = 0 end
-        end
-        if camRecoil then
-            if enabled then camRecoil.Value = 0 end
-        end
-        if kickBack then
-            if enabled then kickBack.Value = 0 end
-        end
-    end
-end
-
-function Core.CBRapidFire(enabled)
-    Core.CBSettings.RapidFire = enabled
-    
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
-    
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        local fireRate = weapon:FindFirstChild("FireRate")
-        if fireRate then
-            if enabled then
-                fireRate.Value = 0
-            end
-        end
-    end
-end
-
-function Core.CBInfAmmo(enabled)
-    Core.CBSettings.InfAmmo = enabled
-    
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
-    
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        local ammo = weapon:FindFirstChild("Ammo")
-        local storedAmmo = weapon:FindFirstChild("StoredAmmo")
-        
-        if ammo then
-            ammo.Value = 200
-        end
-        if storedAmmo then
-            storedAmmo.Value = 999999
-        end
-    end
-end
-
-function Core.CBBHop(enabled)
-    Core.CBSettings.BHop = enabled
-    
-    if Core.Loops.BHop then 
-        Core.Loops.BHop:Disconnect() 
-        Core.Loops.BHop = nil 
-    end
-    
-    if enabled then
-        Core.Loops.BHop = RunService.RenderStepped:Connect(function()
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) and Core.IsAlive(LocalPlayer) then
-                local char = LocalPlayer.Character
-                local hum = char:FindFirstChild("Humanoid")
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                
-                if hum and hrp then
-                    hum.Jump = true
-                    local moveDirection = hrp.CFrame.LookVector * Core.CBSettings.BHopSpeed
-                    hrp.Velocity = Vector3.new(moveDirection.X, hrp.Velocity.Y, moveDirection.Z)
-                end
-            end
-        end)
-    end
-end
-
-function Core.CBSpinbot(enabled)
-    Core.CBSettings.Spinbot = enabled
-    
-    if Core.Loops.Spinbot then 
-        Core.Loops.Spinbot:Disconnect() 
-        Core.Loops.Spinbot = nil 
-    end
-    
-    if enabled then
-        Core.Loops.Spinbot = RunService.RenderStepped:Connect(function()
-            if Core.IsAlive(LocalPlayer) then
-                LocalPlayer.Character.Humanoid.AutoRotate = false
-                LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(Core.CBSettings.SpinSpeed), 0)
-            end
-        end)
-    else
-        if Core.IsAlive(LocalPlayer) then 
-            LocalPlayer.Character.Humanoid.AutoRotate = true 
-        end
-    end
-end
-
-function Core.CBThirdPerson(enabled)
-    Core.CBSettings.ThirdPerson = enabled
-    
-    if Core.Loops.ThirdPerson then 
-        Core.Loops.ThirdPerson:Disconnect() 
-        Core.Loops.ThirdPerson = nil 
-    end
-    
-    if enabled then
-        Core.Loops.ThirdPerson = RunService.Heartbeat:Connect(function()
-            LocalPlayer.CameraMinZoomDistance = Core.CBSettings.ThirdPersonDistance
-            LocalPlayer.CameraMaxZoomDistance = Core.CBSettings.ThirdPersonDistance
-        end)
-    else
-        LocalPlayer.CameraMinZoomDistance = 0.5
-        LocalPlayer.CameraMaxZoomDistance = 0.5
-    end
-end
-
-function Core.CBSetThirdPersonDistance(dist)
-    Core.CBSettings.ThirdPersonDistance = dist
-    if Core.CBSettings.ThirdPerson then
-        LocalPlayer.CameraMinZoomDistance = dist
-        LocalPlayer.CameraMaxZoomDistance = dist
-    end
-end
-
--- Misc
-function Core.Rejoin() 
-    TeleportService:TeleportToPlaceInstance(Core.PlaceId, game.JobId, LocalPlayer) 
-end
-
-function Core.GetJoinScript() 
-    return 'game:GetService("TeleportService"):TeleportToPlaceInstance(' .. Core.PlaceId .. ', "' .. game.JobId .. '", game.Players.LocalPlayer)' 
-end
-
--- Init
-function Core.Init(espUrl)
-    Core.LoadESP(espUrl)
-    if Core.ESP then 
-        Core.ESP.Init() 
-    end
-end
-
--- Cleanup
 function Core.Cleanup()
     for _, conn in pairs(Core.Loops) do
         if conn then pcall(function() conn:Disconnect() end) end
