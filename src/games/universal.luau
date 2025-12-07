@@ -50,7 +50,6 @@ function Universal.SetNoclip(enabled)
 end
 
 function Universal.Init(Core)
-    print("[Universal] Initialized")
     Universal.Core = Core
     
     Universal.Loops.Main = RunService.Heartbeat:Connect(function()
