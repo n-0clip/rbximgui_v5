@@ -177,7 +177,6 @@ function CounterBlox.SetSpinSpeed(speed)
 end
 
 function CounterBlox.Init(Core)
-    print("[Counter Blox] Initialized")
     CounterBlox.Core = Core
 end
 
