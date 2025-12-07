@@ -8628,62 +8628,71 @@ function Compkiller.new(Config : Window)
 			end);
 
 			local Refresh = function()
-				local FullConfig = Configuration.Config:GetFullConfigs();
-
-				for i,v in next, ScrollingFrame:GetChildren() do
-					if v:IsA('Frame') and v.Name ~= "Space" then
-						v:Destroy();
-					end;
-				end;
-
-				for i,v in next , __signals do
-					v:Disconnect();
-				end;
-
-				for i,v in next , FullConfig do
-					local Button = TabArgs:_DrawConfig();
-
-					Button:SetInfo(v.Info.Author,v.Name);
-
-					table.insert(__signals,TabOpenSignal:Connect(function(v)
-						Button:Toggle(v);
-					end));
-
-					Button.OnLoad = function()
-						WindowArgs.Notify.new({
-							Title = "Configs",
-							Icon = Compkiller:CacheImage(Config.Logo),
-							Content = "Load config \""..v.Name.."\""
-						})
-
-						Configuration.Config:LoadConfig(v.Name);
-					end;
-
-					Button.OnSave = function()
-						WindowArgs.Notify.new({
-							Title = "Configs",
-							Icon = Compkiller:CacheImage(Config.Logo),
-							Content = "Save config \""..v.Name.."\""
-						})
-
-						Button:SetInfo(v.Info.Author,v.Name);
-
-						Configuration.Config:WriteConfig({
-							Name = v.Name,
-							Author = v.Info.Author;
-						});
-					end
-
-					Button.OnDelete = function()
-						WindowArgs.Notify.new({
-							Title = "Configs",
-							Icon = Compkiller:CacheImage(Config.Logo),
-							Content = "Delete config \""..v.Name.."\""
-						})
-
-						Configuration.Config:DeleteConfig(v.Name)
-					end
-				end;
+			    local FullConfig = Configuration.Config:GetFullConfigs();
+			
+			    for i,v in next, ScrollingFrame:GetChildren() do
+			        if v:IsA('Frame') and v.Name ~= "Space" then
+			            v:Destroy();
+			        end;
+			    end;
+			
+			    for i,v in next , __signals do
+			        v:Disconnect();
+			    end;
+			
+			    for i,v in next , FullConfig do
+			        if type(v.Info) ~= "table" then
+			            v.Info = {
+			                Author = WindowArgs.Username or "Unknown"
+			            }
+			        else
+			            v.Info.Author = v.Info.Author or WindowArgs.Username or "Unknown"
+			        end
+			
+			        local author = v.Info.Author
+			
+			        local Button = TabArgs:_DrawConfig();
+			        Button:SetInfo(author, v.Name);
+			
+			        table.insert(__signals, TabOpenSignal:Connect(function(opened)
+			            Button:Toggle(opened);
+			        end));
+			
+			        Button.OnLoad = function()
+			            WindowArgs.Notify.new({
+			                Title = "Configs",
+			                Icon = Compkiller:CacheImage(Config.Logo),
+			                Content = "Load config \""..v.Name.."\""
+			            })
+			
+			            Configuration.Config:LoadConfig(v.Name);
+			        end;
+			
+			        Button.OnSave = function()
+			            WindowArgs.Notify.new({
+			                Title = "Configs",
+			                Icon = Compkiller:CacheImage(Config.Logo),
+			                Content = "Save config \""..v.Name.."\""
+			            })
+			
+			            Button:SetInfo(author, v.Name);
+			
+			            Configuration.Config:WriteConfig({
+			                Name = v.Name,
+			                Author = author;
+			            });
+			        end;
+			
+			        Button.OnDelete = function()
+			            WindowArgs.Notify.new({
+			                Title = "Configs",
+			                Icon = Compkiller:CacheImage(Config.Logo),
+			                Content = "Delete config \""..v.Name.."\""
+			            })
+			
+			            Configuration.Config:DeleteConfig(v.Name)
+			        end
+			    end;
 			end;
 
 			Refresh();
