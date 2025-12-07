@@ -24,3 +24,4 @@
 ### Planned
 - try to rewrite core and the main script
 - add more games
+##
