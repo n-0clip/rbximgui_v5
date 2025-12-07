@@ -8,6 +8,15 @@ local CoreGui = game:GetService("CoreGui")
 local Camera = Workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
+local banner = [[
+ __   .__.__  .__   _____                 .___
+|  | _|__|  | |  |_/ ____\____   ____   __| _/
+|  |/ /  |  | |  |\   __\/ __ \_/ __ \ / __ | 
+|    <|  |  |_|  |_|  | \  ___/\  ___// /_/ | 
+|__|_ \__|____/____/__|  \___  >\___  >____ | 
+     \/                      \/     \/     \/ 
+]]
+
 ESP.Settings = {
     Enabled = false,
     TeamCheck = true,
@@ -19,7 +28,7 @@ ESP.Settings = {
     Distance = { Enabled = false, Color = Color3.new(1, 1, 1) },
     Skeleton = { Enabled = false, Color = Color3.new(1, 1, 1) },
     Chams = { Enabled = false, FillColor = Color3.new(1, 0, 0), FillTransparency = 0.5 },
-    Tracers = { Enabled = false, Color = Color3.new(1, 1, 1) }
+    Tracers = { Enabled = false, Color = Color3.new(1, 1, 1), Origin = "Bottom" }
 }
 
 ESP.Objects = {}
@@ -55,11 +64,11 @@ function ESP.Create(plr)
     if ESP.Objects[plr] then return end
     ESP.Objects[plr] = {
         Box = NewDrawing("Square", { Thickness = 1, Filled = false }),
-        BoxOutline = NewDrawing("Square", { Thickness = 3, Filled = false, Color = Color3.new(0,0,0) }),
+        BoxOutline = NewDrawing("Square", { Thickness = 3, Filled = false, Color = Color3.new(0, 0, 0) }),
         Name = NewDrawing("Text", { Size = 13, Center = true, Outline = true, Font = 2 }),
         Distance = NewDrawing("Text", { Size = 11, Center = true, Outline = true, Font = 2 }),
         HealthBar = NewDrawing("Square", { Filled = true }),
-        HealthOutline = NewDrawing("Square", { Filled = false, Color = Color3.new(0,0,0) }),
+        HealthOutline = NewDrawing("Square", { Filled = false, Color = Color3.new(0, 0, 0) }),
         Tracer = NewDrawing("Line", { Thickness = 1 }),
         Skeleton = {}
     }
@@ -72,7 +81,8 @@ function ESP.Remove(plr)
     local obj = ESP.Objects[plr]
     if obj then
         for _, v in pairs(obj) do
-            if type(v) == "table" and v.Remove then pcall(v.Remove, v)
+            if type(v) == "table" and v.Remove then
+                pcall(v.Remove, v)
             elseif type(v) == "table" then
                 for _, l in pairs(v) do pcall(function() l:Remove() end) end
             end
@@ -88,7 +98,8 @@ end
 function ESP.Hide(obj)
     if not obj then return end
     for _, v in pairs(obj) do
-        if type(v) == "table" and v.Visible ~= nil then pcall(function() v.Visible = false end)
+        if type(v) == "table" and v.Visible ~= nil then
+            pcall(function() v.Visible = false end)
         elseif type(v) == "table" then
             for _, l in pairs(v) do pcall(function() l.Visible = false end) end
         end
@@ -128,10 +139,9 @@ function ESP.Update()
         local footPos = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
         local h = math.abs(footPos.Y - headPos.Y)
         local w = h * 0.6
-        local x, y = pos.X - w/2, headPos.Y
+        local x, y = pos.X - w / 2, headPos.Y
         local color = ESP.Settings.Box.Color
         
-        -- Box
         if ESP.Settings.Box.Enabled then
             obj.BoxOutline.Size = Vector2.new(w, h)
             obj.BoxOutline.Position = Vector2.new(x, y)
@@ -145,27 +155,24 @@ function ESP.Update()
             obj.BoxOutline.Visible = false
         end
         
-        -- Name
         if ESP.Settings.Name.Enabled then
             obj.Name.Text = plr.Name
-            obj.Name.Position = Vector2.new(x + w/2, y - 15)
+            obj.Name.Position = Vector2.new(x + w / 2, y - 15)
             obj.Name.Color = ESP.Settings.Name.Color
             obj.Name.Visible = true
         else
             obj.Name.Visible = false
         end
         
-        -- Distance
         if ESP.Settings.Distance.Enabled then
             obj.Distance.Text = math.floor(dist) .. "m"
-            obj.Distance.Position = Vector2.new(x + w/2, y + h + 2)
+            obj.Distance.Position = Vector2.new(x + w / 2, y + h + 2)
             obj.Distance.Color = ESP.Settings.Distance.Color
             obj.Distance.Visible = true
         else
             obj.Distance.Visible = false
         end
         
-        -- Health
         if ESP.Settings.Health.Enabled then
             local hp = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
             obj.HealthOutline.Size = Vector2.new(3, h)
@@ -180,9 +187,10 @@ function ESP.Update()
             obj.HealthOutline.Visible = false
         end
         
-        -- Tracers
         if ESP.Settings.Tracers.Enabled then
-            obj.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+            local originY = ESP.Settings.Tracers.Origin == "Bottom" and Camera.ViewportSize.Y or
+                           (ESP.Settings.Tracers.Origin == "Top" and 0 or Camera.ViewportSize.Y / 2)
+            obj.Tracer.From = Vector2.new(Camera.ViewportSize.X / 2, originY)
             obj.Tracer.To = Vector2.new(pos.X, pos.Y)
             obj.Tracer.Color = ESP.Settings.Tracers.Color
             obj.Tracer.Visible = true
@@ -190,7 +198,6 @@ function ESP.Update()
             obj.Tracer.Visible = false
         end
         
-        -- Skeleton
         if ESP.Settings.Skeleton.Enabled then
             local parts = char:FindFirstChild("UpperTorso") and SkeletonR15 or SkeletonR6
             for i, conn in ipairs(parts) do
@@ -217,7 +224,6 @@ function ESP.Update()
             for _, l in pairs(obj.Skeleton) do pcall(function() l.Visible = false end) end
         end
         
-        -- Chams
         if ESP.Settings.Chams.Enabled then
             if not ESP.Chams[plr] then
                 local hl = Instance.new("Highlight")
@@ -236,6 +242,8 @@ function ESP.Update()
 end
 
 function ESP.Init()
+    print("[ESP] Initialized")
+    
     for _, plr in pairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then ESP.Create(plr) end
     end
