@@ -44,7 +44,7 @@ Core.CBSettings = {
     RapidFire = false,
     InfAmmo = false,
     BHop = false,
-    BHopKey = Enum.KeyCode.Space,
+    BHopSpeed = 20,
     Spinbot = false,
     SpinSpeed = 50,
     ThirdPerson = false,
@@ -73,7 +73,7 @@ end
 function Core.CreateDrawing(t, props)
     local success, d = pcall(function() return Drawing.new(t) end)
     if not success or not d then
-        return {Visible = false, Remove = function() end}
+        return {Visible = false, Remove = function() end, Position = Vector2.new(), Radius = 0, Color = Color3.new()}
     end
     for k, v in pairs(props or {}) do pcall(function() d[k] = v end) end
     return d
@@ -161,7 +161,12 @@ function Core.AimAt(player, TargetCircle)
     local delta = (Vector2.new(screenPos.X, screenPos.Y) - mousePos) / math.max(Core.AimbotSettings.Smoothness, 1)
     
     if mousemoverel then mousemoverel(delta.X, delta.Y) end
-    if TargetCircle then pcall(function() TargetCircle.Position = Vector2.new(screenPos.X, screenPos.Y) TargetCircle.Visible = true end) end
+    if TargetCircle then 
+        pcall(function() 
+            TargetCircle.Position = Vector2.new(screenPos.X, screenPos.Y) 
+            TargetCircle.Visible = true 
+        end) 
+    end
 end
 
 -- Trigger Bot
@@ -199,31 +204,42 @@ function Core.SetFullbright(enabled)
 end
 function Core.SetNoFog(enabled) Lighting.FogEnd = enabled and 100000 or 1000 end
 
--- Counter Blox Functions
+-- ============================================
+-- COUNTER BLOX FUNCTIONS (FIXED)
+-- ============================================
+
 function Core.CBNoSpread(enabled)
     Core.CBSettings.NoSpread = enabled
     local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
     if not WeaponsFolder then return end
     
     for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+        -- Direct Spread value
         local spread = weapon:FindFirstChild("Spread")
-        if spread then
-            if spread:IsA("NumberValue") then
-                if enabled then
-                    if not Core.OriginalValues[spread] then Core.OriginalValues[spread] = spread.Value end
-                    spread.Value = 0
-                else
-                    if Core.OriginalValues[spread] then spread.Value = Core.OriginalValues[spread] end
+        if spread and spread:IsA("NumberValue") then
+            if enabled then
+                if not Core.OriginalValues[spread] then 
+                    Core.OriginalValues[spread] = spread.Value 
                 end
+                spread.Value = 0
             else
-                for _, v in ipairs(spread:GetDescendants()) do
-                    if v:IsA("NumberValue") then
-                        if enabled then
-                            if not Core.OriginalValues[v] then Core.OriginalValues[v] = v.Value end
-                            v.Value = 0
-                        else
-                            if Core.OriginalValues[v] then v.Value = Core.OriginalValues[v] end
-                        end
+                if Core.OriginalValues[spread] then 
+                    spread.Value = Core.OriginalValues[spread] 
+                end
+            end
+        end
+        
+        -- Also check SpreadAim, SpreadHip etc
+        for _, child in ipairs(weapon:GetChildren()) do
+            if child.Name:lower():find("spread") and child:IsA("NumberValue") then
+                if enabled then
+                    if not Core.OriginalValues[child] then 
+                        Core.OriginalValues[child] = child.Value 
+                    end
+                    child.Value = 0
+                else
+                    if Core.OriginalValues[child] then 
+                        child.Value = Core.OriginalValues[child] 
                     end
                 end
             end
@@ -237,14 +253,18 @@ function Core.CBNoRecoil(enabled)
     if not WeaponsFolder then return end
     
     for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        for _, name in ipairs({"Recoil", "CamRecoil", "KickBack"}) do
+        for _, name in ipairs({"Recoil", "CamRecoil", "KickBack", "Kick", "CameraRecoil"}) do
             local recoil = weapon:FindFirstChild(name)
             if recoil and recoil:IsA("NumberValue") then
                 if enabled then
-                    if not Core.OriginalValues[recoil] then Core.OriginalValues[recoil] = recoil.Value end
+                    if not Core.OriginalValues[recoil] then 
+                        Core.OriginalValues[recoil] = recoil.Value 
+                    end
                     recoil.Value = 0
                 else
-                    if Core.OriginalValues[recoil] then recoil.Value = Core.OriginalValues[recoil] end
+                    if Core.OriginalValues[recoil] then 
+                        recoil.Value = Core.OriginalValues[recoil] 
+                    end
                 end
             end
         end
@@ -260,10 +280,14 @@ function Core.CBRapidFire(enabled)
         local fireRate = weapon:FindFirstChild("FireRate")
         if fireRate and fireRate:IsA("NumberValue") then
             if enabled then
-                if not Core.OriginalValues[fireRate] then Core.OriginalValues[fireRate] = fireRate.Value end
-                fireRate.Value = 0.01
+                if not Core.OriginalValues[fireRate] then 
+                    Core.OriginalValues[fireRate] = fireRate.Value 
+                end
+                fireRate.Value = 0
             else
-                if Core.OriginalValues[fireRate] then fireRate.Value = Core.OriginalValues[fireRate] end
+                if Core.OriginalValues[fireRate] then 
+                    fireRate.Value = Core.OriginalValues[fireRate] 
+                end
             end
         end
     end
@@ -271,40 +295,41 @@ end
 
 function Core.CBInfAmmo(enabled)
     Core.CBSettings.InfAmmo = enabled
-    if Core.Loops.InfAmmo then Core.Loops.InfAmmo:Disconnect() Core.Loops.InfAmmo = nil end
-    if enabled then
-        Core.Loops.InfAmmo = RunService.Heartbeat:Connect(function()
-            local gun = Core.GetCurrentGun()
-            if gun then
-                local ammo = gun:FindFirstChild("Ammo")
-                local stored = gun:FindFirstChild("StoredAmmo")
-                if ammo then ammo.Value = 999 end
-                if stored then stored.Value = 999 end
-            end
-        end)
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not WeaponsFolder then return end
+    
+    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
+        local ammo = weapon:FindFirstChild("Ammo")
+        local storedAmmo = weapon:FindFirstChild("StoredAmmo")
+        
+        if ammo and ammo:IsA("NumberValue") then
+            ammo.Value = 999999
+        end
+        if storedAmmo and storedAmmo:IsA("NumberValue") then
+            storedAmmo.Value = 999999
+        end
     end
 end
 
 function Core.CBBHop(enabled)
     Core.CBSettings.BHop = enabled
-    if Core.Loops.BHopInput then Core.Loops.BHopInput:Disconnect() end
-    if Core.Loops.BHopInputEnd then Core.Loops.BHopInputEnd:Disconnect() end
-    if Core.Loops.BHop then Core.Loops.BHop:Disconnect() end
+    
+    if Core.Loops.BHop then 
+        Core.Loops.BHop:Disconnect() 
+        Core.Loops.BHop = nil 
+    end
     
     if enabled then
-        local holding = false
-        Core.Loops.BHopInput = UserInputService.InputBegan:Connect(function(input, gpe)
-            if gpe then return end
-            if input.KeyCode == Core.CBSettings.BHopKey then holding = true end
-        end)
-        Core.Loops.BHopInputEnd = UserInputService.InputEnded:Connect(function(input)
-            if input.KeyCode == Core.CBSettings.BHopKey then holding = false end
-        end)
-        Core.Loops.BHop = RunService.Heartbeat:Connect(function()
-            if holding and Core.IsAlive(LocalPlayer) then
-                local hum = LocalPlayer.Character.Humanoid
-                if hum.FloorMaterial ~= Enum.Material.Air then
-                    hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        Core.Loops.BHop = RunService.RenderStepped:Connect(function()
+            if UserInputService:IsKeyDown(Enum.KeyCode.Space) and Core.IsAlive(LocalPlayer) then
+                local char = LocalPlayer.Character
+                local hum = char:FindFirstChild("Humanoid")
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                
+                if hum and hrp then
+                    hum.Jump = true
+                    local moveDirection = hrp.CFrame.LookVector * Core.CBSettings.BHopSpeed
+                    hrp.Velocity = Vector3.new(moveDirection.X, hrp.Velocity.Y, moveDirection.Z)
                 end
             end
         end)
@@ -313,9 +338,14 @@ end
 
 function Core.CBSpinbot(enabled)
     Core.CBSettings.Spinbot = enabled
-    if Core.Loops.Spinbot then Core.Loops.Spinbot:Disconnect() Core.Loops.Spinbot = nil end
+    
+    if Core.Loops.Spinbot then 
+        Core.Loops.Spinbot:Disconnect() 
+        Core.Loops.Spinbot = nil 
+    end
+    
     if enabled then
-        Core.Loops.Spinbot = RunService.Heartbeat:Connect(function()
+        Core.Loops.Spinbot = RunService.RenderStepped:Connect(function()
             if Core.IsAlive(LocalPlayer) then
                 local char = LocalPlayer.Character
                 char.Humanoid.AutoRotate = false
@@ -323,13 +353,20 @@ function Core.CBSpinbot(enabled)
             end
         end)
     else
-        if Core.IsAlive(LocalPlayer) then LocalPlayer.Character.Humanoid.AutoRotate = true end
+        if Core.IsAlive(LocalPlayer) then 
+            LocalPlayer.Character.Humanoid.AutoRotate = true 
+        end
     end
 end
 
 function Core.CBThirdPerson(enabled)
     Core.CBSettings.ThirdPerson = enabled
-    if Core.Loops.ThirdPerson then Core.Loops.ThirdPerson:Disconnect() Core.Loops.ThirdPerson = nil end
+    
+    if Core.Loops.ThirdPerson then 
+        Core.Loops.ThirdPerson:Disconnect() 
+        Core.Loops.ThirdPerson = nil 
+    end
+    
     if enabled then
         Core.Loops.ThirdPerson = RunService.Heartbeat:Connect(function()
             LocalPlayer.CameraMinZoomDistance = Core.CBSettings.ThirdPersonDistance
@@ -343,16 +380,50 @@ end
 
 function Core.CBSetThirdPersonDistance(dist)
     Core.CBSettings.ThirdPersonDistance = dist
+    if Core.CBSettings.ThirdPerson then
+        LocalPlayer.CameraMinZoomDistance = dist
+        LocalPlayer.CameraMaxZoomDistance = dist
+    end
 end
 
 -- Misc
-function Core.Rejoin() TeleportService:TeleportToPlaceInstance(Core.PlaceId, game.JobId, LocalPlayer) end
-function Core.GetJoinScript() return 'game:GetService("TeleportService"):TeleportToPlaceInstance(' .. Core.PlaceId .. ', "' .. game.JobId .. '", game.Players.LocalPlayer)' end
+function Core.Rejoin() 
+    TeleportService:TeleportToPlaceInstance(Core.PlaceId, game.JobId, LocalPlayer) 
+end
+
+function Core.GetJoinScript() 
+    return 'game:GetService("TeleportService"):TeleportToPlaceInstance(' .. Core.PlaceId .. ', "' .. game.JobId .. '", game.Players.LocalPlayer)' 
+end
 
 -- Init
 function Core.Init(espUrl)
     Core.LoadESP(espUrl)
-    if Core.ESP then Core.ESP.Init() end
+    if Core.ESP then 
+        Core.ESP.Init() 
+    end
+end
+
+-- Cleanup
+function Core.Cleanup()
+    for _, conn in pairs(Core.Loops) do
+        if conn then pcall(function() conn:Disconnect() end) end
+    end
+    Core.Loops = {}
+    
+    for obj, val in pairs(Core.OriginalValues) do
+        pcall(function() obj.Value = val end)
+    end
+    Core.OriginalValues = {}
+    
+    if Core.IsAlive(LocalPlayer) then
+        LocalPlayer.Character.Humanoid.AutoRotate = true
+    end
+    LocalPlayer.CameraMinZoomDistance = 0.5
+    LocalPlayer.CameraMaxZoomDistance = 0.5
+    
+    if Core.ESP then
+        pcall(function() Core.ESP.Destroy() end)
+    end
 end
 
 return Core
