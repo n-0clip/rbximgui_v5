@@ -18,6 +18,7 @@
 - world settings (Fullbright, No Fog, Time)
 - movement (Speed, Infinite Jump, Noclip)
 - removed mm2
+- removed loader bcs of errors
 ### Planned
 - try to rewrite core and the main script
 - add more games
