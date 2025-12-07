@@ -1,6 +1,6 @@
 # change logs
 
-**7.12.25**
+# **7.12.25**
 ```diff
 + counter blox functions fixed (its might kicking in other cb games)
 - removed mm2
@@ -13,7 +13,7 @@ TODO
 - 
 ```
 
-**1.12.25**
+# **1.12.25**
 ```diff
 + some fixes
 + added new features in core.luau
