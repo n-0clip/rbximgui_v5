@@ -18,6 +18,7 @@ local banner = [[
 
 CounterBlox.Core = nil
 CounterBlox.Loops = {}
+CounterBlox.OriginalValues = {}
 
 CounterBlox.Settings = {
     NoSpread = false,
@@ -25,9 +26,9 @@ CounterBlox.Settings = {
     RapidFire = false,
     InfAmmo = false,
     BHop = false,
-    BHopSpeed = 20,
+    BHopSpeed = 50,
     Spinbot = false,
-    SpinSpeed = 50,
+    SpinSpeed = 15,
     ThirdPerson = false,
     ThirdPersonDistance = 10
 }
@@ -40,9 +41,16 @@ function CounterBlox.NoSpread(enabled)
     
     for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
         local spread = weapon:FindFirstChild("Spread")
-        if spread then
+        if spread and spread:IsA("NumberValue") then
             if enabled then
+                if not CounterBlox.OriginalValues[spread] then
+                    CounterBlox.OriginalValues[spread] = spread.Value
+                end
                 spread.Value = 0
+            else
+                if CounterBlox.OriginalValues[spread] then
+                    spread.Value = CounterBlox.OriginalValues[spread]
+                end
             end
         end
     end
@@ -59,9 +67,44 @@ function CounterBlox.NoRecoil(enabled)
         local camRecoil = weapon:FindFirstChild("CamRecoil")
         local kickBack = weapon:FindFirstChild("KickBack")
         
-        if recoil and enabled then recoil.Value = 0 end
-        if camRecoil and enabled then camRecoil.Value = 0 end
-        if kickBack and enabled then kickBack.Value = 0 end
+        if recoil and recoil:IsA("NumberValue") then
+            if enabled then
+                if not CounterBlox.OriginalValues[recoil] then
+                    CounterBlox.OriginalValues[recoil] = recoil.Value
+                end
+                recoil.Value = 0
+            else
+                if CounterBlox.OriginalValues[recoil] then
+                    recoil.Value = CounterBlox.OriginalValues[recoil]
+                end
+            end
+        end
+        
+        if camRecoil and camRecoil:IsA("NumberValue") then
+            if enabled then
+                if not CounterBlox.OriginalValues[camRecoil] then
+                    CounterBlox.OriginalValues[camRecoil] = camRecoil.Value
+                end
+                camRecoil.Value = 0
+            else
+                if CounterBlox.OriginalValues[camRecoil] then
+                    camRecoil.Value = CounterBlox.OriginalValues[camRecoil]
+                end
+            end
+        end
+        
+        if kickBack and kickBack:IsA("NumberValue") then
+            if enabled then
+                if not CounterBlox.OriginalValues[kickBack] then
+                    CounterBlox.OriginalValues[kickBack] = kickBack.Value
+                end
+                kickBack.Value = 0
+            else
+                if CounterBlox.OriginalValues[kickBack] then
+                    kickBack.Value = CounterBlox.OriginalValues[kickBack]
+                end
+            end
+        end
     end
 end
 
@@ -73,8 +116,17 @@ function CounterBlox.RapidFire(enabled)
     
     for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
         local fireRate = weapon:FindFirstChild("FireRate")
-        if fireRate and enabled then
-            fireRate.Value = 0
+        if fireRate and fireRate:IsA("NumberValue") then
+            if enabled then
+                if not CounterBlox.OriginalValues[fireRate] then
+                    CounterBlox.OriginalValues[fireRate] = fireRate.Value
+                end
+                fireRate.Value = 0
+            else
+                if CounterBlox.OriginalValues[fireRate] then
+                    fireRate.Value = CounterBlox.OriginalValues[fireRate]
+                end
+            end
         end
     end
 end
@@ -89,8 +141,12 @@ function CounterBlox.InfAmmo(enabled)
         local ammo = weapon:FindFirstChild("Ammo")
         local storedAmmo = weapon:FindFirstChild("StoredAmmo")
         
-        if ammo then ammo.Value = 999999 end
-        if storedAmmo then storedAmmo.Value = 999999 end
+        if ammo and ammo:IsA("NumberValue") then
+            ammo.Value = 999999
+        end
+        if storedAmmo and storedAmmo:IsA("NumberValue") then
+            storedAmmo.Value = 999999
+        end
     end
 end
 
@@ -104,15 +160,25 @@ function CounterBlox.BHop(enabled)
     
     if enabled then
         CounterBlox.Loops.BHop = RunService.RenderStepped:Connect(function()
-            if UserInputService:IsKeyDown(Enum.KeyCode.Space) and CounterBlox.Core.IsAlive(LocalPlayer) then
-                local char = LocalPlayer.Character
-                local hum = char:FindFirstChild("Humanoid")
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                
-                if hum and hrp then
+            if not CounterBlox.Core.IsAlive(LocalPlayer) then return end
+            if not UserInputService:IsKeyDown(Enum.KeyCode.Space) then return end
+            
+            local char = LocalPlayer.Character
+            local hum = char:FindFirstChild("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            
+            if hum and hrp then
+                if hum.FloorMaterial ~= Enum.Material.Air then
                     hum.Jump = true
-                    local moveDirection = hrp.CFrame.LookVector * CounterBlox.Settings.BHopSpeed
-                    hrp.Velocity = Vector3.new(moveDirection.X, hrp.Velocity.Y, moveDirection.Z)
+                end
+                
+                local moveDir = hum.MoveDirection
+                if moveDir.Magnitude > 0 then
+                    hrp.Velocity = Vector3.new(
+                        moveDir.X * CounterBlox.Settings.BHopSpeed,
+                        hrp.Velocity.Y,
+                        moveDir.Z * CounterBlox.Settings.BHopSpeed
+                    )
                 end
             end
         end)
@@ -128,15 +194,24 @@ function CounterBlox.Spinbot(enabled)
     end
     
     if enabled then
-        CounterBlox.Loops.Spinbot = RunService.RenderStepped:Connect(function()
-            if CounterBlox.Core.IsAlive(LocalPlayer) then
-                LocalPlayer.Character.Humanoid.AutoRotate = false
-                LocalPlayer.Character.HumanoidRootPart.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(CounterBlox.Settings.SpinSpeed), 0)
+        CounterBlox.Loops.Spinbot = RunService.Heartbeat:Connect(function()
+            if not CounterBlox.Core.IsAlive(LocalPlayer) then return end
+            
+            local char = LocalPlayer.Character
+            local hum = char:FindFirstChild("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            
+            if hum and hrp then
+                hum.AutoRotate = false
+                hrp.CFrame = hrp.CFrame * CFrame.Angles(0, math.rad(CounterBlox.Settings.SpinSpeed), 0)
             end
         end)
     else
         if CounterBlox.Core.IsAlive(LocalPlayer) then
-            LocalPlayer.Character.Humanoid.AutoRotate = true
+            local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
+            if hum then
+                hum.AutoRotate = true
+            end
         end
     end
 end
@@ -150,7 +225,10 @@ function CounterBlox.ThirdPerson(enabled)
     end
     
     if enabled then
-        CounterBlox.Loops.ThirdPerson = RunService.Heartbeat:Connect(function()
+        LocalPlayer.CameraMinZoomDistance = CounterBlox.Settings.ThirdPersonDistance
+        LocalPlayer.CameraMaxZoomDistance = CounterBlox.Settings.ThirdPersonDistance
+        
+        CounterBlox.Loops.ThirdPerson = RunService.RenderStepped:Connect(function()
             LocalPlayer.CameraMinZoomDistance = CounterBlox.Settings.ThirdPersonDistance
             LocalPlayer.CameraMaxZoomDistance = CounterBlox.Settings.ThirdPersonDistance
         end)
@@ -186,8 +264,16 @@ function CounterBlox.Cleanup()
     end
     CounterBlox.Loops = {}
     
+    for obj, val in pairs(CounterBlox.OriginalValues) do
+        pcall(function() obj.Value = val end)
+    end
+    CounterBlox.OriginalValues = {}
+    
     if CounterBlox.Core.IsAlive(LocalPlayer) then
-        LocalPlayer.Character.Humanoid.AutoRotate = true
+        local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
+        if hum then
+            hum.AutoRotate = true
+        end
     end
     LocalPlayer.CameraMinZoomDistance = 0.5
     LocalPlayer.CameraMaxZoomDistance = 0.5
