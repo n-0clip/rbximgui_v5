@@ -54,7 +54,7 @@ Core.CBSettings = {
 Core.Loops = {}
 Core.OriginalValues = {}
 Core.LockedTarget = nil
-Core.HookedMetatable = false
+Core.Hooks = {}
 
 -- Load ESP
 function Core.LoadESP(url)
@@ -206,79 +206,132 @@ end
 function Core.SetNoFog(enabled) Lighting.FogEnd = enabled and 100000 or 1000 end
 
 -- ============================================
--- ANTI-KICK / ANTI-DETECT SYSTEM
+-- СЕРВЕРНЫЕ ЭКСПЛОИТЫ (NAMECALL HOOK)
 -- ============================================
 
--- Метод 1: Хук метатаблицы для спуфинга значений
-Core.SpoofedValues = {}
+Core.OriginalNamecall = nil
+Core.HookEnabled = false
 
-function Core.SetupAntiDetect()
-    if Core.HookedMetatable then return end
+function Core.SetupServerHook()
+    if Core.HookEnabled then return true end
+    
+    -- Проверяем наличие нужных функций
+    if not getrawmetatable or not setreadonly or not newcclosure then
+        warn("[Core] Executor doesn't support metatable hooks")
+        return false
+    end
     
     local mt = getrawmetatable(game)
-    if not mt then return end
+    if not mt then return false end
     
-    local oldIndex = mt.__index
-    local oldNewindex = mt.__newindex
+    Core.OriginalNamecall = mt.__namecall
     
     setreadonly(mt, false)
     
-    mt.__index = newcclosure(function(self, key)
-        -- Спуфим значения для античита
-        if Core.SpoofedValues[self] and Core.SpoofedValues[self][key] then
-            return Core.SpoofedValues[self][key]
-        end
-        return oldIndex(self, key)
-    end)
-    
-    mt.__newindex = newcclosure(function(self, key, value)
-        -- Блокируем детект изменений
-        if self:IsA("NumberValue") and self.Parent then
-            local parentName = self.Parent.Name
-            local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-            if WeaponsFolder and self:IsDescendantOf(WeaponsFolder) then
-                -- Сохраняем спуф
-                if not Core.SpoofedValues[self] then
-                    Core.SpoofedValues[self] = {}
+    mt.__namecall = newcclosure(function(self, ...)
+        local args = {...}
+        local method = getnamecallmethod()
+        
+        -- Hook FireServer для модификации данных стрельбы
+        if method == "FireServer" then
+            local remoteName = self.Name
+            
+            -- Counter Blox использует разные remote для стрельбы
+            -- Нужно найти правильные названия через RemoteSpy
+            
+            -- No Spread - модифицируем данные spread в аргументах
+            if Core.CBSettings.NoSpread then
+                if remoteName == "ShootEvent" or remoteName == "Fire" or remoteName == "Shoot" or remoteName:find("Shoot") or remoteName:find("Fire") then
+                    -- Ищем spread в аргументах и обнуляем
+                    for i, arg in pairs(args) do
+                        if type(arg) == "table" then
+                            if arg.Spread then arg.Spread = 0 end
+                            if arg.spread then arg.spread = 0 end
+                            if arg.SpreadAngle then arg.SpreadAngle = 0 end
+                        end
+                        if type(arg) == "number" and i > 1 then
+                            -- Может быть spread как отдельный аргумент
+                        end
+                    end
                 end
-                Core.SpoofedValues[self].Value = Core.OriginalValues[self] or self.Value
+            end
+            
+            -- No Recoil - блокируем recoil events
+            if Core.CBSettings.NoRecoil then
+                if remoteName:find("Recoil") or remoteName == "CameraRecoil" then
+                    return nil -- Блокируем
+                end
+            end
+            
+            -- Rapid Fire - модифицируем cooldown/firerate
+            if Core.CBSettings.RapidFire then
+                if remoteName:find("Fire") or remoteName:find("Shoot") then
+                    for i, arg in pairs(args) do
+                        if type(arg) == "table" then
+                            if arg.FireRate then arg.FireRate = 0 end
+                            if arg.Cooldown then arg.Cooldown = 0 end
+                            if arg.Delay then arg.Delay = 0 end
+                        end
+                    end
+                end
             end
         end
-        return oldNewindex(self, key, value)
+        
+        -- Hook InvokeServer
+        if method == "InvokeServer" then
+            local remoteName = self.Name
+            
+            -- Infinite Ammo - модифицируем ammo checks
+            if Core.CBSettings.InfAmmo then
+                if remoteName:find("Ammo") or remoteName:find("Reload") then
+                    for i, arg in pairs(args) do
+                        if type(arg) == "table" then
+                            if arg.Ammo then arg.Ammo = 999 end
+                            if arg.CurrentAmmo then arg.CurrentAmmo = 999 end
+                        end
+                    end
+                end
+            end
+        end
+        
+        return Core.OriginalNamecall(self, ...)
     end)
     
     setreadonly(mt, true)
-    Core.HookedMetatable = true
+    Core.HookEnabled = true
+    
+    return true
 end
 
--- Метод 2: Клонирование оружия (безопаснее)
-Core.ClonedWeapons = {}
-
-function Core.GetWeaponClone(weaponName)
-    if Core.ClonedWeapons[weaponName] then
-        return Core.ClonedWeapons[weaponName]
+-- Альтернативный метод - hookfunction для конкретных remote
+function Core.HookRemote(remote, callback)
+    if not hookfunction then
+        warn("[Core] hookfunction not available")
+        return
     end
     
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return nil end
+    local oldFunc
+    oldFunc = hookfunction(remote.FireServer, function(...)
+        local args = {...}
+        local modifiedArgs = callback(args)
+        return oldFunc(unpack(modifiedArgs or args))
+    end)
     
-    local weapon = WeaponsFolder:FindFirstChild(weaponName)
-    if weapon then
-        Core.ClonedWeapons[weaponName] = weapon:Clone()
-        return Core.ClonedWeapons[weaponName]
-    end
-    return nil
+    Core.Hooks[remote] = oldFunc
 end
 
 -- ============================================
--- COUNTER BLOX FUNCTIONS (SAFE METHOD)
--- Работает только на клиенте во время стрельбы
+-- COUNTER BLOX FUNCTIONS (SERVER-SIDE)
 -- ============================================
 
--- Метод 3: Модификация только во время использования (самый безопасный)
 function Core.CBNoSpread(enabled)
     Core.CBSettings.NoSpread = enabled
     
+    if enabled and not Core.HookEnabled then
+        Core.SetupServerHook()
+    end
+    
+    -- Также клиентский fallback
     if Core.Loops.NoSpread then
         Core.Loops.NoSpread:Disconnect()
         Core.Loops.NoSpread = nil
@@ -287,20 +340,9 @@ function Core.CBNoSpread(enabled)
     if enabled then
         Core.Loops.NoSpread = RunService.RenderStepped:Connect(function()
             if not Core.IsAlive(LocalPlayer) then return end
-            
             local tool = Core.GetCurrentGun()
             if not tool then return end
             
-            -- Модифицируем только текущее оружие в руках
-            local spread = tool:FindFirstChild("Spread")
-            if spread and spread:IsA("NumberValue") then
-                if not Core.OriginalValues[spread] then
-                    Core.OriginalValues[spread] = spread.Value
-                end
-                spread.Value = 0
-            end
-            
-            -- Также проверяем вложенные
             for _, child in pairs(tool:GetDescendants()) do
                 if child:IsA("NumberValue") and child.Name:lower():find("spread") then
                     if not Core.OriginalValues[child] then
@@ -310,18 +352,15 @@ function Core.CBNoSpread(enabled)
                 end
             end
         end)
-    else
-        -- Восстанавливаем
-        for obj, val in pairs(Core.OriginalValues) do
-            if obj.Name:lower():find("spread") then
-                pcall(function() obj.Value = val end)
-            end
-        end
     end
 end
 
 function Core.CBNoRecoil(enabled)
     Core.CBSettings.NoRecoil = enabled
+    
+    if enabled and not Core.HookEnabled then
+        Core.SetupServerHook()
+    end
     
     if Core.Loops.NoRecoil then
         Core.Loops.NoRecoil:Disconnect()
@@ -331,12 +370,10 @@ function Core.CBNoRecoil(enabled)
     if enabled then
         Core.Loops.NoRecoil = RunService.RenderStepped:Connect(function()
             if not Core.IsAlive(LocalPlayer) then return end
-            
             local tool = Core.GetCurrentGun()
             if not tool then return end
             
-            local recoilNames = {"Recoil", "CamRecoil", "KickBack", "Kick", "CameraRecoil", "RecoilUp", "RecoilSide"}
-            
+            local recoilNames = {"Recoil", "CamRecoil", "KickBack", "Kick", "CameraRecoil"}
             for _, name in pairs(recoilNames) do
                 local recoil = tool:FindFirstChild(name)
                 if recoil and recoil:IsA("NumberValue") then
@@ -347,18 +384,15 @@ function Core.CBNoRecoil(enabled)
                 end
             end
         end)
-    else
-        for obj, val in pairs(Core.OriginalValues) do
-            local name = obj.Name:lower()
-            if name:find("recoil") or name:find("kick") then
-                pcall(function() obj.Value = val end)
-            end
-        end
     end
 end
 
 function Core.CBRapidFire(enabled)
     Core.CBSettings.RapidFire = enabled
+    
+    if enabled and not Core.HookEnabled then
+        Core.SetupServerHook()
+    end
     
     if Core.Loops.RapidFire then
         Core.Loops.RapidFire:Disconnect()
@@ -368,7 +402,6 @@ function Core.CBRapidFire(enabled)
     if enabled then
         Core.Loops.RapidFire = RunService.RenderStepped:Connect(function()
             if not Core.IsAlive(LocalPlayer) then return end
-            
             local tool = Core.GetCurrentGun()
             if not tool then return end
             
@@ -380,17 +413,15 @@ function Core.CBRapidFire(enabled)
                 fireRate.Value = 0.01
             end
         end)
-    else
-        for obj, val in pairs(Core.OriginalValues) do
-            if obj.Name == "FireRate" then
-                pcall(function() obj.Value = val end)
-            end
-        end
     end
 end
 
 function Core.CBInfAmmo(enabled)
     Core.CBSettings.InfAmmo = enabled
+    
+    if enabled and not Core.HookEnabled then
+        Core.SetupServerHook()
+    end
     
     if Core.Loops.InfAmmo then
         Core.Loops.InfAmmo:Disconnect()
@@ -400,17 +431,14 @@ function Core.CBInfAmmo(enabled)
     if enabled then
         Core.Loops.InfAmmo = RunService.RenderStepped:Connect(function()
             if not Core.IsAlive(LocalPlayer) then return end
-            
             local tool = Core.GetCurrentGun()
             if not tool then return end
             
             local ammo = tool:FindFirstChild("Ammo")
             local storedAmmo = tool:FindFirstChild("StoredAmmo")
-            local magSize = tool:FindFirstChild("MagSize")
             
             if ammo and ammo:IsA("NumberValue") then
-                local maxAmmo = magSize and magSize.Value or 30
-                ammo.Value = maxAmmo
+                ammo.Value = 999
             end
             if storedAmmo and storedAmmo:IsA("NumberValue") then
                 storedAmmo.Value = 999
@@ -505,13 +533,13 @@ end
 
 -- Init
 function Core.Init(espUrl)
-    -- Пробуем настроить анти-детект (может не работать на всех экзекуторах)
-    pcall(Core.SetupAntiDetect)
-    
     Core.LoadESP(espUrl)
     if Core.ESP then 
         Core.ESP.Init() 
     end
+    
+    -- Автоматически настраиваем hook
+    pcall(Core.SetupServerHook)
 end
 
 -- Cleanup
@@ -525,6 +553,16 @@ function Core.Cleanup()
         pcall(function() obj.Value = val end)
     end
     Core.OriginalValues = {}
+    
+    -- Восстанавливаем metatable
+    if Core.OriginalNamecall and Core.HookEnabled then
+        pcall(function()
+            local mt = getrawmetatable(game)
+            setreadonly(mt, false)
+            mt.__namecall = Core.OriginalNamecall
+            setreadonly(mt, true)
+        end)
+    end
     
     if Core.IsAlive(LocalPlayer) then
         LocalPlayer.Character.Humanoid.AutoRotate = true
