@@ -25,7 +25,8 @@ Aim.Settings = {
     Smoothness = 5,
     AimPart = "Head",
     Prediction = 0,
-    StickyAim = false
+    StickyAim = false,
+    AimType = "Mouse" -- Mouse, Camera
 }
 
 Aim.TriggerSettings = {
@@ -36,6 +37,7 @@ Aim.TriggerSettings = {
 
 Aim.LockedTarget = nil
 Aim.IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+Aim.LastAimTime = 0
 
 function Aim.GetMousePosition()
     if Aim.IsMobile then
@@ -62,6 +64,7 @@ function Aim.IsVisible(part)
 end
 
 function Aim.GetClosestPlayer()
+    Camera = Workspace.CurrentCamera
     local closest, shortestDist = nil, Aim.Settings.FOV
     local mousePos = Aim.GetMousePosition()
     
@@ -89,11 +92,12 @@ function Aim.GetClosestPlayer()
 end
 
 function Aim.AimAt(player, TargetCircle)
+    Camera = Workspace.CurrentCamera
+    
     if not player or not Aim.IsAlive(player) then
         Aim.LockedTarget = nil
         return
     end
-    if Aim.IsMobile then return end
     
     local char = player.Character
     if not char then return end
@@ -102,6 +106,7 @@ function Aim.AimAt(player, TargetCircle)
     if not aimPart then return end
     
     local targetPos = aimPart.Position
+    
     if Aim.Settings.Prediction > 0 then
         local root = char:FindFirstChild("HumanoidRootPart")
         if root then
@@ -109,12 +114,40 @@ function Aim.AimAt(player, TargetCircle)
         end
     end
     
-    local screenPos = Camera:WorldToViewportPoint(targetPos)
-    local mousePos = Aim.GetMousePosition()
-    local delta = (Vector2.new(screenPos.X, screenPos.Y) - mousePos) / math.max(Aim.Settings.Smoothness, 1)
+    local screenPos, onScreen = Camera:WorldToViewportPoint(targetPos)
+    if not onScreen then return end
     
-    if mousemoverel then
-        mousemoverel(delta.X, delta.Y)
+    local mousePos = Aim.GetMousePosition()
+    
+    local smoothness = math.max(Aim.Settings.Smoothness, 0.5)
+    
+    if Aim.Settings.AimType == "Camera" then
+        local direction = (targetPos - Camera.CFrame.Position).Unit
+        local targetCFrame = CFrame.new(Camera.CFrame.Position, Camera.CFrame.Position + direction)
+        Camera.CFrame = Camera.CFrame:Lerp(targetCFrame, 1 / smoothness)
+    else
+        if Aim.IsMobile then return end
+        
+        local deltaX = (screenPos.X - mousePos.X)
+        local deltaY = (screenPos.Y - mousePos.Y)
+        
+        local distance = math.sqrt(deltaX * deltaX + deltaY * deltaY)
+        
+        if distance < 1 then return end
+        
+        local moveX = deltaX / smoothness
+        local moveY = deltaY / smoothness
+        
+        local maxMove = 50
+        moveX = math.clamp(moveX, -maxMove, maxMove)
+        moveY = math.clamp(moveY, -maxMove, maxMove)
+        
+        if math.abs(moveX) < 0.1 then moveX = 0 end
+        if math.abs(moveY) < 0.1 then moveY = 0 end
+        
+        if mousemoverel and (moveX ~= 0 or moveY ~= 0) then
+            mousemoverel(moveX, moveY)
+        end
     end
     
     if TargetCircle then
@@ -126,6 +159,7 @@ function Aim.AimAt(player, TargetCircle)
 end
 
 function Aim.GetTriggerTarget()
+    Camera = Workspace.CurrentCamera
     local center = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
     local ray = Camera:ViewportPointToRay(center.X, center.Y)
     local params = RaycastParams.new()
@@ -144,8 +178,6 @@ function Aim.GetTriggerTarget()
     return nil
 end
 
-function Aim.Init()
-    print("[Aim] Initialized")
-end
+function Aim.Init() end
 
 return Aim
