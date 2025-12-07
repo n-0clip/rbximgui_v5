@@ -1810,23 +1810,30 @@ function Compkiller:Drag(InputFrame: Frame, MoveFrame: Frame, Speed : number)
 	end;
 
 	InputFrame.InputBegan:Connect(function(input)
-		if (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) and #Compkiller.DragBlacklist <= 0 then 
-			dragToggle = true
-			dragStart = input.Position
-			startPos = MoveFrame.Position
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragToggle = false;
-					Compkiller.IS_DRAG_MOVE = false;
-				end
-			end)
-		end
-
-		if not Compkiller.IsDrage and dragToggle then
-			Compkiller.LastDrag = tick();
-		end;
-
-		Compkiller.IaDrag = dragToggle;
+	    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+	        dragToggle = true
+	        dragStart = input.Position
+	        startPos = frame.Position
+	
+	        if dragConn then dragConn:Disconnect() end
+	        dragConn = RunService.RenderStepped:Connect(function()
+	            if not dragging then
+	                dragConn:Disconnect()
+	                dragConn = nil
+	                return
+	            end
+	
+	            local mousePos = UIS:GetMouseLocation()
+	            local delta = mousePos - dragStart
+	
+	            frame.Position = UDim2.new(
+	                startPos.X.Scale,
+	                startPos.X.Offset + delta.X,
+	                startPos.Y.Scale,
+	                startPos.Y.Offset + delta.Y
+	            )
+	        end)
+	    end
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
