@@ -54,6 +54,7 @@ Core.CBSettings = {
 Core.Loops = {}
 Core.OriginalValues = {}
 Core.LockedTarget = nil
+Core.HookedMetatable = false
 
 -- Load ESP
 function Core.LoadESP(url)
@@ -205,43 +206,115 @@ end
 function Core.SetNoFog(enabled) Lighting.FogEnd = enabled and 100000 or 1000 end
 
 -- ============================================
--- COUNTER BLOX FUNCTIONS (FIXED)
+-- ANTI-KICK / ANTI-DETECT SYSTEM
 -- ============================================
 
-function Core.CBNoSpread(enabled)
-    Core.CBSettings.NoSpread = enabled
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
+-- Метод 1: Хук метатаблицы для спуфинга значений
+Core.SpoofedValues = {}
+
+function Core.SetupAntiDetect()
+    if Core.HookedMetatable then return end
     
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        -- Direct Spread value
-        local spread = weapon:FindFirstChild("Spread")
-        if spread and spread:IsA("NumberValue") then
-            if enabled then
-                if not Core.OriginalValues[spread] then 
-                    Core.OriginalValues[spread] = spread.Value 
+    local mt = getrawmetatable(game)
+    if not mt then return end
+    
+    local oldIndex = mt.__index
+    local oldNewindex = mt.__newindex
+    
+    setreadonly(mt, false)
+    
+    mt.__index = newcclosure(function(self, key)
+        -- Спуфим значения для античита
+        if Core.SpoofedValues[self] and Core.SpoofedValues[self][key] then
+            return Core.SpoofedValues[self][key]
+        end
+        return oldIndex(self, key)
+    end)
+    
+    mt.__newindex = newcclosure(function(self, key, value)
+        -- Блокируем детект изменений
+        if self:IsA("NumberValue") and self.Parent then
+            local parentName = self.Parent.Name
+            local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+            if WeaponsFolder and self:IsDescendantOf(WeaponsFolder) then
+                -- Сохраняем спуф
+                if not Core.SpoofedValues[self] then
+                    Core.SpoofedValues[self] = {}
                 end
-                spread.Value = 0
-            else
-                if Core.OriginalValues[spread] then 
-                    spread.Value = Core.OriginalValues[spread] 
-                end
+                Core.SpoofedValues[self].Value = Core.OriginalValues[self] or self.Value
             end
         end
-        
-        -- Also check SpreadAim, SpreadHip etc
-        for _, child in ipairs(weapon:GetChildren()) do
-            if child.Name:lower():find("spread") and child:IsA("NumberValue") then
-                if enabled then
-                    if not Core.OriginalValues[child] then 
-                        Core.OriginalValues[child] = child.Value 
+        return oldNewindex(self, key, value)
+    end)
+    
+    setreadonly(mt, true)
+    Core.HookedMetatable = true
+end
+
+-- Метод 2: Клонирование оружия (безопаснее)
+Core.ClonedWeapons = {}
+
+function Core.GetWeaponClone(weaponName)
+    if Core.ClonedWeapons[weaponName] then
+        return Core.ClonedWeapons[weaponName]
+    end
+    
+    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
+    if not WeaponsFolder then return nil end
+    
+    local weapon = WeaponsFolder:FindFirstChild(weaponName)
+    if weapon then
+        Core.ClonedWeapons[weaponName] = weapon:Clone()
+        return Core.ClonedWeapons[weaponName]
+    end
+    return nil
+end
+
+-- ============================================
+-- COUNTER BLOX FUNCTIONS (SAFE METHOD)
+-- Работает только на клиенте во время стрельбы
+-- ============================================
+
+-- Метод 3: Модификация только во время использования (самый безопасный)
+function Core.CBNoSpread(enabled)
+    Core.CBSettings.NoSpread = enabled
+    
+    if Core.Loops.NoSpread then
+        Core.Loops.NoSpread:Disconnect()
+        Core.Loops.NoSpread = nil
+    end
+    
+    if enabled then
+        Core.Loops.NoSpread = RunService.RenderStepped:Connect(function()
+            if not Core.IsAlive(LocalPlayer) then return end
+            
+            local tool = Core.GetCurrentGun()
+            if not tool then return end
+            
+            -- Модифицируем только текущее оружие в руках
+            local spread = tool:FindFirstChild("Spread")
+            if spread and spread:IsA("NumberValue") then
+                if not Core.OriginalValues[spread] then
+                    Core.OriginalValues[spread] = spread.Value
+                end
+                spread.Value = 0
+            end
+            
+            -- Также проверяем вложенные
+            for _, child in pairs(tool:GetDescendants()) do
+                if child:IsA("NumberValue") and child.Name:lower():find("spread") then
+                    if not Core.OriginalValues[child] then
+                        Core.OriginalValues[child] = child.Value
                     end
                     child.Value = 0
-                else
-                    if Core.OriginalValues[child] then 
-                        child.Value = Core.OriginalValues[child] 
-                    end
                 end
+            end
+        end)
+    else
+        -- Восстанавливаем
+        for obj, val in pairs(Core.OriginalValues) do
+            if obj.Name:lower():find("spread") then
+                pcall(function() obj.Value = val end)
             end
         end
     end
@@ -249,23 +322,36 @@ end
 
 function Core.CBNoRecoil(enabled)
     Core.CBSettings.NoRecoil = enabled
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
     
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        for _, name in ipairs({"Recoil", "CamRecoil", "KickBack", "Kick", "CameraRecoil"}) do
-            local recoil = weapon:FindFirstChild(name)
-            if recoil and recoil:IsA("NumberValue") then
-                if enabled then
-                    if not Core.OriginalValues[recoil] then 
-                        Core.OriginalValues[recoil] = recoil.Value 
+    if Core.Loops.NoRecoil then
+        Core.Loops.NoRecoil:Disconnect()
+        Core.Loops.NoRecoil = nil
+    end
+    
+    if enabled then
+        Core.Loops.NoRecoil = RunService.RenderStepped:Connect(function()
+            if not Core.IsAlive(LocalPlayer) then return end
+            
+            local tool = Core.GetCurrentGun()
+            if not tool then return end
+            
+            local recoilNames = {"Recoil", "CamRecoil", "KickBack", "Kick", "CameraRecoil", "RecoilUp", "RecoilSide"}
+            
+            for _, name in pairs(recoilNames) do
+                local recoil = tool:FindFirstChild(name)
+                if recoil and recoil:IsA("NumberValue") then
+                    if not Core.OriginalValues[recoil] then
+                        Core.OriginalValues[recoil] = recoil.Value
                     end
                     recoil.Value = 0
-                else
-                    if Core.OriginalValues[recoil] then 
-                        recoil.Value = Core.OriginalValues[recoil] 
-                    end
                 end
+            end
+        end)
+    else
+        for obj, val in pairs(Core.OriginalValues) do
+            local name = obj.Name:lower()
+            if name:find("recoil") or name:find("kick") then
+                pcall(function() obj.Value = val end)
             end
         end
     end
@@ -273,21 +359,31 @@ end
 
 function Core.CBRapidFire(enabled)
     Core.CBSettings.RapidFire = enabled
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
     
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        local fireRate = weapon:FindFirstChild("FireRate")
-        if fireRate and fireRate:IsA("NumberValue") then
-            if enabled then
-                if not Core.OriginalValues[fireRate] then 
-                    Core.OriginalValues[fireRate] = fireRate.Value 
+    if Core.Loops.RapidFire then
+        Core.Loops.RapidFire:Disconnect()
+        Core.Loops.RapidFire = nil
+    end
+    
+    if enabled then
+        Core.Loops.RapidFire = RunService.RenderStepped:Connect(function()
+            if not Core.IsAlive(LocalPlayer) then return end
+            
+            local tool = Core.GetCurrentGun()
+            if not tool then return end
+            
+            local fireRate = tool:FindFirstChild("FireRate")
+            if fireRate and fireRate:IsA("NumberValue") then
+                if not Core.OriginalValues[fireRate] then
+                    Core.OriginalValues[fireRate] = fireRate.Value
                 end
-                fireRate.Value = 0
-            else
-                if Core.OriginalValues[fireRate] then 
-                    fireRate.Value = Core.OriginalValues[fireRate] 
-                end
+                fireRate.Value = 0.01
+            end
+        end)
+    else
+        for obj, val in pairs(Core.OriginalValues) do
+            if obj.Name == "FireRate" then
+                pcall(function() obj.Value = val end)
             end
         end
     end
@@ -295,19 +391,31 @@ end
 
 function Core.CBInfAmmo(enabled)
     Core.CBSettings.InfAmmo = enabled
-    local WeaponsFolder = ReplicatedStorage:FindFirstChild("Weapons")
-    if not WeaponsFolder then return end
     
-    for _, weapon in ipairs(WeaponsFolder:GetChildren()) do
-        local ammo = weapon:FindFirstChild("Ammo")
-        local storedAmmo = weapon:FindFirstChild("StoredAmmo")
-        
-        if ammo and ammo:IsA("NumberValue") then
-            ammo.Value = 999999
-        end
-        if storedAmmo and storedAmmo:IsA("NumberValue") then
-            storedAmmo.Value = 999999
-        end
+    if Core.Loops.InfAmmo then
+        Core.Loops.InfAmmo:Disconnect()
+        Core.Loops.InfAmmo = nil
+    end
+    
+    if enabled then
+        Core.Loops.InfAmmo = RunService.RenderStepped:Connect(function()
+            if not Core.IsAlive(LocalPlayer) then return end
+            
+            local tool = Core.GetCurrentGun()
+            if not tool then return end
+            
+            local ammo = tool:FindFirstChild("Ammo")
+            local storedAmmo = tool:FindFirstChild("StoredAmmo")
+            local magSize = tool:FindFirstChild("MagSize")
+            
+            if ammo and ammo:IsA("NumberValue") then
+                local maxAmmo = magSize and magSize.Value or 30
+                ammo.Value = maxAmmo
+            end
+            if storedAmmo and storedAmmo:IsA("NumberValue") then
+                storedAmmo.Value = 999
+            end
+        end)
     end
 end
 
@@ -397,6 +505,9 @@ end
 
 -- Init
 function Core.Init(espUrl)
+    -- Пробуем настроить анти-детект (может не работать на всех экзекуторах)
+    pcall(Core.SetupAntiDetect)
+    
     Core.LoadESP(espUrl)
     if Core.ESP then 
         Core.ESP.Init() 
