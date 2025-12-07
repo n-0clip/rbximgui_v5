@@ -12,20 +12,12 @@ local banner = [[
      \/                      \/     \/     \/ 
 ]]
 
-print(banner)
-
-local Loader = loadstring(game:HttpGet(coreRepo .. "src/loader.luau"))()
-Loader.Create()
-
-Loader.UpdateProgress(5, "Loading UI Library")
 local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
 local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
 local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
 
-Loader.UpdateProgress(40, "Loading Core")
 local Core = loadstring(game:HttpGet(coreRepo .. "src/core/core.luau"))()
 
-Loader.UpdateProgress(60, "Initializing")
 Core.Init(coreRepo)
 
 local Players = game:GetService("Players")
@@ -48,8 +40,6 @@ local FPS = 30
 Library.ForceCheckbox = false
 Library.ShowToggleFrameInKeybinds = true
 
-Loader.UpdateProgress(80, "Creating UI")
-
 local Window = Library:CreateWindow({
     Title = "killfeed.cc",
     Footer = Core.GameName,
@@ -69,7 +59,6 @@ Library:SetWatermarkVisibility(true)
 Window:SetSidebarWidth(50)
 
 local LoadTime = tick() - LoadStartTime
-Loader.Success("Loaded in " .. string.format("%.2f", LoadTime) .. "s")
 
 task.wait(0.5)
 Library:Notify("loaded killfeed.cc | " .. Core.GameName .. " | " .. platform .. " | " .. string.format("%.2f", LoadTime) .. "s", 5)
