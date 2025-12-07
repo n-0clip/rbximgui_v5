@@ -27,12 +27,27 @@ Core.Game = nil
 Core.IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 Core.SupportedGames = {
-    [301549746] = "counter-blox"
+    [301549746] = "counter-blox",
+    [286090429] = "arsenal",
+    [136801880565837] = "flick",
+    [142823291] = "murder-mystery-2",
+    [292439477] = "phantom-forces",
+    [17625359962] = "rivals"
+}
+
+Core.GameNames = {
+    ["counter-blox"] = "Counter Blox",
+    ["arsenal"] = "Arsenal",
+    ["flick"] = "Flick",
+    ["murder-mystery-2"] = "Murder Mystery 2",
+    ["phantom-forces"] = "Phantom Forces",
+    ["rivals"] = "Rivals",
+    ["universal"] = "Universal"
 }
 
 Core.PlaceId = game.PlaceId
 Core.GameId = Core.SupportedGames[Core.PlaceId] or "universal"
-Core.GameName = Core.GameId == "counter-blox" and "Counter Blox" or "Universal"
+Core.GameName = Core.GameNames[Core.GameId] or "Universal"
 
 Core.Loops = {}
 Core.LockedTarget = nil
@@ -129,6 +144,10 @@ function Core.Init(baseUrl)
     local gameFile = Core.GameId .. ".luau"
     Core.Game = Core.LoadModule(gamesUrl .. gameFile)
     
+    if not Core.Game then
+        Core.Game = Core.LoadModule(gamesUrl .. "universal.luau")
+    end
+    
     if Core.ESP then
         Core.ESP.Init()
     end
@@ -156,6 +175,10 @@ function Core.Cleanup()
     
     if Core.ESP then
         pcall(function() Core.ESP.Destroy() end)
+    end
+    
+    if Core.Game and Core.Game.Cleanup then
+        pcall(function() Core.Game.Cleanup() end)
     end
 end
 
