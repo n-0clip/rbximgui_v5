@@ -242,17 +242,46 @@ function ESP.RemoveChams(plr)
     end
 end
 
+function ESP.HideCornerBox(obj)
+    SafeSet(obj.CornerTL1, "Visible", false)
+    SafeSet(obj.CornerTL2, "Visible", false)
+    SafeSet(obj.CornerTR1, "Visible", false)
+    SafeSet(obj.CornerTR2, "Visible", false)
+    SafeSet(obj.CornerBL1, "Visible", false)
+    SafeSet(obj.CornerBL2, "Visible", false)
+    SafeSet(obj.CornerBR1, "Visible", false)
+    SafeSet(obj.CornerBR2, "Visible", false)
+    SafeSet(obj.CornerTL1_O, "Visible", false)
+    SafeSet(obj.CornerTL2_O, "Visible", false)
+    SafeSet(obj.CornerTR1_O, "Visible", false)
+    SafeSet(obj.CornerTR2_O, "Visible", false)
+    SafeSet(obj.CornerBL1_O, "Visible", false)
+    SafeSet(obj.CornerBL2_O, "Visible", false)
+    SafeSet(obj.CornerBR1_O, "Visible", false)
+    SafeSet(obj.CornerBR2_O, "Visible", false)
+end
+
 function ESP.Hide(obj)
     if not obj then return end
     
-    for key, value in pairs(obj) do
-        if type(value) == "table" then
-            for _, item in pairs(value) do
-                SafeSet(item, "Visible", false)
-            end
-        else
-            SafeSet(value, "Visible", false)
-        end
+    SafeSet(obj.Box, "Visible", false)
+    SafeSet(obj.BoxOutline, "Visible", false)
+    SafeSet(obj.Name, "Visible", false)
+    SafeSet(obj.Distance, "Visible", false)
+    SafeSet(obj.HealthBar, "Visible", false)
+    SafeSet(obj.HealthBarBg, "Visible", false)
+    SafeSet(obj.HealthBarOutline, "Visible", false)
+    SafeSet(obj.Tracer, "Visible", false)
+    SafeSet(obj.TracerOutline, "Visible", false)
+    SafeSet(obj.HeadDot, "Visible", false)
+    SafeSet(obj.HeadDotOutline, "Visible", false)
+    SafeSet(obj.Arrow, "Visible", false)
+    SafeSet(obj.ArrowOutline, "Visible", false)
+    
+    ESP.HideCornerBox(obj)
+    
+    for _, line in pairs(obj.Skeleton) do
+        SafeSet(line, "Visible", false)
     end
 end
 
@@ -263,48 +292,96 @@ function ESP.HideChams(plr)
 end
 
 function ESP.DrawCornerBox(obj, x, y, w, h, color, thickness, length, outline)
-    local corners = {
-        {obj.CornerTL1, obj.CornerTL1_O, {x, y}, {x + length, y}},
-        {obj.CornerTL2, obj.CornerTL2_O, {x, y}, {x, y + length}},
-        {obj.CornerTR1, obj.CornerTR1_O, {x + w, y}, {x + w - length, y}},
-        {obj.CornerTR2, obj.CornerTR2_O, {x + w, y}, {x + w, y + length}},
-        {obj.CornerBL1, obj.CornerBL1_O, {x, y + h}, {x + length, y + h}},
-        {obj.CornerBL2, obj.CornerBL2_O, {x, y + h}, {x, y + h - length}},
-        {obj.CornerBR1, obj.CornerBR1_O, {x + w, y + h}, {x + w - length, y + h}},
-        {obj.CornerBR2, obj.CornerBR2_O, {x + w, y + h}, {x + w, y + h - length}},
-    }
+    if outline then
+        SafeSet(obj.CornerTL1_O, "From", Vector2.new(x, y))
+        SafeSet(obj.CornerTL1_O, "To", Vector2.new(x + length, y))
+        SafeSet(obj.CornerTL1_O, "Visible", true)
+        
+        SafeSet(obj.CornerTL2_O, "From", Vector2.new(x, y))
+        SafeSet(obj.CornerTL2_O, "To", Vector2.new(x, y + length))
+        SafeSet(obj.CornerTL2_O, "Visible", true)
+        
+        SafeSet(obj.CornerTR1_O, "From", Vector2.new(x + w, y))
+        SafeSet(obj.CornerTR1_O, "To", Vector2.new(x + w - length, y))
+        SafeSet(obj.CornerTR1_O, "Visible", true)
+        
+        SafeSet(obj.CornerTR2_O, "From", Vector2.new(x + w, y))
+        SafeSet(obj.CornerTR2_O, "To", Vector2.new(x + w, y + length))
+        SafeSet(obj.CornerTR2_O, "Visible", true)
+        
+        SafeSet(obj.CornerBL1_O, "From", Vector2.new(x, y + h))
+        SafeSet(obj.CornerBL1_O, "To", Vector2.new(x + length, y + h))
+        SafeSet(obj.CornerBL1_O, "Visible", true)
+        
+        SafeSet(obj.CornerBL2_O, "From", Vector2.new(x, y + h))
+        SafeSet(obj.CornerBL2_O, "To", Vector2.new(x, y + h - length))
+        SafeSet(obj.CornerBL2_O, "Visible", true)
+        
+        SafeSet(obj.CornerBR1_O, "From", Vector2.new(x + w, y + h))
+        SafeSet(obj.CornerBR1_O, "To", Vector2.new(x + w - length, y + h))
+        SafeSet(obj.CornerBR1_O, "Visible", true)
+        
+        SafeSet(obj.CornerBR2_O, "From", Vector2.new(x + w, y + h))
+        SafeSet(obj.CornerBR2_O, "To", Vector2.new(x + w, y + h - length))
+        SafeSet(obj.CornerBR2_O, "Visible", true)
+    else
+        SafeSet(obj.CornerTL1_O, "Visible", false)
+        SafeSet(obj.CornerTL2_O, "Visible", false)
+        SafeSet(obj.CornerTR1_O, "Visible", false)
+        SafeSet(obj.CornerTR2_O, "Visible", false)
+        SafeSet(obj.CornerBL1_O, "Visible", false)
+        SafeSet(obj.CornerBL2_O, "Visible", false)
+        SafeSet(obj.CornerBR1_O, "Visible", false)
+        SafeSet(obj.CornerBR2_O, "Visible", false)
+    end
     
-    for _, corner in ipairs(corners) do
-        local line, outlineLine, from, to = corner[1], corner[2], corner[3], corner[4]
-        
-        if outline and outlineLine then
-            outlineLine.From = Vector2.new(from[1], from[2])
-            outlineLine.To = Vector2.new(to[1], to[2])
-            outlineLine.Visible = true
-        elseif outlineLine then
-            outlineLine.Visible = false
-        end
-        
-        if line then
-            line.From = Vector2.new(from[1], from[2])
-            line.To = Vector2.new(to[1], to[2])
-            line.Color = color
-            line.Thickness = thickness
-            line.Visible = true
-        end
-    end
-end
-
-function ESP.HideCornerBox(obj)
-    local corners = {
-        obj.CornerTL1, obj.CornerTL2, obj.CornerTR1, obj.CornerTR2,
-        obj.CornerBL1, obj.CornerBL2, obj.CornerBR1, obj.CornerBR2,
-        obj.CornerTL1_O, obj.CornerTL2_O, obj.CornerTR1_O, obj.CornerTR2_O,
-        obj.CornerBL1_O, obj.CornerBL2_O, obj.CornerBR1_O, obj.CornerBR2_O
-    }
-    for _, c in ipairs(corners) do
-        SafeSet(c, "Visible", false)
-    end
+    SafeSet(obj.CornerTL1, "From", Vector2.new(x, y))
+    SafeSet(obj.CornerTL1, "To", Vector2.new(x + length, y))
+    SafeSet(obj.CornerTL1, "Color", color)
+    SafeSet(obj.CornerTL1, "Thickness", thickness)
+    SafeSet(obj.CornerTL1, "Visible", true)
+    
+    SafeSet(obj.CornerTL2, "From", Vector2.new(x, y))
+    SafeSet(obj.CornerTL2, "To", Vector2.new(x, y + length))
+    SafeSet(obj.CornerTL2, "Color", color)
+    SafeSet(obj.CornerTL2, "Thickness", thickness)
+    SafeSet(obj.CornerTL2, "Visible", true)
+    
+    SafeSet(obj.CornerTR1, "From", Vector2.new(x + w, y))
+    SafeSet(obj.CornerTR1, "To", Vector2.new(x + w - length, y))
+    SafeSet(obj.CornerTR1, "Color", color)
+    SafeSet(obj.CornerTR1, "Thickness", thickness)
+    SafeSet(obj.CornerTR1, "Visible", true)
+    
+    SafeSet(obj.CornerTR2, "From", Vector2.new(x + w, y))
+    SafeSet(obj.CornerTR2, "To", Vector2.new(x + w, y + length))
+    SafeSet(obj.CornerTR2, "Color", color)
+    SafeSet(obj.CornerTR2, "Thickness", thickness)
+    SafeSet(obj.CornerTR2, "Visible", true)
+    
+    SafeSet(obj.CornerBL1, "From", Vector2.new(x, y + h))
+    SafeSet(obj.CornerBL1, "To", Vector2.new(x + length, y + h))
+    SafeSet(obj.CornerBL1, "Color", color)
+    SafeSet(obj.CornerBL1, "Thickness", thickness)
+    SafeSet(obj.CornerBL1, "Visible", true)
+    
+    SafeSet(obj.CornerBL2, "From", Vector2.new(x, y + h))
+    SafeSet(obj.CornerBL2, "To", Vector2.new(x, y + h - length))
+    SafeSet(obj.CornerBL2, "Color", color)
+    SafeSet(obj.CornerBL2, "Thickness", thickness)
+    SafeSet(obj.CornerBL2, "Visible", true)
+    
+    SafeSet(obj.CornerBR1, "From", Vector2.new(x + w, y + h))
+    SafeSet(obj.CornerBR1, "To", Vector2.new(x + w - length, y + h))
+    SafeSet(obj.CornerBR1, "Color", color)
+    SafeSet(obj.CornerBR1, "Thickness", thickness)
+    SafeSet(obj.CornerBR1, "Visible", true)
+    
+    SafeSet(obj.CornerBR2, "From", Vector2.new(x + w, y + h))
+    SafeSet(obj.CornerBR2, "To", Vector2.new(x + w, y + h - length))
+    SafeSet(obj.CornerBR2, "Color", color)
+    SafeSet(obj.CornerBR2, "Thickness", thickness)
+    SafeSet(obj.CornerBR2, "Visible", true)
 end
 
 function ESP.DrawArrow(obj, targetPos, color, size)
@@ -398,9 +475,6 @@ function ESP.Update()
             
             if ESP.Settings.OffScreenArrows.Enabled then
                 ESP.DrawArrow(obj, rootPos, ESP.Settings.OffScreenArrows.Color, ESP.Settings.OffScreenArrows.Size)
-            else
-                SafeSet(obj.Arrow, "Visible", false)
-                SafeSet(obj.ArrowOutline, "Visible", false)
             end
             
             ESP.HideChams(plr)
@@ -418,7 +492,20 @@ function ESP.Update()
         local boxX = rootPos.X - boxW / 2
         local boxY = headTop.Y
         
-        if ESP.Settings.Box.Enabled and not ESP.Settings.CornerBox.Enabled then
+        if ESP.Settings.CornerBox.Enabled then
+            SafeSet(obj.Box, "Visible", false)
+            SafeSet(obj.BoxOutline, "Visible", false)
+            
+            ESP.DrawCornerBox(
+                obj, boxX, boxY, boxW, boxH,
+                ESP.Settings.CornerBox.Color,
+                ESP.Settings.CornerBox.Thickness,
+                ESP.Settings.CornerBox.Length,
+                ESP.Settings.CornerBox.Outline
+            )
+        elseif ESP.Settings.Box.Enabled then
+            ESP.HideCornerBox(obj)
+            
             if ESP.Settings.Box.Outline and obj.BoxOutline then
                 obj.BoxOutline.Size = Vector2.new(boxW, boxH)
                 obj.BoxOutline.Position = Vector2.new(boxX, boxY)
@@ -434,19 +521,6 @@ function ESP.Update()
                 obj.Box.Thickness = ESP.Settings.Box.Thickness
                 obj.Box.Visible = true
             end
-            
-            ESP.HideCornerBox(obj)
-        elseif ESP.Settings.CornerBox.Enabled then
-            SafeSet(obj.Box, "Visible", false)
-            SafeSet(obj.BoxOutline, "Visible", false)
-            
-            ESP.DrawCornerBox(
-                obj, boxX, boxY, boxW, boxH,
-                ESP.Settings.CornerBox.Color,
-                ESP.Settings.CornerBox.Thickness,
-                ESP.Settings.CornerBox.Length,
-                ESP.Settings.CornerBox.Outline
-            )
         else
             SafeSet(obj.Box, "Visible", false)
             SafeSet(obj.BoxOutline, "Visible", false)
