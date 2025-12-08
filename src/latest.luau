@@ -259,17 +259,17 @@ if Core.GameId == "murder-mystery-2" then
         MM2Pickup:AddToggle({Name = "TP Pickup", Text = "Teleport Pickup", Default = false, Callback = function(v) MM2.SetTeleportPickup(v) end})
         MM2Pickup:AddSlider({Name = "Grab Range", Text = "Grab Range", Default = 15, Min = 5, Max = 50, Round = 0, Callback = function(v) MM2.SetGrabRange(v) end})
 		MM2Colors:AddColorPicker({Name = "Murderer", Text = "Murderer", Default = Color3.fromRGB(255, 0, 0), Callback = function(v) 
-			Core.ESP.MM2.Colors.Murderer = v 
-		end})
-		MM2Colors:AddColorPicker({Name = "Sheriff", Text = "Sheriff", Default = Color3.fromRGB(0, 100, 255), Callback = function(v) 
-			Core.ESP.MM2.Colors.Sheriff = v 
-		end})
-		MM2Colors:AddColorPicker({Name = "Innocent", Text = "Innocent", Default = Color3.fromRGB(0, 255, 0), Callback = function(v) 
-			Core.ESP.MM2.Colors.Innocent = v 
-		end})
-		MM2Colors:AddColorPicker({Name = "Hero", Text = "Hero", Default = Color3.fromRGB(255, 255, 0), Callback = function(v) 
-			Core.ESP.MM2.Colors.Hero = v 
-		end})
+		Core.ESP.MM2.Colors.Murderer = v 
+	end})
+	MM2Colors:AddColorPicker({Name = "Sheriff", Text = "Sheriff", Default = Color3.fromRGB(0, 100, 255), Callback = function(v) 
+		Core.ESP.MM2.Colors.Sheriff = v 
+	end})
+	MM2Colors:AddColorPicker({Name = "Innocent", Text = "Innocent", Default = Color3.fromRGB(0, 255, 0), Callback = function(v) 
+		Core.ESP.MM2.Colors.Innocent = v 
+	end})
+	MM2Colors:AddColorPicker({Name = "Hero", Text = "Hero", Default = Color3.fromRGB(255, 255, 0), Callback = function(v) 
+		Core.ESP.MM2.Colors.Hero = v 
+	end})
     end
 end
 
