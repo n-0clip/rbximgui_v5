@@ -22,6 +22,20 @@
 - removed loader bcs of errors
 - custom obsidian ui and then replaced with compkiller ui
 ### Planned
-- try to rewrite core and the main script
-- add more games
+- try to rewrite core and the main script (*-*)
+- add more games (*-*)
+##
+
+##
+## [1.14a] - 2025-08.12
+### added // updated // removed // upgraded
+- fixed lags with compkiller lib
+- fixed mm2 esp
+- added corner box to esp
+- added of screen arrows (beta)
+- head dot
+### Planned
+- fix color pickers for esp (*-*)
+- make better esp and aimbot / fix trigger (*-*)
+- add more funcs to universal (*-*)
 ##
