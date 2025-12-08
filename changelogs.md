@@ -26,7 +26,6 @@
 - add more games (*-*)
 ##
 
-##
 ## [1.14a] - 2025-08.12
 ### added // updated // removed // upgraded
 - fixed lags with compkiller lib
