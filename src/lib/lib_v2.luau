@@ -43,6 +43,19 @@ export type WindowUpdate = {
 	UserProfile: string
 };
 
+export type KeybindSettings = {
+	Key : string,
+	On : boolean | number,
+	Off : boolean | number,
+	Mode : number,
+	Name : string,
+}
+
+export type SecurityConfig = {
+	BlurEnabled : boolean,
+	ImageScale: number,
+};
+
 export type ConfigFunctions = {
 	Directory: string,
 	WriteConfig: (self: ConfigFunctions , Config: WriteConfig) -> any?,
@@ -1481,7 +1494,7 @@ function Compkiller:GetCalculatePosition(planePos: number, planeNormal: number, 
 end;
 
 function Compkiller:_Blur(element : Frame , WindowRemote) : RBXScriptSignal
-    if Compkiller.SecureMode then
+    if Compkiller.SecureMode and not Compkiller.SecurityConfig.BlurEnabled then
         return game.Changed:Connect(function() end);
     end;
 
@@ -2425,8 +2438,8 @@ Compkiller.Hash = function(str: string)
 end;
 
 function Compkiller:CacheImage(id: string) : string
-    if not Compkiller.SecureMode then
-        return id;
+    if not Compkiller.SecureMode or not id or not id:byte() then
+        return id or "";
     end;
 
 	assert(Compkiller.SecureMode , "please use Compkiller:Security(< string >) before cache image")
@@ -2439,10 +2452,18 @@ function Compkiller:CacheImage(id: string) : string
 	local cache_path = string.format("%s/cache-%s.png" ,Compkiller.CacheDirectory , Hash);
 
 	if isfile(cache_path) then
-		return getcustomasset(cache_path);
+		return (getcustomasset or getsynasset)(cache_path);
 	end;
 
-	local endpoint = string.format("https://thumbnails.roblox.com/v1/assets?assetIds=%s&size=150x150&format=Png&isCircular=false" , id);
+	local imgSize = Compkiller.SecurityConfig.ImageScale;
+	
+	local imagesize = (imgSize and string.format("%sx%s", tostring(math.round(imgSize)), tostring(math.round(imgSize)))) or "150x150"
+
+    local endpoint = string.format(
+        "https://thumbnails.roblox.com/v1/assets?assetIds=%s&size=%s&format=Png&isCircular=false",
+        ids,
+        imagesize
+    );
 
 	local json = game:HttpGet(endpoint);
 
@@ -2450,7 +2471,7 @@ function Compkiller:CacheImage(id: string) : string
 		return HttpService:JSONDecode(json);
 	end));
 
-	if typeof(JSON_Decode) == "table" and JSON_Decode.data[1] and JSON_Decode.data[1].imageUrl and JSON_Decode.data[1].state == "Completed" then task.wait()
+	if typeof(JSON_Decode) == "table" and JSON_Decode and JSON_Decode.data and JSON_Decode.data[1] and JSON_Decode.data[1].imageUrl and JSON_Decode.data[1].state == "Completed" then task.wait()
 		local en = JSON_Decode.data[1].imageUrl;
 
 		writefile(cache_path , game:HttpGet(en));
@@ -2463,14 +2484,16 @@ function Compkiller:CacheImage(id: string) : string
 	return "";
 end;
 
-function Compkiller:Security(directory: string) -- Security Mode
+function Compkiller:Security(directory: string,Config: SecurityConfig) -- Security Mode
 	directory = directory or "Compkiller-Cache";
 
-    if not isfolder(directory) then
-        makefolder(directory);
-    end;
+	if not isfolder(directory) then
+		makefolder(directory);
+	end;
 
 	Compkiller.SecureMode = true;
+	
+	Compkiller.SecurityConfig = Config or {};
 
 	Compkiller.CacheDirectory = directory;
 end;
