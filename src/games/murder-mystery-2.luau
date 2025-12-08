@@ -9,14 +9,14 @@ local LocalPlayer = Players.LocalPlayer
 
 MM2.Core = nil
 MM2.Loops = {}
-MM2.Roles = {}
 MM2.RoleData = {}
 MM2.Murderer = nil
 MM2.Sheriff = nil
 MM2.Hero = nil
+MM2.LastRefresh = 0
 
 MM2.Settings = {
-    ShowRoles = true,
+    ShowRoles = false,
     AutoPickupGun = false,
     AutoPickupKnife = false,
     GrabRange = 15,
@@ -29,23 +29,37 @@ MM2.Settings = {
 
 function MM2.GetPlayerData()
     local success, data = pcall(function()
+        local remote = ReplicatedStorage:FindFirstChild("Remotes")
+        if remote then
+            local getPlayerData = remote:FindFirstChild("Gameplay"):FindFirstChild("GetPlayerData")
+            if getPlayerData then
+                return getPlayerData:InvokeServer()
+            end
+        end
+        
         local getPlayerData = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
         if getPlayerData then
             return getPlayerData:InvokeServer()
         end
+        
         return nil
     end)
     
     if success and data then
         MM2.RoleData = data
+        MM2.Murderer = nil
+        MM2.Sheriff = nil
+        MM2.Hero = nil
         
         for playerName, info in pairs(data) do
-            if info.Role == "Murderer" then
-                MM2.Murderer = playerName
-            elseif info.Role == "Sheriff" then
-                MM2.Sheriff = playerName
-            elseif info.Role == "Hero" then
-                MM2.Hero = playerName
+            if type(info) == "table" then
+                if info.Role == "Murderer" then
+                    MM2.Murderer = playerName
+                elseif info.Role == "Sheriff" then
+                    MM2.Sheriff = playerName
+                elseif info.Role == "Hero" then
+                    MM2.Hero = playerName
+                end
             end
         end
         
@@ -55,14 +69,14 @@ function MM2.GetPlayerData()
     return {}
 end
 
-function MM2.IsAlive(player)
+function MM2.IsPlayerAlive(player)
     if not player then return false end
     
     local playerName = type(player) == "string" and player or player.Name
     
     if MM2.RoleData[playerName] then
         local data = MM2.RoleData[playerName]
-        if data.Killed or data.Dead then
+        if type(data) == "table" and (data.Killed or data.Dead) then
             return false
         end
     end
@@ -83,16 +97,16 @@ function MM2.HasGun(player)
     
     local playerName = type(player) == "string" and player or player.Name
     
-    if MM2.RoleData[playerName] and MM2.RoleData[playerName].HasGun then
-        return true
+    if MM2.RoleData[playerName] then
+        local data = MM2.RoleData[playerName]
+        if type(data) == "table" and data.HasGun then
+            return true
+        end
     end
     
     local plr = type(player) == "string" and Players:FindFirstChild(player) or player
     if plr then
-        local char = plr.Character
-        local backpack = plr:FindFirstChild("Backpack")
-        
-        local function checkForGun(container)
+        local function checkContainer(container)
             if not container then return false end
             for _, tool in pairs(container:GetChildren()) do
                 if tool:IsA("Tool") then
@@ -105,9 +119,33 @@ function MM2.HasGun(player)
             return false
         end
         
-        if checkForGun(char) or checkForGun(backpack) then
-            return true
+        if plr.Character and checkContainer(plr.Character) then return true end
+        if plr:FindFirstChild("Backpack") and checkContainer(plr.Backpack) then return true end
+    end
+    
+    return false
+end
+
+function MM2.HasKnife(player)
+    if not player then return false end
+    
+    local plr = type(player) == "string" and Players:FindFirstChild(player) or player
+    if plr then
+        local function checkContainer(container)
+            if not container then return false end
+            for _, tool in pairs(container:GetChildren()) do
+                if tool:IsA("Tool") then
+                    local name = tool.Name:lower()
+                    if name:find("knife") then
+                        return true
+                    end
+                end
+            end
+            return false
         end
+        
+        if plr.Character and checkContainer(plr.Character) then return true end
+        if plr:FindFirstChild("Backpack") and checkContainer(plr.Backpack) then return true end
     end
     
     return false
@@ -119,20 +157,27 @@ function MM2.GetRole(player)
     local playerName = type(player) == "string" and player or player.Name
     
     if MM2.RoleData[playerName] then
-        local role = MM2.RoleData[playerName].Role
-        if role then
-            return role
+        local data = MM2.RoleData[playerName]
+        if type(data) == "table" and data.Role then
+            return data.Role
         end
     end
     
-    if playerName == MM2.Murderer and MM2.IsAlive(player) then
+    if playerName == MM2.Murderer then
         return "Murderer"
-    elseif playerName == MM2.Sheriff and MM2.IsAlive(player) then
+    elseif playerName == MM2.Sheriff then
         return "Sheriff"
-    elseif playerName == MM2.Hero and MM2.IsAlive(player) then
+    elseif playerName == MM2.Hero then
         return "Hero"
-    elseif MM2.HasGun(player) and MM2.IsAlive(player) then
-        return "Hero"
+    end
+    
+    if MM2.HasKnife(player) then
+        return "Murderer"
+    elseif MM2.HasGun(player) then
+        if MM2.Sheriff and not MM2.IsPlayerAlive(MM2.Sheriff) then
+            return "Hero"
+        end
+        return "Sheriff"
     end
     
     return "Innocent"
@@ -157,20 +202,8 @@ end
 function MM2.GetDrops()
     local drops = {}
     
-    for _, obj in pairs(Workspace:GetChildren()) do
-        if obj:IsA("Tool") or obj:IsA("Model") then
-            local name = obj.Name:lower()
-            if name:find("gun") or name:find("revolver") or name == "gundrop" then
-                table.insert(drops, {Object = obj, Type = "Gun"})
-            elseif name:find("knife") or name == "knifedrop" then
-                table.insert(drops, {Object = obj, Type = "Knife"})
-            end
-        end
-    end
-    
-    local droppedItems = Workspace:FindFirstChild("DroppedItems")
-    if droppedItems then
-        for _, obj in pairs(droppedItems:GetChildren()) do
+    for _, obj in pairs(Workspace:GetDescendants()) do
+        if obj:IsA("Tool") or (obj:IsA("Model") and obj:FindFirstChild("Handle")) then
             local name = obj.Name:lower()
             if name:find("gun") or name:find("revolver") then
                 table.insert(drops, {Object = obj, Type = "Gun"})
@@ -186,48 +219,43 @@ end
 function MM2.GetDropPosition(drop)
     if not drop then return nil end
     
-    local handle = drop:FindFirstChild("Handle") or drop:FindFirstChildOfClass("BasePart")
+    if drop:IsA("BasePart") then
+        return drop.Position
+    end
+    
+    local handle = drop:FindFirstChild("Handle")
     if handle then return handle.Position end
-    if drop:IsA("BasePart") then return drop.Position end
-    if drop:IsA("Model") and drop.PrimaryPart then return drop.PrimaryPart.Position end
+    
+    local part = drop:FindFirstChildOfClass("BasePart")
+    if part then return part.Position end
+    
+    if drop:IsA("Model") and drop.PrimaryPart then
+        return drop.PrimaryPart.Position
+    end
     
     return nil
 end
 
 function MM2.GrabDrop(drop)
-    if not MM2.Core then return end
-    if not MM2.Core.IsAlive then return end
-    if not MM2.Core.IsAlive(LocalPlayer) then return end
+    if not LocalPlayer.Character then return end
     
-    local char = LocalPlayer.Character
-    if not char then return end
-    
-    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
     
     local handle = drop:FindFirstChild("Handle") or drop:FindFirstChildOfClass("BasePart")
-    if not handle then
-        if drop:IsA("BasePart") then
-            handle = drop
-        elseif drop:IsA("Model") and drop.PrimaryPart then
-            handle = drop.PrimaryPart
-        else
-            return
-        end
-    end
+    if not handle then return end
     
     if MM2.Settings.TeleportPickup then
         local oldCFrame = hrp.CFrame
         hrp.CFrame = handle.CFrame * CFrame.new(0, 3, 0)
-        task.wait(0.1)
+        task.wait(0.15)
         hrp.CFrame = oldCFrame
     else
         pcall(function()
             if firetouchinterest then
                 firetouchinterest(hrp, handle, 0)
-                task.defer(function()
-                    firetouchinterest(hrp, handle, 1)
-                end)
+                task.wait()
+                firetouchinterest(hrp, handle, 1)
             end
         end)
     end
@@ -243,18 +271,13 @@ function MM2.AutoPickupGun(enabled)
     
     if enabled then
         MM2.Loops.AutoPickupGun = RunService.Heartbeat:Connect(function()
-            if not MM2.Core or not MM2.Core.IsAlive then return end
-            if not MM2.Core.IsAlive(LocalPlayer) then return end
+            if not LocalPlayer.Character then return end
+            
+            local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
             
             local myRole = MM2.GetRole(LocalPlayer)
             if myRole == "Murderer" then return end
-            
-            local char = LocalPlayer.Character
-            if not char then return end
-            
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-            
             if MM2.HasGun(LocalPlayer) then return end
             
             for _, drop in pairs(MM2.GetDrops()) do
@@ -283,13 +306,9 @@ function MM2.AutoPickupKnife(enabled)
     
     if enabled then
         MM2.Loops.AutoPickupKnife = RunService.Heartbeat:Connect(function()
-            if not MM2.Core or not MM2.Core.IsAlive then return end
-            if not MM2.Core.IsAlive(LocalPlayer) then return end
+            if not LocalPlayer.Character then return end
             
-            local char = LocalPlayer.Character
-            if not char then return end
-            
-            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             if not hrp then return end
             
             for _, drop in pairs(MM2.GetDrops()) do
@@ -317,7 +336,6 @@ function MM2.SetTeleportPickup(enabled)
 end
 
 function MM2.RefreshRoles()
-    MM2.Roles = {}
     MM2.RoleData = {}
     MM2.Murderer = nil
     MM2.Sheriff = nil
@@ -335,27 +353,19 @@ function MM2.Init(Core)
     MM2.GetPlayerData()
     
     MM2.Loops.RoleRefresh = RunService.Heartbeat:Connect(function()
-        if not MM2._lastRefresh then MM2._lastRefresh = 0 end
-        
-        if tick() - MM2._lastRefresh >= 2 then
-            MM2._lastRefresh = tick()
+        if tick() - MM2.LastRefresh >= 2 then
+            MM2.LastRefresh = tick()
             MM2.GetPlayerData()
         end
     end)
 end
 
 function MM2.Cleanup()
-    for name, conn in pairs(MM2.Loops) do
-        if conn then
-            pcall(function() conn:Disconnect() end)
-        end
+    for _, conn in pairs(MM2.Loops) do
+        if conn then pcall(function() conn:Disconnect() end) end
     end
     MM2.Loops = {}
-    MM2.Roles = {}
     MM2.RoleData = {}
-    MM2.Murderer = nil
-    MM2.Sheriff = nil
-    MM2.Hero = nil
 end
 
 return MM2
