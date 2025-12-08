@@ -20,6 +20,14 @@ ESP.Settings = {
         Outline = true
     },
     
+    CornerBox = {
+        Enabled = false,
+        Color = Color3.fromRGB(255, 255, 255),
+        Thickness = 1,
+        Length = 10,
+        Outline = true
+    },
+    
     Name = { 
         Enabled = false, 
         Color = Color3.fromRGB(255, 255, 255), 
@@ -29,7 +37,8 @@ ESP.Settings = {
     
     Health = { 
         Enabled = false, 
-        Position = "Left"
+        Position = "Left",
+        Outline = true
     },
     
     Distance = { 
@@ -56,6 +65,19 @@ ESP.Settings = {
         Color = Color3.fromRGB(255, 255, 255), 
         Thickness = 1,
         Origin = "Bottom" 
+    },
+    
+    HeadDot = {
+        Enabled = false,
+        Color = Color3.fromRGB(255, 0, 0),
+        Size = 3,
+        Outline = true
+    },
+    
+    OffScreenArrows = {
+        Enabled = false,
+        Color = Color3.fromRGB(255, 0, 0),
+        Size = 15
     },
     
     UseRoleColors = false
@@ -138,6 +160,12 @@ function ESP.GetColor(plr)
     return ESP.Settings.Box.Color
 end
 
+function ESP.GetHealthColor(percent)
+    local r = math.floor(255 * (1 - percent))
+    local g = math.floor(255 * percent)
+    return Color3.fromRGB(r, g, 0)
+end
+
 function ESP.Create(plr)
     if not plr or ESP.Objects[plr] then return end
     
@@ -145,15 +173,39 @@ function ESP.Create(plr)
         Box = NewDrawing("Square", {Thickness = 1, Filled = false}),
         BoxOutline = NewDrawing("Square", {Thickness = 3, Filled = false, Color = Color3.new(0, 0, 0)}),
         
+        CornerTL1 = NewDrawing("Line", {Thickness = 1}),
+        CornerTL2 = NewDrawing("Line", {Thickness = 1}),
+        CornerTR1 = NewDrawing("Line", {Thickness = 1}),
+        CornerTR2 = NewDrawing("Line", {Thickness = 1}),
+        CornerBL1 = NewDrawing("Line", {Thickness = 1}),
+        CornerBL2 = NewDrawing("Line", {Thickness = 1}),
+        CornerBR1 = NewDrawing("Line", {Thickness = 1}),
+        CornerBR2 = NewDrawing("Line", {Thickness = 1}),
+        
+        CornerTL1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
+        CornerTL2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
+        CornerTR1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
+        CornerTR2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
+        CornerBL1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
+        CornerBL2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
+        CornerBR1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
+        CornerBR2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
+        
         Name = NewDrawing("Text", {Size = 13, Center = true, Outline = true, Font = 2}),
         Distance = NewDrawing("Text", {Size = 11, Center = true, Outline = true, Font = 2}),
         
         HealthBar = NewDrawing("Square", {Filled = true}),
-        HealthBarBg = NewDrawing("Square", {Filled = true, Color = Color3.fromRGB(40, 40, 40)}),
+        HealthBarBg = NewDrawing("Square", {Filled = true, Color = Color3.fromRGB(20, 20, 20)}),
         HealthBarOutline = NewDrawing("Square", {Filled = false, Color = Color3.new(0, 0, 0), Thickness = 1}),
         
         Tracer = NewDrawing("Line", {Thickness = 1}),
         TracerOutline = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
+        
+        HeadDot = NewDrawing("Circle", {Filled = true, NumSides = 30}),
+        HeadDotOutline = NewDrawing("Circle", {Filled = false, Color = Color3.new(0, 0, 0), Thickness = 2, NumSides = 30}),
+        
+        Arrow = NewDrawing("Triangle", {Filled = true}),
+        ArrowOutline = NewDrawing("Triangle", {Filled = false, Color = Color3.new(0, 0, 0), Thickness = 2}),
         
         Skeleton = {}
     }
@@ -168,53 +220,19 @@ end
 function ESP.Remove(plr)
     local obj = ESP.Objects[plr]
     if obj then
-        SafeRemove(obj.Box)
-        SafeRemove(obj.BoxOutline)
-        SafeRemove(obj.Name)
-        SafeRemove(obj.Distance)
-        SafeRemove(obj.HealthBar)
-        SafeRemove(obj.HealthBarBg)
-        SafeRemove(obj.HealthBarOutline)
-        SafeRemove(obj.Tracer)
-        SafeRemove(obj.TracerOutline)
-        
-        for _, line in pairs(obj.Skeleton) do
-            SafeRemove(line)
+        for key, value in pairs(obj) do
+            if type(value) == "table" then
+                for _, line in pairs(value) do
+                    SafeRemove(line)
+                end
+            else
+                SafeRemove(value)
+            end
         end
-        
         ESP.Objects[plr] = nil
     end
     
-    if ESP.Chams[plr] then
-        pcall(function() ESP.Chams[plr]:Destroy() end)
-        ESP.Chams[plr] = nil
-    end
-end
-
-function ESP.Hide(obj)
-    if not obj then return end
-    
-    SafeSet(obj.Box, "Visible", false)
-    SafeSet(obj.BoxOutline, "Visible", false)
-    SafeSet(obj.Name, "Visible", false)
-    SafeSet(obj.Distance, "Visible", false)
-    SafeSet(obj.HealthBar, "Visible", false)
-    SafeSet(obj.HealthBarBg, "Visible", false)
-    SafeSet(obj.HealthBarOutline, "Visible", false)
-    SafeSet(obj.Tracer, "Visible", false)
-    SafeSet(obj.TracerOutline, "Visible", false)
-    
-    for _, line in pairs(obj.Skeleton) do
-        SafeSet(line, "Visible", false)
-    end
-end
-
-function ESP.HideChams(plr)
-    if ESP.Chams[plr] then
-        pcall(function() 
-            ESP.Chams[plr].Enabled = false 
-        end)
-    end
+    ESP.RemoveChams(plr)
 end
 
 function ESP.RemoveChams(plr)
@@ -224,12 +242,107 @@ function ESP.RemoveChams(plr)
     end
 end
 
+function ESP.Hide(obj)
+    if not obj then return end
+    
+    for key, value in pairs(obj) do
+        if type(value) == "table" then
+            for _, item in pairs(value) do
+                SafeSet(item, "Visible", false)
+            end
+        else
+            SafeSet(value, "Visible", false)
+        end
+    end
+end
+
+function ESP.HideChams(plr)
+    if ESP.Chams[plr] then
+        pcall(function() ESP.Chams[plr].Enabled = false end)
+    end
+end
+
+function ESP.DrawCornerBox(obj, x, y, w, h, color, thickness, length, outline)
+    local corners = {
+        {obj.CornerTL1, obj.CornerTL1_O, {x, y}, {x + length, y}},
+        {obj.CornerTL2, obj.CornerTL2_O, {x, y}, {x, y + length}},
+        {obj.CornerTR1, obj.CornerTR1_O, {x + w, y}, {x + w - length, y}},
+        {obj.CornerTR2, obj.CornerTR2_O, {x + w, y}, {x + w, y + length}},
+        {obj.CornerBL1, obj.CornerBL1_O, {x, y + h}, {x + length, y + h}},
+        {obj.CornerBL2, obj.CornerBL2_O, {x, y + h}, {x, y + h - length}},
+        {obj.CornerBR1, obj.CornerBR1_O, {x + w, y + h}, {x + w - length, y + h}},
+        {obj.CornerBR2, obj.CornerBR2_O, {x + w, y + h}, {x + w, y + h - length}},
+    }
+    
+    for _, corner in ipairs(corners) do
+        local line, outlineLine, from, to = corner[1], corner[2], corner[3], corner[4]
+        
+        if outline and outlineLine then
+            outlineLine.From = Vector2.new(from[1], from[2])
+            outlineLine.To = Vector2.new(to[1], to[2])
+            outlineLine.Visible = true
+        elseif outlineLine then
+            outlineLine.Visible = false
+        end
+        
+        if line then
+            line.From = Vector2.new(from[1], from[2])
+            line.To = Vector2.new(to[1], to[2])
+            line.Color = color
+            line.Thickness = thickness
+            line.Visible = true
+        end
+    end
+end
+
+function ESP.HideCornerBox(obj)
+    local corners = {
+        obj.CornerTL1, obj.CornerTL2, obj.CornerTR1, obj.CornerTR2,
+        obj.CornerBL1, obj.CornerBL2, obj.CornerBR1, obj.CornerBR2,
+        obj.CornerTL1_O, obj.CornerTL2_O, obj.CornerTR1_O, obj.CornerTR2_O,
+        obj.CornerBL1_O, obj.CornerBL2_O, obj.CornerBR1_O, obj.CornerBR2_O
+    }
+    for _, c in ipairs(corners) do
+        SafeSet(c, "Visible", false)
+    end
+end
+
+function ESP.DrawArrow(obj, targetPos, color, size)
+    local viewportSize = Camera.ViewportSize
+    local center = viewportSize / 2
+    
+    local direction = (Vector2.new(targetPos.X, targetPos.Y) - center).Unit
+    local arrowPos = center + direction * math.min(viewportSize.X, viewportSize.Y) * 0.4
+    
+    local angle = math.atan2(direction.Y, direction.X)
+    
+    local p1 = arrowPos + Vector2.new(math.cos(angle) * size, math.sin(angle) * size)
+    local p2 = arrowPos + Vector2.new(math.cos(angle + 2.5) * size * 0.6, math.sin(angle + 2.5) * size * 0.6)
+    local p3 = arrowPos + Vector2.new(math.cos(angle - 2.5) * size * 0.6, math.sin(angle - 2.5) * size * 0.6)
+    
+    if obj.ArrowOutline then
+        obj.ArrowOutline.PointA = p1
+        obj.ArrowOutline.PointB = p2
+        obj.ArrowOutline.PointC = p3
+        obj.ArrowOutline.Visible = true
+    end
+    
+    if obj.Arrow then
+        obj.Arrow.PointA = p1
+        obj.Arrow.PointB = p2
+        obj.Arrow.PointC = p3
+        obj.Arrow.Color = color
+        obj.Arrow.Visible = true
+    end
+end
+
 function ESP.Update()
     Camera = Workspace.CurrentCamera
     if not Camera then return end
     
     for plr, obj in pairs(ESP.Objects) do
         local shouldHide = false
+        local isDead = false
         
         if not ESP.Settings.Enabled then
             shouldHide = true
@@ -237,9 +350,13 @@ function ESP.Update()
             shouldHide = true
         elseif not IsAlive(plr) then
             shouldHide = true
-            ESP.RemoveChams(plr)
+            isDead = true
         elseif ESP.Settings.TeamCheck and plr.Team and LocalPlayer.Team and plr.Team == LocalPlayer.Team then
             shouldHide = true
+        end
+        
+        if isDead then
+            ESP.RemoveChams(plr)
         end
         
         if shouldHide then
@@ -268,39 +385,72 @@ function ESP.Update()
         local rootPos, onScreen = Camera:WorldToViewportPoint(root.Position)
         local dist = (root.Position - Camera.CFrame.Position).Magnitude
         
-        if not onScreen or dist > ESP.Settings.MaxDistance then
+        if dist > ESP.Settings.MaxDistance then
             ESP.Hide(obj)
             ESP.HideChams(plr)
             continue
         end
         
+        local espColor = ESP.GetColor(plr)
+        
+        if not onScreen then
+            ESP.Hide(obj)
+            
+            if ESP.Settings.OffScreenArrows.Enabled then
+                ESP.DrawArrow(obj, rootPos, ESP.Settings.OffScreenArrows.Color, ESP.Settings.OffScreenArrows.Size)
+            else
+                SafeSet(obj.Arrow, "Visible", false)
+                SafeSet(obj.ArrowOutline, "Visible", false)
+            end
+            
+            ESP.HideChams(plr)
+            continue
+        end
+        
+        SafeSet(obj.Arrow, "Visible", false)
+        SafeSet(obj.ArrowOutline, "Visible", false)
+        
         local headTop = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
         local footBottom = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
         
         local boxH = math.abs(footBottom.Y - headTop.Y)
-        local boxW = boxH * 0.55
+        local boxW = boxH * 0.5
         local boxX = rootPos.X - boxW / 2
         local boxY = headTop.Y
         
-        local espColor = ESP.GetColor(plr)
-        
-        if ESP.Settings.Box.Enabled and obj.Box then
+        if ESP.Settings.Box.Enabled and not ESP.Settings.CornerBox.Enabled then
             if ESP.Settings.Box.Outline and obj.BoxOutline then
                 obj.BoxOutline.Size = Vector2.new(boxW, boxH)
                 obj.BoxOutline.Position = Vector2.new(boxX, boxY)
                 obj.BoxOutline.Visible = true
-            elseif obj.BoxOutline then
-                obj.BoxOutline.Visible = false
+            else
+                SafeSet(obj.BoxOutline, "Visible", false)
             end
             
-            obj.Box.Size = Vector2.new(boxW, boxH)
-            obj.Box.Position = Vector2.new(boxX, boxY)
-            obj.Box.Color = espColor
-            obj.Box.Thickness = ESP.Settings.Box.Thickness
-            obj.Box.Visible = true
+            if obj.Box then
+                obj.Box.Size = Vector2.new(boxW, boxH)
+                obj.Box.Position = Vector2.new(boxX, boxY)
+                obj.Box.Color = espColor
+                obj.Box.Thickness = ESP.Settings.Box.Thickness
+                obj.Box.Visible = true
+            end
+            
+            ESP.HideCornerBox(obj)
+        elseif ESP.Settings.CornerBox.Enabled then
+            SafeSet(obj.Box, "Visible", false)
+            SafeSet(obj.BoxOutline, "Visible", false)
+            
+            ESP.DrawCornerBox(
+                obj, boxX, boxY, boxW, boxH,
+                ESP.Settings.CornerBox.Color,
+                ESP.Settings.CornerBox.Thickness,
+                ESP.Settings.CornerBox.Length,
+                ESP.Settings.CornerBox.Outline
+            )
         else
             SafeSet(obj.Box, "Visible", false)
             SafeSet(obj.BoxOutline, "Visible", false)
+            ESP.HideCornerBox(obj)
         end
         
         if ESP.Settings.Name.Enabled and obj.Name then
@@ -328,45 +478,79 @@ function ESP.Update()
             SafeSet(obj.Distance, "Visible", false)
         end
         
-        if ESP.Settings.Health.Enabled and obj.HealthBar then
+        if ESP.Settings.Health.Enabled then
             local hp = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
-            local barW = 3
-            local barX = ESP.Settings.Health.Position == "Left" and (boxX - 6) or (boxX + boxW + 3)
+            local barW = 4
+            local barX = ESP.Settings.Health.Position == "Left" and (boxX - 7) or (boxX + boxW + 3)
             
-            obj.HealthBarBg.Size = Vector2.new(barW, boxH)
-            obj.HealthBarBg.Position = Vector2.new(barX, boxY)
-            obj.HealthBarBg.Visible = true
+            if obj.HealthBarBg then
+                obj.HealthBarBg.Size = Vector2.new(barW, boxH)
+                obj.HealthBarBg.Position = Vector2.new(barX, boxY)
+                obj.HealthBarBg.Visible = true
+            end
             
             local healthH = boxH * hp
-            obj.HealthBar.Size = Vector2.new(barW - 2, healthH)
-            obj.HealthBar.Position = Vector2.new(barX + 1, boxY + boxH - healthH)
-            obj.HealthBar.Color = Color3.fromRGB(255 * (1 - hp), 255 * hp, 0)
-            obj.HealthBar.Visible = true
+            if obj.HealthBar then
+                obj.HealthBar.Size = Vector2.new(barW - 2, healthH)
+                obj.HealthBar.Position = Vector2.new(barX + 1, boxY + boxH - healthH)
+                obj.HealthBar.Color = ESP.GetHealthColor(hp)
+                obj.HealthBar.Visible = true
+            end
             
-            obj.HealthBarOutline.Size = Vector2.new(barW, boxH)
-            obj.HealthBarOutline.Position = Vector2.new(barX, boxY)
-            obj.HealthBarOutline.Visible = true
+            if ESP.Settings.Health.Outline and obj.HealthBarOutline then
+                obj.HealthBarOutline.Size = Vector2.new(barW, boxH)
+                obj.HealthBarOutline.Position = Vector2.new(barX, boxY)
+                obj.HealthBarOutline.Visible = true
+            else
+                SafeSet(obj.HealthBarOutline, "Visible", false)
+            end
         else
             SafeSet(obj.HealthBar, "Visible", false)
             SafeSet(obj.HealthBarBg, "Visible", false)
             SafeSet(obj.HealthBarOutline, "Visible", false)
         end
         
-        if ESP.Settings.Tracers.Enabled and obj.Tracer then
+        if ESP.Settings.HeadDot.Enabled then
+            local headScreen = Camera:WorldToViewportPoint(head.Position)
+            
+            if ESP.Settings.HeadDot.Outline and obj.HeadDotOutline then
+                obj.HeadDotOutline.Position = Vector2.new(headScreen.X, headScreen.Y)
+                obj.HeadDotOutline.Radius = ESP.Settings.HeadDot.Size + 1
+                obj.HeadDotOutline.Visible = true
+            else
+                SafeSet(obj.HeadDotOutline, "Visible", false)
+            end
+            
+            if obj.HeadDot then
+                obj.HeadDot.Position = Vector2.new(headScreen.X, headScreen.Y)
+                obj.HeadDot.Radius = ESP.Settings.HeadDot.Size
+                obj.HeadDot.Color = ESP.Settings.HeadDot.Color
+                obj.HeadDot.Visible = true
+            end
+        else
+            SafeSet(obj.HeadDot, "Visible", false)
+            SafeSet(obj.HeadDotOutline, "Visible", false)
+        end
+        
+        if ESP.Settings.Tracers.Enabled then
             local originX = Camera.ViewportSize.X / 2
             local originY = ESP.Settings.Tracers.Origin == "Top" and 0 
                 or ESP.Settings.Tracers.Origin == "Center" and Camera.ViewportSize.Y / 2 
                 or Camera.ViewportSize.Y
             
-            obj.TracerOutline.From = Vector2.new(originX, originY)
-            obj.TracerOutline.To = Vector2.new(rootPos.X, rootPos.Y)
-            obj.TracerOutline.Visible = true
+            if obj.TracerOutline then
+                obj.TracerOutline.From = Vector2.new(originX, originY)
+                obj.TracerOutline.To = Vector2.new(rootPos.X, footBottom.Y)
+                obj.TracerOutline.Visible = true
+            end
             
-            obj.Tracer.From = Vector2.new(originX, originY)
-            obj.Tracer.To = Vector2.new(rootPos.X, rootPos.Y)
-            obj.Tracer.Color = ESP.Settings.Tracers.Color
-            obj.Tracer.Thickness = ESP.Settings.Tracers.Thickness
-            obj.Tracer.Visible = true
+            if obj.Tracer then
+                obj.Tracer.From = Vector2.new(originX, originY)
+                obj.Tracer.To = Vector2.new(rootPos.X, footBottom.Y)
+                obj.Tracer.Color = ESP.Settings.Tracers.Color
+                obj.Tracer.Thickness = ESP.Settings.Tracers.Thickness
+                obj.Tracer.Visible = true
+            end
         else
             SafeSet(obj.Tracer, "Visible", false)
             SafeSet(obj.TracerOutline, "Visible", false)
@@ -376,38 +560,40 @@ function ESP.Update()
             local isR15 = char:FindFirstChild("UpperTorso") ~= nil
             local connections = isR15 and SkeletonConnections.R15 or SkeletonConnections.R6
             
-            for i, conn in ipairs(connections) do
+            for i = 1, 14 do
                 local line = obj.Skeleton[i]
-                if line then
-                    local p1 = char:FindFirstChild(conn[1])
-                    local p2 = char:FindFirstChild(conn[2])
+                if not line then continue end
+                
+                local conn = connections[i]
+                if not conn then
+                    line.Visible = false
+                    continue
+                end
+                
+                local p1 = char:FindFirstChild(conn[1])
+                local p2 = char:FindFirstChild(conn[2])
+                
+                if p1 and p2 then
+                    local v1, os1 = Camera:WorldToViewportPoint(p1.Position)
+                    local v2, os2 = Camera:WorldToViewportPoint(p2.Position)
                     
-                    if p1 and p2 then
-                        local v1, os1 = Camera:WorldToViewportPoint(p1.Position)
-                        local v2, os2 = Camera:WorldToViewportPoint(p2.Position)
-                        
-                        if os1 and os2 then
-                            line.From = Vector2.new(v1.X, v1.Y)
-                            line.To = Vector2.new(v2.X, v2.Y)
-                            line.Color = ESP.Settings.Skeleton.Color
-                            line.Thickness = ESP.Settings.Skeleton.Thickness
-                            line.Visible = true
-                        else
-                            line.Visible = false
-                        end
+                    if os1 and os2 then
+                        line.From = Vector2.new(v1.X, v1.Y)
+                        line.To = Vector2.new(v2.X, v2.Y)
+                        line.Color = ESP.Settings.Skeleton.Color
+                        line.Thickness = ESP.Settings.Skeleton.Thickness
+                        line.Visible = true
                     else
                         line.Visible = false
                     end
+                else
+                    line.Visible = false
                 end
             end
-            
-            for i = #connections + 1, 14 do
+        else
+            for i = 1, 14 do
                 local line = obj.Skeleton[i]
                 if line then line.Visible = false end
-            end
-        else
-            for _, line in pairs(obj.Skeleton) do
-                SafeSet(line, "Visible", false)
             end
         end
         
