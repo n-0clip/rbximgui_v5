@@ -105,48 +105,26 @@ ESP.MM2 = {
 
 local SkeletonConnections = {
     R15 = {
-        {"Head", "UpperTorso"}, 
-        {"UpperTorso", "LowerTorso"},
-        {"UpperTorso", "LeftUpperArm"}, 
-        {"LeftUpperArm", "LeftLowerArm"}, 
-        {"LeftLowerArm", "LeftHand"},
-        {"UpperTorso", "RightUpperArm"}, 
-        {"RightUpperArm", "RightLowerArm"}, 
-        {"RightLowerArm", "RightHand"},
-        {"LowerTorso", "LeftUpperLeg"}, 
-        {"LeftUpperLeg", "LeftLowerLeg"}, 
-        {"LeftLowerLeg", "LeftFoot"},
-        {"LowerTorso", "RightUpperLeg"}, 
-        {"RightUpperLeg", "RightLowerLeg"}, 
-        {"RightLowerLeg", "RightFoot"}
+        {"Head", "UpperTorso"}, {"UpperTorso", "LowerTorso"},
+        {"UpperTorso", "LeftUpperArm"}, {"LeftUpperArm", "LeftLowerArm"}, {"LeftLowerArm", "LeftHand"},
+        {"UpperTorso", "RightUpperArm"}, {"RightUpperArm", "RightLowerArm"}, {"RightLowerArm", "RightHand"},
+        {"LowerTorso", "LeftUpperLeg"}, {"LeftUpperLeg", "LeftLowerLeg"}, {"LeftLowerLeg", "LeftFoot"},
+        {"LowerTorso", "RightUpperLeg"}, {"RightUpperLeg", "RightLowerLeg"}, {"RightLowerLeg", "RightFoot"}
     },
     R6 = {
-        {"Head", "Torso"}, 
-        {"Torso", "Left Arm"}, 
-        {"Torso", "Right Arm"}, 
-        {"Torso", "Left Leg"}, 
-        {"Torso", "Right Leg"}
+        {"Head", "Torso"}, {"Torso", "Left Arm"}, {"Torso", "Right Arm"}, {"Torso", "Left Leg"}, {"Torso", "Right Leg"}
     }
 }
 
 local function NewDrawing(class, props)
-    local success, drawing = pcall(function()
-        return Drawing.new(class)
-    end)
+    local success, drawing = pcall(function() return Drawing.new(class) end)
     if not success or not drawing then return nil end
-    for key, value in pairs(props or {}) do 
-        pcall(function() drawing[key] = value end) 
-    end
+    for k, v in pairs(props or {}) do pcall(function() drawing[k] = v end) end
     return drawing
 end
 
-local function SafeRemove(drawing)
-    if drawing then pcall(function() drawing:Remove() end) end
-end
-
-local function SafeSet(drawing, prop, value)
-    if drawing then pcall(function() drawing[prop] = value end) end
-end
+local function SafeRemove(d) if d then pcall(function() d:Remove() end) end end
+local function SafeSet(d, p, v) if d then pcall(function() d[p] = v end) end end
 
 local function IsAlive(plr)
     if not plr then return false end
@@ -154,12 +132,9 @@ local function IsAlive(plr)
     if not char then return false end
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hum or hum.Health <= 0 then return false end
-    
     if ESP.MM2.RoleData[plr.Name] then
         local data = ESP.MM2.RoleData[plr.Name]
-        if type(data) == "table" and (data.Killed or data.Dead) then
-            return false
-        end
+        if type(data) == "table" and (data.Killed or data.Dead) then return false end
     end
     return true
 end
@@ -173,27 +148,23 @@ function ESP.UpdateMM2Roles()
         if remote then
             local gameplay = remote:FindFirstChild("Gameplay")
             if gameplay then
-                local getPlayerData = gameplay:FindFirstChild("GetPlayerData")
-                if getPlayerData then return getPlayerData:InvokeServer() end
+                local gpd = gameplay:FindFirstChild("GetPlayerData")
+                if gpd then return gpd:InvokeServer() end
             end
         end
-        local getPlayerData = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
-        if getPlayerData then return getPlayerData:InvokeServer() end
+        local gpd = ReplicatedStorage:FindFirstChild("GetPlayerData", true)
+        if gpd then return gpd:InvokeServer() end
         return nil
     end)
     
     if success and data and type(data) == "table" then
         ESP.MM2.RoleData = data
-        ESP.MM2.Murderer = nil
-        ESP.MM2.Sheriff = nil
-        ESP.MM2.Hero = nil
-        
-        for playerName, info in pairs(data) do
+        ESP.MM2.Murderer, ESP.MM2.Sheriff, ESP.MM2.Hero = nil, nil, nil
+        for name, info in pairs(data) do
             if type(info) == "table" and info.Role then
-                if info.Role == "Murderer" then ESP.MM2.Murderer = playerName
-                elseif info.Role == "Sheriff" then ESP.MM2.Sheriff = playerName
-                elseif info.Role == "Hero" then ESP.MM2.Hero = playerName
-                end
+                if info.Role == "Murderer" then ESP.MM2.Murderer = name
+                elseif info.Role == "Sheriff" then ESP.MM2.Sheriff = name
+                elseif info.Role == "Hero" then ESP.MM2.Hero = name end
             end
         end
     end
@@ -201,73 +172,56 @@ end
 
 function ESP.GetMM2Role(plr)
     if not plr then return "Innocent" end
-    local playerName = plr.Name
+    local name = plr.Name
     
-    if ESP.MM2.RoleData[playerName] then
-        local data = ESP.MM2.RoleData[playerName]
-        if type(data) == "table" and data.Role then
-            return data.Role
-        end
+    if ESP.MM2.RoleData[name] then
+        local data = ESP.MM2.RoleData[name]
+        if type(data) == "table" and data.Role then return data.Role end
     end
     
-    if playerName == ESP.MM2.Murderer then return "Murderer" end
-    if playerName == ESP.MM2.Sheriff then return "Sheriff" end
-    if playerName == ESP.MM2.Hero then return "Hero" end
+    if name == ESP.MM2.Murderer then return "Murderer" end
+    if name == ESP.MM2.Sheriff then return "Sheriff" end
+    if name == ESP.MM2.Hero then return "Hero" end
     
-    local char = plr.Character
-    local backpack = plr:FindFirstChild("Backpack")
-    
-    local function hasWeapon(container, weaponType)
-        if not container then return false end
-        for _, tool in pairs(container:GetChildren()) do
+    local char, bp = plr.Character, plr:FindFirstChild("Backpack")
+    local function hasWeapon(c, t)
+        if not c then return false end
+        for _, tool in pairs(c:GetChildren()) do
             if tool:IsA("Tool") then
-                local name = tool.Name:lower()
-                if weaponType == "knife" and name:find("knife") then return true end
-                if weaponType == "gun" and (name:find("gun") or name:find("revolver")) then return true end
+                local n = tool.Name:lower()
+                if t == "knife" and n:find("knife") then return true end
+                if t == "gun" and (n:find("gun") or n:find("revolver")) then return true end
             end
         end
         return false
     end
     
-    if hasWeapon(char, "knife") or hasWeapon(backpack, "knife") then return "Murderer" end
-    if hasWeapon(char, "gun") or hasWeapon(backpack, "gun") then
+    if hasWeapon(char, "knife") or hasWeapon(bp, "knife") then return "Murderer" end
+    if hasWeapon(char, "gun") or hasWeapon(bp, "gun") then
         if ESP.MM2.Sheriff then
-            local sheriff = Players:FindFirstChild(ESP.MM2.Sheriff)
-            if sheriff and not IsAlive(sheriff) then return "Hero" end
+            local s = Players:FindFirstChild(ESP.MM2.Sheriff)
+            if s and not IsAlive(s) then return "Hero" end
         end
         return "Sheriff"
     end
     
-    if ESP.MM2.RoleData[playerName] then
-        local data = ESP.MM2.RoleData[playerName]
-        if type(data) == "table" and data.HasGun then return "Hero" end
+    if ESP.MM2.RoleData[name] and type(ESP.MM2.RoleData[name]) == "table" and ESP.MM2.RoleData[name].HasGun then
+        return "Hero"
     end
     
     return "Innocent"
 end
 
-function ESP.GetColor(plr)
-    -- Callback has priority
-    if ESP.GetColorCallback then
-        local success, color = pcall(ESP.GetColorCallback, plr)
-        if success and color then return color end
-    end
-    
-    -- Role colors for MM2
-    if ESP.Settings.UseRoleColors then
-        local role = ESP.GetMM2Role(plr)
-        if role == "Murderer" then return ESP.MM2.Colors.Murderer end
-        if role == "Sheriff" then return ESP.MM2.Colors.Sheriff end
-        if role == "Hero" then return ESP.MM2.Colors.Hero end
-        return ESP.MM2.Colors.Innocent
-    end
-    
-    -- Default color
-    return ESP.Settings.Box.Color
+function ESP.GetRoleColor(plr)
+    local role = ESP.GetMM2Role(plr)
+    if role == "Murderer" then return ESP.MM2.Colors.Murderer end
+    if role == "Sheriff" then return ESP.MM2.Colors.Sheriff end
+    if role == "Hero" then return ESP.MM2.Colors.Hero end
+    return ESP.MM2.Colors.Innocent
 end
 
-function ESP.GetHealthColor(percent)
-    return Color3.fromRGB(math.floor(255 * (1 - percent)), math.floor(255 * percent), 0)
+function ESP.GetHealthColor(p)
+    return Color3.fromRGB(math.floor(255 * (1 - p)), math.floor(255 * p), 0)
 end
 
 function ESP.Create(plr)
@@ -275,44 +229,32 @@ function ESP.Create(plr)
     
     local obj = {
         Box = NewDrawing("Square", {Thickness = 1, Filled = false}),
-        BoxOutline = NewDrawing("Square", {Thickness = 3, Filled = false, Color = Color3.new(0, 0, 0)}),
-        
-        CornerTL1 = NewDrawing("Line", {Thickness = 1}),
-        CornerTL2 = NewDrawing("Line", {Thickness = 1}),
-        CornerTR1 = NewDrawing("Line", {Thickness = 1}),
-        CornerTR2 = NewDrawing("Line", {Thickness = 1}),
-        CornerBL1 = NewDrawing("Line", {Thickness = 1}),
-        CornerBL2 = NewDrawing("Line", {Thickness = 1}),
-        CornerBR1 = NewDrawing("Line", {Thickness = 1}),
-        CornerBR2 = NewDrawing("Line", {Thickness = 1}),
-        CornerTL1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
-        CornerTL2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
-        CornerTR1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
-        CornerTR2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
-        CornerBL1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
-        CornerBL2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
-        CornerBR1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
-        CornerBR2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
-        
+        BoxOutline = NewDrawing("Square", {Thickness = 3, Filled = false, Color = Color3.new(0,0,0)}),
+        CornerTL1 = NewDrawing("Line", {Thickness = 1}), CornerTL2 = NewDrawing("Line", {Thickness = 1}),
+        CornerTR1 = NewDrawing("Line", {Thickness = 1}), CornerTR2 = NewDrawing("Line", {Thickness = 1}),
+        CornerBL1 = NewDrawing("Line", {Thickness = 1}), CornerBL2 = NewDrawing("Line", {Thickness = 1}),
+        CornerBR1 = NewDrawing("Line", {Thickness = 1}), CornerBR2 = NewDrawing("Line", {Thickness = 1}),
+        CornerTL1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0)}),
+        CornerTL2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0)}),
+        CornerTR1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0)}),
+        CornerTR2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0)}),
+        CornerBL1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0)}),
+        CornerBL2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0)}),
+        CornerBR1_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0)}),
+        CornerBR2_O = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0)}),
         Name = NewDrawing("Text", {Size = 13, Center = true, Outline = true, Font = 2}),
         Distance = NewDrawing("Text", {Size = 11, Center = true, Outline = true, Font = 2}),
-        
         HealthBar = NewDrawing("Square", {Filled = true}),
-        HealthBarBg = NewDrawing("Square", {Filled = true, Color = Color3.fromRGB(20, 20, 20)}),
-        HealthBarOutline = NewDrawing("Square", {Filled = false, Color = Color3.new(0, 0, 0), Thickness = 1}),
-        
+        HealthBarBg = NewDrawing("Square", {Filled = true, Color = Color3.fromRGB(20,20,20)}),
+        HealthBarOutline = NewDrawing("Square", {Filled = false, Color = Color3.new(0,0,0), Thickness = 1}),
         Tracer = NewDrawing("Line", {Thickness = 1}),
-        TracerOutline = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0, 0, 0)}),
-        
+        TracerOutline = NewDrawing("Line", {Thickness = 3, Color = Color3.new(0,0,0)}),
         HeadDot = NewDrawing("Circle", {Filled = true, NumSides = 30}),
-        HeadDotOutline = NewDrawing("Circle", {Filled = false, Color = Color3.new(0, 0, 0), Thickness = 2, NumSides = 30}),
-        
+        HeadDotOutline = NewDrawing("Circle", {Filled = false, Color = Color3.new(0,0,0), Thickness = 2, NumSides = 30}),
         Arrow = NewDrawing("Triangle", {Filled = true}),
-        ArrowOutline = NewDrawing("Triangle", {Filled = false, Color = Color3.new(0, 0, 0), Thickness = 2}),
-        
+        ArrowOutline = NewDrawing("Triangle", {Filled = false, Color = Color3.new(0,0,0), Thickness = 2}),
         Skeleton = {}
     }
-    
     for i = 1, 14 do obj.Skeleton[i] = NewDrawing("Line", {Thickness = 1}) end
     ESP.Objects[plr] = obj
 end
@@ -320,10 +262,9 @@ end
 function ESP.Remove(plr)
     local obj = ESP.Objects[plr]
     if obj then
-        for key, value in pairs(obj) do
-            if type(value) == "table" then
-                for _, line in pairs(value) do SafeRemove(line) end
-            else SafeRemove(value) end
+        for k, v in pairs(obj) do
+            if type(v) == "table" then for _, l in pairs(v) do SafeRemove(l) end
+            else SafeRemove(v) end
         end
         ESP.Objects[plr] = nil
     end
@@ -331,23 +272,25 @@ function ESP.Remove(plr)
 end
 
 function ESP.RemoveChams(plr)
-    if ESP.Chams[plr] then
-        pcall(function() ESP.Chams[plr]:Destroy() end)
-        ESP.Chams[plr] = nil
-    end
+    if ESP.Chams[plr] then pcall(function() ESP.Chams[plr]:Destroy() end) ESP.Chams[plr] = nil end
 end
 
 function ESP.HideAll(obj)
     if not obj then return end
-    for key, value in pairs(obj) do
-        if type(value) == "table" then
-            for _, item in pairs(value) do SafeSet(item, "Visible", false) end
-        else SafeSet(value, "Visible", false) end
+    for k, v in pairs(obj) do
+        if type(v) == "table" then for _, i in pairs(v) do SafeSet(i, "Visible", false) end
+        else SafeSet(v, "Visible", false) end
     end
 end
 
 function ESP.HideChams(plr)
     if ESP.Chams[plr] then pcall(function() ESP.Chams[plr].Enabled = false end) end
+end
+
+function ESP.HideCorners(obj)
+    local c = {obj.CornerTL1, obj.CornerTL2, obj.CornerTR1, obj.CornerTR2, obj.CornerBL1, obj.CornerBL2, obj.CornerBR1, obj.CornerBR2,
+               obj.CornerTL1_O, obj.CornerTL2_O, obj.CornerTR1_O, obj.CornerTR2_O, obj.CornerBL1_O, obj.CornerBL2_O, obj.CornerBR1_O, obj.CornerBR2_O}
+    for _, corner in ipairs(c) do SafeSet(corner, "Visible", false) end
 end
 
 function ESP.DrawCornerBox(obj, x, y, w, h, color, thickness, length, outline)
@@ -361,58 +304,35 @@ function ESP.DrawCornerBox(obj, x, y, w, h, color, thickness, length, outline)
         {obj.CornerBR1, obj.CornerBR1_O, x + w, y + h, x + w - length, y + h},
         {obj.CornerBR2, obj.CornerBR2_O, x + w, y + h, x + w, y + h - length},
     }
-    
     for _, c in ipairs(corners) do
-        local line, outLine, x1, y1, x2, y2 = c[1], c[2], c[3], c[4], c[5], c[6]
-        if outline and outLine then
-            SafeSet(outLine, "From", Vector2.new(x1, y1))
-            SafeSet(outLine, "To", Vector2.new(x2, y2))
-            SafeSet(outLine, "Visible", true)
-        elseif outLine then SafeSet(outLine, "Visible", false) end
-        
+        local line, out, x1, y1, x2, y2 = c[1], c[2], c[3], c[4], c[5], c[6]
+        if outline and out then
+            SafeSet(out, "From", Vector2.new(x1, y1)) SafeSet(out, "To", Vector2.new(x2, y2)) SafeSet(out, "Visible", true)
+        elseif out then SafeSet(out, "Visible", false) end
         if line then
-            SafeSet(line, "From", Vector2.new(x1, y1))
-            SafeSet(line, "To", Vector2.new(x2, y2))
-            SafeSet(line, "Color", color)
-            SafeSet(line, "Thickness", thickness)
-            SafeSet(line, "Visible", true)
+            SafeSet(line, "From", Vector2.new(x1, y1)) SafeSet(line, "To", Vector2.new(x2, y2))
+            SafeSet(line, "Color", color) SafeSet(line, "Thickness", thickness) SafeSet(line, "Visible", true)
         end
     end
 end
 
-function ESP.HideCorners(obj)
-    local corners = {
-        obj.CornerTL1, obj.CornerTL2, obj.CornerTR1, obj.CornerTR2,
-        obj.CornerBL1, obj.CornerBL2, obj.CornerBR1, obj.CornerBR2,
-        obj.CornerTL1_O, obj.CornerTL2_O, obj.CornerTR1_O, obj.CornerTR2_O,
-        obj.CornerBL1_O, obj.CornerBL2_O, obj.CornerBR1_O, obj.CornerBR2_O
-    }
-    for _, c in ipairs(corners) do SafeSet(c, "Visible", false) end
-end
-
-function ESP.DrawArrow(obj, targetPos, color, size)
-    local viewportSize = Camera.ViewportSize
-    local center = viewportSize / 2
-    local direction = (Vector2.new(targetPos.X, targetPos.Y) - center).Unit
-    local arrowPos = center + direction * math.min(viewportSize.X, viewportSize.Y) * 0.4
-    local angle = math.atan2(direction.Y, direction.X)
-    
-    local p1 = arrowPos + Vector2.new(math.cos(angle) * size, math.sin(angle) * size)
-    local p2 = arrowPos + Vector2.new(math.cos(angle + 2.5) * size * 0.6, math.sin(angle + 2.5) * size * 0.6)
-    local p3 = arrowPos + Vector2.new(math.cos(angle - 2.5) * size * 0.6, math.sin(angle - 2.5) * size * 0.6)
+function ESP.DrawArrow(obj, pos, color, size)
+    local vs = Camera.ViewportSize
+    local center = vs / 2
+    local dir = (Vector2.new(pos.X, pos.Y) - center).Unit
+    local ap = center + dir * math.min(vs.X, vs.Y) * 0.4
+    local angle = math.atan2(dir.Y, dir.X)
+    local p1 = ap + Vector2.new(math.cos(angle) * size, math.sin(angle) * size)
+    local p2 = ap + Vector2.new(math.cos(angle + 2.5) * size * 0.6, math.sin(angle + 2.5) * size * 0.6)
+    local p3 = ap + Vector2.new(math.cos(angle - 2.5) * size * 0.6, math.sin(angle - 2.5) * size * 0.6)
     
     if obj.ArrowOutline then
-        SafeSet(obj.ArrowOutline, "PointA", p1)
-        SafeSet(obj.ArrowOutline, "PointB", p2)
-        SafeSet(obj.ArrowOutline, "PointC", p3)
+        SafeSet(obj.ArrowOutline, "PointA", p1) SafeSet(obj.ArrowOutline, "PointB", p2) SafeSet(obj.ArrowOutline, "PointC", p3)
         SafeSet(obj.ArrowOutline, "Visible", true)
     end
     if obj.Arrow then
-        SafeSet(obj.Arrow, "PointA", p1)
-        SafeSet(obj.Arrow, "PointB", p2)
-        SafeSet(obj.Arrow, "PointC", p3)
-        SafeSet(obj.Arrow, "Color", color)
-        SafeSet(obj.Arrow, "Visible", true)
+        SafeSet(obj.Arrow, "PointA", p1) SafeSet(obj.Arrow, "PointB", p2) SafeSet(obj.Arrow, "PointC", p3)
+        SafeSet(obj.Arrow, "Color", color) SafeSet(obj.Arrow, "Visible", true)
     end
 end
 
@@ -431,9 +351,7 @@ function ESP.Update()
         end
         
         if ESP.Settings.TeamCheck and plr.Team and LocalPlayer.Team and plr.Team == LocalPlayer.Team then
-            ESP.HideAll(obj)
-            ESP.HideChams(plr)
-            continue
+            ESP.HideAll(obj) ESP.HideChams(plr) continue
         end
         
         local char = plr.Character
@@ -449,20 +367,19 @@ function ESP.Update()
         
         if dist > ESP.Settings.MaxDistance then ESP.HideAll(obj) ESP.HideChams(plr) continue end
         
-        -- GET COLOR HERE - This is the key fix
-        local espColor = ESP.GetColor(plr)
+        -- Get role color if enabled, otherwise nil
+        local roleColor = ESP.Settings.UseRoleColors and ESP.GetRoleColor(plr) or nil
         
         if not onScreen then
-            ESP.HideAll(obj)
-            ESP.HideChams(plr)
+            ESP.HideAll(obj) ESP.HideChams(plr)
             if ESP.Settings.OffScreenArrows.Enabled then
-                ESP.DrawArrow(obj, rootPos, espColor, ESP.Settings.OffScreenArrows.Size)
+                local arrowColor = roleColor or ESP.Settings.OffScreenArrows.Color
+                ESP.DrawArrow(obj, rootPos, arrowColor, ESP.Settings.OffScreenArrows.Size)
             end
             continue
         end
         
-        SafeSet(obj.Arrow, "Visible", false)
-        SafeSet(obj.ArrowOutline, "Visible", false)
+        SafeSet(obj.Arrow, "Visible", false) SafeSet(obj.ArrowOutline, "Visible", false)
         
         local headTop = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
         local footBottom = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
@@ -471,52 +388,51 @@ function ESP.Update()
         local boxX = rootPos.X - boxW / 2
         local boxY = headTop.Y
         
-        -- CORNER BOX - use espColor
+        -- CORNER BOX
         if ESP.Settings.CornerBox.Enabled then
-            SafeSet(obj.Box, "Visible", false)
-            SafeSet(obj.BoxOutline, "Visible", false)
-            ESP.DrawCornerBox(obj, boxX, boxY, boxW, boxH, espColor, ESP.Settings.CornerBox.Thickness, ESP.Settings.CornerBox.Length, ESP.Settings.CornerBox.Outline)
-        -- REGULAR BOX - use espColor
+            SafeSet(obj.Box, "Visible", false) SafeSet(obj.BoxOutline, "Visible", false)
+            local boxColor = roleColor or ESP.Settings.CornerBox.Color
+            ESP.DrawCornerBox(obj, boxX, boxY, boxW, boxH, boxColor, ESP.Settings.CornerBox.Thickness, ESP.Settings.CornerBox.Length, ESP.Settings.CornerBox.Outline)
+        -- REGULAR BOX
         elseif ESP.Settings.Box.Enabled then
             ESP.HideCorners(obj)
+            local boxColor = roleColor or ESP.Settings.Box.Color
             if ESP.Settings.Box.Outline then
                 SafeSet(obj.BoxOutline, "Size", Vector2.new(boxW, boxH))
                 SafeSet(obj.BoxOutline, "Position", Vector2.new(boxX, boxY))
                 SafeSet(obj.BoxOutline, "Visible", true)
             else SafeSet(obj.BoxOutline, "Visible", false) end
-            
             SafeSet(obj.Box, "Size", Vector2.new(boxW, boxH))
             SafeSet(obj.Box, "Position", Vector2.new(boxX, boxY))
-            SafeSet(obj.Box, "Color", espColor)
+            SafeSet(obj.Box, "Color", boxColor)
             SafeSet(obj.Box, "Thickness", ESP.Settings.Box.Thickness)
             SafeSet(obj.Box, "Visible", true)
         else
-            SafeSet(obj.Box, "Visible", false)
-            SafeSet(obj.BoxOutline, "Visible", false)
-            ESP.HideCorners(obj)
+            SafeSet(obj.Box, "Visible", false) SafeSet(obj.BoxOutline, "Visible", false) ESP.HideCorners(obj)
         end
         
-        -- NAME - use espColor
+        -- NAME
         if ESP.Settings.Name.Enabled then
+            local nameColor = roleColor or ESP.Settings.Name.Color
             local nameText = plr.DisplayName or plr.Name
             if ESP.Settings.UseRoleColors then
                 local role = ESP.GetMM2Role(plr)
                 if role ~= "Innocent" then nameText = "[" .. role .. "] " .. nameText end
             end
             if ESP.Settings.Name.ShowDistance then nameText = nameText .. " [" .. math.floor(dist) .. "m]" end
-            
             SafeSet(obj.Name, "Text", nameText)
             SafeSet(obj.Name, "Position", Vector2.new(boxX + boxW / 2, boxY - 16))
-            SafeSet(obj.Name, "Color", espColor)
+            SafeSet(obj.Name, "Color", nameColor)
             SafeSet(obj.Name, "Size", ESP.Settings.Name.Size)
             SafeSet(obj.Name, "Visible", true)
         else SafeSet(obj.Name, "Visible", false) end
         
-        -- DISTANCE - use espColor
+        -- DISTANCE
         if ESP.Settings.Distance.Enabled and not ESP.Settings.Name.ShowDistance then
+            local distColor = roleColor or ESP.Settings.Distance.Color
             SafeSet(obj.Distance, "Text", math.floor(dist) .. "m")
             SafeSet(obj.Distance, "Position", Vector2.new(boxX + boxW / 2, boxY + boxH + 2))
-            SafeSet(obj.Distance, "Color", espColor)
+            SafeSet(obj.Distance, "Color", distColor)
             SafeSet(obj.Distance, "Size", ESP.Settings.Distance.Size)
             SafeSet(obj.Distance, "Visible", true)
         else SafeSet(obj.Distance, "Visible", false) end
@@ -525,94 +441,77 @@ function ESP.Update()
         if ESP.Settings.Health.Enabled then
             local hp = math.clamp(hum.Health / hum.MaxHealth, 0, 1)
             local barW, barX = 4, ESP.Settings.Health.Position == "Left" and (boxX - 7) or (boxX + boxW + 3)
-            
             SafeSet(obj.HealthBarBg, "Size", Vector2.new(barW, boxH))
             SafeSet(obj.HealthBarBg, "Position", Vector2.new(barX, boxY))
             SafeSet(obj.HealthBarBg, "Visible", true)
-            
             local healthH = boxH * hp
             SafeSet(obj.HealthBar, "Size", Vector2.new(barW - 2, healthH))
             SafeSet(obj.HealthBar, "Position", Vector2.new(barX + 1, boxY + boxH - healthH))
             SafeSet(obj.HealthBar, "Color", ESP.GetHealthColor(hp))
             SafeSet(obj.HealthBar, "Visible", true)
-            
             if ESP.Settings.Health.Outline then
                 SafeSet(obj.HealthBarOutline, "Size", Vector2.new(barW, boxH))
                 SafeSet(obj.HealthBarOutline, "Position", Vector2.new(barX, boxY))
                 SafeSet(obj.HealthBarOutline, "Visible", true)
             else SafeSet(obj.HealthBarOutline, "Visible", false) end
         else
-            SafeSet(obj.HealthBar, "Visible", false)
-            SafeSet(obj.HealthBarBg, "Visible", false)
-            SafeSet(obj.HealthBarOutline, "Visible", false)
+            SafeSet(obj.HealthBar, "Visible", false) SafeSet(obj.HealthBarBg, "Visible", false) SafeSet(obj.HealthBarOutline, "Visible", false)
         end
         
-        -- HEAD DOT - use espColor
+        -- HEAD DOT
         if ESP.Settings.HeadDot.Enabled then
+            local dotColor = roleColor or ESP.Settings.HeadDot.Color
             local headScreen = Camera:WorldToViewportPoint(head.Position)
             if ESP.Settings.HeadDot.Outline then
                 SafeSet(obj.HeadDotOutline, "Position", Vector2.new(headScreen.X, headScreen.Y))
                 SafeSet(obj.HeadDotOutline, "Radius", ESP.Settings.HeadDot.Size + 1)
                 SafeSet(obj.HeadDotOutline, "Visible", true)
             else SafeSet(obj.HeadDotOutline, "Visible", false) end
-            
             SafeSet(obj.HeadDot, "Position", Vector2.new(headScreen.X, headScreen.Y))
             SafeSet(obj.HeadDot, "Radius", ESP.Settings.HeadDot.Size)
-            SafeSet(obj.HeadDot, "Color", espColor)
+            SafeSet(obj.HeadDot, "Color", dotColor)
             SafeSet(obj.HeadDot, "Visible", true)
-        else
-            SafeSet(obj.HeadDot, "Visible", false)
-            SafeSet(obj.HeadDotOutline, "Visible", false)
-        end
+        else SafeSet(obj.HeadDot, "Visible", false) SafeSet(obj.HeadDotOutline, "Visible", false) end
         
-        -- TRACERS - use espColor
+        -- TRACERS
         if ESP.Settings.Tracers.Enabled then
+            local tracerColor = roleColor or ESP.Settings.Tracers.Color
             local originX = Camera.ViewportSize.X / 2
             local originY = ESP.Settings.Tracers.Origin == "Top" and 0 or ESP.Settings.Tracers.Origin == "Center" and Camera.ViewportSize.Y / 2 or Camera.ViewportSize.Y
-            
             SafeSet(obj.TracerOutline, "From", Vector2.new(originX, originY))
             SafeSet(obj.TracerOutline, "To", Vector2.new(rootPos.X, footBottom.Y))
             SafeSet(obj.TracerOutline, "Visible", true)
-            
             SafeSet(obj.Tracer, "From", Vector2.new(originX, originY))
             SafeSet(obj.Tracer, "To", Vector2.new(rootPos.X, footBottom.Y))
-            SafeSet(obj.Tracer, "Color", espColor)
+            SafeSet(obj.Tracer, "Color", tracerColor)
             SafeSet(obj.Tracer, "Thickness", ESP.Settings.Tracers.Thickness)
             SafeSet(obj.Tracer, "Visible", true)
-        else
-            SafeSet(obj.Tracer, "Visible", false)
-            SafeSet(obj.TracerOutline, "Visible", false)
-        end
+        else SafeSet(obj.Tracer, "Visible", false) SafeSet(obj.TracerOutline, "Visible", false) end
         
-        -- SKELETON - use espColor
+        -- SKELETON
         if ESP.Settings.Skeleton.Enabled then
+            local skelColor = roleColor or ESP.Settings.Skeleton.Color
             local isR15 = char:FindFirstChild("UpperTorso") ~= nil
-            local connections = isR15 and SkeletonConnections.R15 or SkeletonConnections.R6
-            
+            local conns = isR15 and SkeletonConnections.R15 or SkeletonConnections.R6
             for i = 1, 14 do
                 local line = obj.Skeleton[i]
                 if not line then continue end
-                local conn = connections[i]
+                local conn = conns[i]
                 if not conn then SafeSet(line, "Visible", false) continue end
-                
                 local p1, p2 = char:FindFirstChild(conn[1]), char:FindFirstChild(conn[2])
                 if p1 and p2 then
                     local v1, os1 = Camera:WorldToViewportPoint(p1.Position)
                     local v2, os2 = Camera:WorldToViewportPoint(p2.Position)
                     if os1 and os2 then
-                        SafeSet(line, "From", Vector2.new(v1.X, v1.Y))
-                        SafeSet(line, "To", Vector2.new(v2.X, v2.Y))
-                        SafeSet(line, "Color", espColor)
-                        SafeSet(line, "Thickness", ESP.Settings.Skeleton.Thickness)
+                        SafeSet(line, "From", Vector2.new(v1.X, v1.Y)) SafeSet(line, "To", Vector2.new(v2.X, v2.Y))
+                        SafeSet(line, "Color", skelColor) SafeSet(line, "Thickness", ESP.Settings.Skeleton.Thickness)
                         SafeSet(line, "Visible", true)
                     else SafeSet(line, "Visible", false) end
                 else SafeSet(line, "Visible", false) end
             end
-        else
-            for i = 1, 14 do if obj.Skeleton[i] then SafeSet(obj.Skeleton[i], "Visible", false) end end
-        end
+        else for i = 1, 14 do if obj.Skeleton[i] then SafeSet(obj.Skeleton[i], "Visible", false) end end end
         
-        -- CHAMS - use espColor
+        -- CHAMS
         if ESP.Settings.Chams.Enabled then
             if not ESP.Chams[plr] then
                 local hl = Instance.new("Highlight")
@@ -622,11 +521,11 @@ function ESP.Update()
                 if not hl.Parent then pcall(function() hl.Parent = game:GetService("Lighting") end) end
                 ESP.Chams[plr] = hl
             end
-            
             local chams = ESP.Chams[plr]
             if chams then
                 if chams.Adornee ~= char then chams.Adornee = char end
-                chams.FillColor = espColor
+                local chamsColor = roleColor or ESP.Settings.Chams.FillColor
+                chams.FillColor = chamsColor
                 chams.OutlineColor = ESP.Settings.Chams.OutlineColor
                 chams.FillTransparency = ESP.Settings.Chams.FillTransparency
                 chams.Enabled = true
@@ -637,9 +536,7 @@ end
 
 function ESP.Init()
     Camera = Workspace.CurrentCamera
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then ESP.Create(plr) end
-    end
+    for _, plr in pairs(Players:GetPlayers()) do if plr ~= LocalPlayer then ESP.Create(plr) end end
     Players.PlayerAdded:Connect(function(plr) task.wait(0.1) ESP.Create(plr) end)
     Players.PlayerRemoving:Connect(function(plr) ESP.Remove(plr) end)
     if ESP.Connection then pcall(function() ESP.Connection:Disconnect() end) end
@@ -650,8 +547,7 @@ function ESP.Destroy()
     if ESP.Connection then pcall(function() ESP.Connection:Disconnect() end) ESP.Connection = nil end
     for plr in pairs(ESP.Objects) do ESP.Remove(plr) end
     for plr in pairs(ESP.Chams) do ESP.RemoveChams(plr) end
-    ESP.Objects = {}
-    ESP.Chams = {}
+    ESP.Objects = {} ESP.Chams = {}
 end
 
 return ESP
