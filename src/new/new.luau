@@ -1,5 +1,5 @@
 setfpscap(0)
-local UID = 0
+local UID = 1 -- ehhh 
 
 if not getcustomasset then
     getgenv().getcustomasset = function()
@@ -1037,91 +1037,75 @@ do
     
         return Library:Create(_Instance, Properties);
     end;
-    
-    function Library:MakeDraggable(Instance, Cutoff, Perfomance)
-        if not Perfomance then
-            Instance.Active = true
-        
-            local LatestPosition = nil
-            local LatestDrag = nil
-    
-            Instance.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local ObjPos = _Vector2New(
-                        Mouse.X - Instance.AbsolutePosition.X,
-                        Mouse.Y - Instance.AbsolutePosition.Y
-                    );
-                    
-                    if ObjPos.Y > (Cutoff or 40) then
-                        return
-                    end
-                    
-                    while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                        Instance.Position = _UDim2New(
-                            0,
-                            Mouse.X - ObjPos.X + (Instance.Size.X.Offset * Instance.AnchorPoint.X),
-                            0,
-                            Mouse.Y - ObjPos.Y + (Instance.Size.Y.Offset * Instance.AnchorPoint.Y)
-                        );
-                        
-                        _Wait()
-                    end
-                end
-            end) 
-        else
-            Perfomance.Active = true
-            Instance.Active = true
-    
-            local LatestDrag = nil
-    
-            Instance.InputBegan:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                    local ObjPos = _Vector2New(
-                        Mouse.X - Perfomance.AbsolutePosition.X,
-                        Mouse.Y - Perfomance.AbsolutePosition.Y
-                    );
-                    
-                    if ObjPos.Y > (Cutoff or 40) then
-                        return
-                    end
-                    
-                    while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
-                        Perfomance.Position = _UDim2New(
-                            0,
-                            Mouse.X - ObjPos.X + (Perfomance.Size.X.Offset * Perfomance.AnchorPoint.X),
-                            0,
-                            Mouse.Y - ObjPos.Y + (Perfomance.Size.Y.Offset * Perfomance.AnchorPoint.Y)
-                        )
-                        Perfomance.Visible = true
-                        LatestDrag = Perfomance.Position
-                        
-                        _Wait()
-                    end
-                end
-            end)
-            Instance.InputEnded:Connect(function(Input)
-                if Input.UserInputType == Enum.UserInputType.MouseButton1 and LatestDrag then 
-                    Perfomance.Visible = false                   
-                    Instance.Position = LatestDrag
-                end
-            end)
-        end
-        --[[Instance.InputEnded:Connect(function(Input)
-            if Input.UserInputType == Enum.UserInputType.MouseButton1 then
-                local ObjPos = _Vector2New(
-                    Mouse.X - Instance.AbsolutePosition.X,
-                    Mouse.Y - Instance.AbsolutePosition.Y
-                );
-    
-                if ObjPos.Y > (Cutoff or 40) then
-                    return;
-                end;
-                
-                Instance.Position = LatestDrag
-                RenderStepped:Wait();
-            end;
-        end)]]
-    end;
+
+	function Library:MakeDraggable(Instance, Cutoff, Perfomance)
+		if not Perfomance then
+			Instance.Active = true
+		
+			Instance.InputBegan:Connect(function(Input)
+				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+					local ObjPos = _Vector2New(
+						Mouse.X - Instance.AbsolutePosition.X,
+						Mouse.Y - Instance.AbsolutePosition.Y
+					)
+					
+					if ObjPos.Y > (Cutoff or 40) then
+						return
+					end
+					
+					while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+						Instance.Position = _UDim2New(
+							0,
+							Mouse.X - ObjPos.X + (Instance.Size.X.Offset * Instance.AnchorPoint.X),
+							0,
+							Mouse.Y - ObjPos.Y + (Instance.Size.Y.Offset * Instance.AnchorPoint.Y)
+						)
+						_Wait()
+					end
+				end
+			end) 
+		else
+			Perfomance.Active = true
+			Instance.Active = true
+			Perfomance.Visible = false  -- Изначально скрыта
+
+			Instance.InputBegan:Connect(function(Input)
+				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
+					local ObjPos = _Vector2New(
+						Mouse.X - Instance.AbsolutePosition.X,  -- Используем Instance, не Perfomance
+						Mouse.Y - Instance.AbsolutePosition.Y
+					)
+					
+					if ObjPos.Y > (Cutoff or 40) then
+						return
+					end
+					
+					-- Синхронизируем позицию тени с основным окном
+					Perfomance.Position = Instance.Position
+					Perfomance.Visible = true
+					
+					local LatestDrag = Instance.Position
+					
+					while InputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) do
+						LatestDrag = _UDim2New(
+							0,
+							Mouse.X - ObjPos.X + (Perfomance.Size.X.Offset * Perfomance.AnchorPoint.X),
+							0,
+							Mouse.Y - ObjPos.Y + (Perfomance.Size.Y.Offset * Perfomance.AnchorPoint.Y)
+						)
+						Perfomance.Position = LatestDrag
+						_Wait()
+					end
+					
+					-- Сразу после выхода из цикла (мышь отпущена):
+					Perfomance.Visible = false      -- Скрываем тень
+					Instance.Position = LatestDrag  -- Перемещаем основное окно
+				end
+			end)
+			
+			-- InputEnded больше не нужен!
+		end
+	end
     
     function Library:AddToolTip(InfoStr, HoverInstance)
         -- Tamanho máximo antes de quebrar o texto em uma nova linha
@@ -4279,7 +4263,6 @@ do
             Parent = ScreenGui;
         });
         Window.MainFrame = Outer
-
     
         local Outer2 = Library:Create('Frame', {
             AnchorPoint = Config.AnchorPoint,
@@ -4336,7 +4319,6 @@ do
         Library:AddToRegistry(Outer2, {
             BackgroundColor3 = 'OutlineColor';
         });
-
 
         local WindowLabel = Library:CreateLabel({---- window name
             Position = _UDim2New(0.5, 0, 0, 0);
