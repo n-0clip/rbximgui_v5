@@ -123,8 +123,8 @@ local workspaceRaycast = workspace.Raycast
 repeat _TaskWait() until _IsLoaded(game)
 if getgenv().Loaded ~= nil then return end
 
-local version = "V67 FLAGGED"
-local Build = "AuroraNN"
+local version = "2.42"
+local Build = "beta"
 local LoadTick = _Tick()
 local checkcalled = false
 
