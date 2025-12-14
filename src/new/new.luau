@@ -128,7 +128,6 @@ local Build = "AuroraNN"
 local LoadTick = _Tick()
 local checkcalled = false
 
--- Core Vars
 local HttpService = cloneref(_GetService(game,"HttpService"))
 local InputService = cloneref(_GetService(game,"UserInputService"))
 local replicatedStorage = cloneref(_GetService(game,"ReplicatedStorage"))
