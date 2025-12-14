@@ -1067,12 +1067,12 @@ do
 		else
 			Perfomance.Active = true
 			Instance.Active = true
-			Perfomance.Visible = false  -- Изначально скрыта
+			Perfomance.Visible = false
 
 			Instance.InputBegan:Connect(function(Input)
 				if Input.UserInputType == Enum.UserInputType.MouseButton1 then
 					local ObjPos = _Vector2New(
-						Mouse.X - Instance.AbsolutePosition.X,  -- Используем Instance, не Perfomance
+						Mouse.X - Instance.AbsolutePosition.X,
 						Mouse.Y - Instance.AbsolutePosition.Y
 					)
 					
@@ -1080,7 +1080,6 @@ do
 						return
 					end
 					
-					-- Синхронизируем позицию тени с основным окном
 					Perfomance.Position = Instance.Position
 					Perfomance.Visible = true
 					
@@ -1097,7 +1096,6 @@ do
 						_Wait()
 					end
 					
-					-- Сразу после выхода из цикла (мышь отпущена):
 					Perfomance.Visible = false      -- Скрываем тень
 					Instance.Position = LatestDrag  -- Перемещаем основное окно
 				end
@@ -1159,7 +1157,6 @@ do
     
             IsHovering = true
     
-            -- Aguarda o delay de 2 segundos antes de exibir o tooltip
             task.delay(1, function()
                 if IsHovering then
                     Tooltip.Position = _UDim2fromOffset(Mouse.X + 15, Mouse.Y + 12)
@@ -4277,7 +4274,7 @@ do
         });
         
         Library:MakeDraggable(Outer, 25, Outer2);
-        
+
         local Inner = Library:Create('Frame', {
             BackgroundColor3 = Library.BackgroundColor; -- sirex: why is it Library.Background :WHAT:
             BorderColor3 = Library.OutlineColor;
