@@ -135,8 +135,8 @@ function Core.GetJoinScript()
 end
 
 function Core.Init(baseUrl)
-    local funcsUrl = baseUrl .. "src/core/funcs/"
-    local gamesUrl = baseUrl .. "src/games/"
+    local funcsUrl = baseUrl .. "src/old/core/funcs/"
+    local gamesUrl = baseUrl .. "src/old/games/"
     
     Core.Aim = Core.LoadModule(funcsUrl .. "aim.luau")
     Core.ESP = Core.LoadModule(funcsUrl .. "esp.luau")
